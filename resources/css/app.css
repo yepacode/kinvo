@@ -1,0 +1,28 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../**/*.vue";
+
+/*
+ * Identidad de marca Kinvoo — "Where talent meets fitness"
+ * Paleta y tipografías extraídas de la landing (gokinvoo.com).
+ */
+@theme {
+    /* Tipografías */
+    --font-serif: 'Cormorant Garamond', ui-serif, Georgia, 'Times New Roman', serif;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Paleta Kinvoo */
+    --color-sage: #5C7A5F;        /* verde salvia — primario de marca */
+    --color-sage-light: #A8BBA8;  /* salvia claro — hover, fondos suaves */
+    --color-lime: #C8C040;        /* lima/oliva — acento, CTAs, badges */
+    --color-ink: #1C1C1A;         /* casi-negro — texto, header/footer */
+    --color-cream: #F7F4EE;       /* crema — fondo base */
+    --color-beige: #EFECE4;       /* beige — cards, secciones alternas */
+    --color-warmgray: #8A8A78;    /* topo cálido — texto secundario */
+    --color-line: #E0DDD5;        /* bordes, divisores */
+}

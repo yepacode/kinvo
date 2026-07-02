@@ -1,0 +1,11 @@
+{
+    "version": "0.0.1",
+    "configurations": [
+        {
+            "name": "kinvoo",
+            "runtimeExecutable": "php",
+            "runtimeArgs": ["artisan", "serve", "--port=8100"],
+            "port": 8100
+        }
+    ]
+}
