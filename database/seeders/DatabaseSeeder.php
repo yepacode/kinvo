@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(TaxonomiaSeeder::class);
+
         // Owner de Kinvoo (acceso al panel Filament).
         User::updateOrCreate(
             ['email' => 'hola@gokinvoo.com'],

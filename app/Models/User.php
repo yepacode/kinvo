@@ -8,6 +8,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -81,6 +82,16 @@ class User extends Authenticatable implements FilamentUser
     public function estaActivo(): bool
     {
         return $this->estado === EstadoUsuario::Activo;
+    }
+
+    public function professionalProfile(): HasOne
+    {
+        return $this->hasOne(ProfessionalProfile::class);
+    }
+
+    public function companyProfile(): HasOne
+    {
+        return $this->hasOne(CompanyProfile::class);
     }
 
     /**
