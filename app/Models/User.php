@@ -77,4 +77,27 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->nivel === RolUsuario::Contractor;
     }
+
+    public function estaActivo(): bool
+    {
+        return $this->estado === EstadoUsuario::Activo;
+    }
+
+    /**
+     * Ruta de aterrizaje según rol y estado (usada tras login/registro).
+     */
+    public function homeRoute(): string
+    {
+        if ($this->esAdmin()) {
+            return route('filament.admin.pages.dashboard');
+        }
+
+        // Aprobación activada: mientras no esté activo, va al aviso de cuenta pendiente.
+        if (! $this->estaActivo()) {
+            return route('account.pending');
+        }
+
+        // Áreas por rol (buscador del contratante y panel del profesional llegan en F3/F4).
+        return route('dashboard');
+    }
 }

@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\EstadoUsuario;
+use App\Enums\RolUsuario;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -29,6 +31,8 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'nivel' => RolUsuario::Professional,
+            'estado' => EstadoUsuario::Activo,
         ];
     }
 
@@ -39,6 +43,31 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /** Usuario con rol Admin (owner). */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'nivel' => RolUsuario::Admin,
+            'estado' => EstadoUsuario::Activo,
+        ]);
+    }
+
+    /** Usuario contratante. */
+    public function contratante(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'nivel' => RolUsuario::Contractor,
+        ]);
+    }
+
+    /** Cuenta pendiente de aprobación. */
+    public function pendiente(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'estado' => EstadoUsuario::Pendiente,
         ]);
     }
 }
