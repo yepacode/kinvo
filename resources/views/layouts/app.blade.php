@@ -10,7 +10,7 @@
         @include('partials.head-assets')
     </head>
     <body class="font-sans text-ink antialiased">
-        <div class="min-h-screen bg-cream">
+        <div class="min-h-screen">
             @include('layouts.navigation')
 
             <!-- Page Heading -->

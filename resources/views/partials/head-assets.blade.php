@@ -5,6 +5,19 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+{{-- Fondo de marca: manchas orgánicas sutiles, fijas (efecto "medio perceptivo"
+     al hacer scroll). Se ve en las páginas públicas, no en el panel Filament. --}}
+<style>
+    body {
+        background-color: #F7F4EE;
+        background-image: url('{{ asset('img/kinvoo-pattern.svg') }}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+</style>
+
 @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 @else
