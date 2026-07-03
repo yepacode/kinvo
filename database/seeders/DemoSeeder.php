@@ -9,6 +9,7 @@ use App\Models\Location;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 /**
  * Datos de demostración (no se llama desde DatabaseSeeder).
@@ -44,6 +45,38 @@ class DemoSeeder extends Seeder
             Discipline::whereIn('slug', ['entrenamiento-funcional', 'crossfit', 'musculacion'])->pluck('id')
         );
 
-        $this->command->info('Demo listo → /talento/'.$p->fresh()->slug);
+        // Más perfiles publicados para poblar el buscador.
+        $demo = [
+            ['Luis Márquez', 'Instructor de CrossFit', 'presencial', 'Monterrey', ['crossfit', 'hiit']],
+            ['Sofía Ramírez', 'Instructora de yoga y pilates', 'hibrido', 'Ciudad de México', ['yoga', 'pilates']],
+            ['Diego Herrera', 'Entrenador personal online', 'online', 'Guadalajara', ['entrenamiento-personal', 'musculacion']],
+            ['Valeria Cruz', 'Coach de spinning y HIIT', 'presencial', 'Puebla', ['spinning', 'hiit']],
+            ['Andrés Gómez', 'Nutriólogo deportivo', 'online', 'Mérida', ['nutricion-deportiva']],
+            ['Camila Ortiz', 'Instructora de boxeo', 'presencial', 'Cancún', ['boxeo', 'entrenamiento-funcional']],
+            ['Jorge Pineda', 'Especialista en calistenia', 'hibrido', 'Tijuana', ['calistenia', 'entrenamiento-funcional']],
+        ];
+        foreach ($demo as [$nombre, $headline, $mod, $ciudad, $discs]) {
+            $du = User::updateOrCreate(
+                ['email' => Str::slug($nombre).'@demo.gokinvoo.com'],
+                [
+                    'name' => $nombre,
+                    'password' => Hash::make('password'),
+                    'nivel' => RolUsuario::Professional,
+                    'estado' => EstadoUsuario::Activo,
+                    'email_verified_at' => now(),
+                ]
+            );
+            $dp = $du->professionalProfile()->firstOrCreate([]);
+            $dp->update([
+                'headline' => $headline,
+                'modalidad' => $mod,
+                'years_experience' => rand(2, 12),
+                'location_id' => Location::where('ciudad', $ciudad)->value('id'),
+                'is_published' => true,
+            ]);
+            $dp->disciplines()->sync(Discipline::whereIn('slug', $discs)->pluck('id'));
+        }
+
+        $this->command->info('Demo listo → /talento (buscador) · perfil /talento/'.$p->fresh()->slug);
     }
 }

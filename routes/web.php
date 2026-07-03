@@ -10,7 +10,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Vista pública del talento (solo perfiles publicados).
+// Buscador y vista pública del talento (solo perfiles publicados).
+Route::get('/talento', [TalentoController::class, 'index'])->name('talento.index');
 Route::get('/talento/{professionalProfile:slug}', [TalentoController::class, 'show'])->name('talento.show');
 
 // Aviso de cuenta pendiente/suspendida (no pasa por el gate de estado).

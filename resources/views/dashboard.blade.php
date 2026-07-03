@@ -33,10 +33,14 @@
             <div class="rounded-2xl border border-line bg-white p-8">
                 <p class="text-sm font-500 uppercase tracking-widest text-sage">Contratante</p>
                 <h3 class="mt-2 font-serif text-2xl font-500 text-ink">Encuentra talento fitness</h3>
-                <p class="mt-2 text-warmgray">Completa los datos de tu empresa. El buscador de talento estará disponible muy pronto.</p>
+                <p class="mt-2 text-warmgray">Explora perfiles de profesionales o completa los datos de tu empresa.</p>
                 <div class="mt-6 flex flex-wrap gap-3">
-                    <a href="{{ route('company.profile.edit') }}"
+                    <a href="{{ route('talento.index') }}"
                        class="rounded-full bg-sage px-6 py-2.5 text-sm font-600 text-cream transition hover:bg-ink">
+                        Buscar talento
+                    </a>
+                    <a href="{{ route('company.profile.edit') }}"
+                       class="rounded-full border border-line px-6 py-2.5 text-sm font-500 text-warmgray transition hover:border-sage hover:text-sage">
                         Editar mi empresa
                     </a>
                 </div>

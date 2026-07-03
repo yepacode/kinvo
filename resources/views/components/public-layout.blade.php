@@ -24,6 +24,7 @@
             <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
                 <a href="/" class="font-serif text-2xl font-500 tracking-tight text-ink">Kinvoo</a>
                 <nav class="flex items-center gap-4 text-sm">
+                    <a href="{{ route('talento.index') }}" class="text-warmgray hover:text-sage">Buscar talento</a>
                     @auth
                         <a href="{{ auth()->user()->homeRoute() }}" class="text-warmgray hover:text-sage">Mi cuenta</a>
                     @else

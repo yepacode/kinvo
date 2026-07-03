@@ -35,11 +35,11 @@
                     </p>
 
                     <div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                        <a href="#"
+                        <a href="{{ route('register') }}"
                            class="rounded-full bg-sage px-7 py-3 text-sm font-600 text-cream shadow-sm transition hover:bg-ink">
                             Soy profesional
                         </a>
-                        <a href="#"
+                        <a href="{{ route('talento.index') }}"
                            class="rounded-full bg-lime px-7 py-3 text-sm font-600 text-ink shadow-sm transition hover:brightness-95">
                             Busco talento
                         </a>
