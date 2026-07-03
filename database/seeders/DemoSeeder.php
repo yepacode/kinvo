@@ -95,7 +95,7 @@ class DemoSeeder extends Seeder
         ]);
 
         // Un contacto de ejemplo para la bitácora del owner.
-        $p->contacts()->firstOrCreate(
+        $contacto = $p->contacts()->firstOrCreate(
             ['contact_email' => 'demo.gym@gokinvoo.com'],
             [
                 'contractor_user_id' => $contratante->id,
@@ -105,6 +105,11 @@ class DemoSeeder extends Seeder
                 'estado' => \App\Enums\EstadoContacto::NoLeido,
             ]
         );
+
+        // Notificación in-app de ejemplo para el profesional demo.
+        if ($u->notifications()->count() === 0) {
+            $u->notify(new \App\Notifications\NuevoContactoNotification($contacto));
+        }
 
         $this->command->info('Demo listo → /talento (buscador) · perfil /talento/'.$p->fresh()->slug);
         $this->command->info('Contratante demo: demo.gym@gokinvoo.com / password');

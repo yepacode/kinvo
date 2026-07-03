@@ -110,7 +110,10 @@ class UserResource extends Resource
                     ->color('success')
                     ->requiresConfirmation()
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Pendiente)
-                    ->action(fn (User $u) => $u->update(['estado' => EstadoUsuario::Activo])),
+                    ->action(function (User $u) {
+                        $u->update(['estado' => EstadoUsuario::Activo]);
+                        $u->notify(new \App\Notifications\CuentaAprobadaNotification());
+                    }),
                 Tables\Actions\Action::make('suspender')
                     ->label('Suspender')
                     ->icon('heroicon-o-no-symbol')

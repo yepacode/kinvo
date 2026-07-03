@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\EstadoContacto;
 use App\Mail\NuevoContacto;
 use App\Models\ProfessionalProfile;
+use App\Notifications\NuevoContactoNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -54,6 +55,9 @@ class ContactController extends Controller
         Mail::to($professionalProfile->user->email)
             ->cc(config('mail.owner_address', 'hola@gokinvoo.com'))
             ->send(new NuevoContacto($contact, $professionalProfile));
+
+        // Notificación in-app (campana) para el profesional.
+        $professionalProfile->user->notify(new NuevoContactoNotification($contact));
 
         return redirect()
             ->route('talento.show', $professionalProfile->slug)

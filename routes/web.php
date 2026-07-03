@@ -3,6 +3,7 @@
 use App\Http\Controllers\CompanyProfileController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProfessionalProfileController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\TalentoController;
@@ -33,6 +34,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Notificaciones (campana)
+    Route::get('/notificaciones', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notificaciones/leer-todo', [NotificationController::class, 'readAll'])->name('notifications.readAll');
+    Route::get('/notificaciones/{id}/abrir', [NotificationController::class, 'open'])->name('notifications.open');
 });
 
 // Perfiles autoeditables (requieren cuenta activa).

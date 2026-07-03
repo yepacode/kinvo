@@ -10,6 +10,7 @@
 {{-- Fondo de marca: manchas orgánicas sutiles, fijas (efecto "medio perceptivo"
      al hacer scroll). Se ve en las páginas públicas, no en el panel Filament. --}}
 <style>
+    [x-cloak] { display: none !important; }
     body {
         background-color: #F7F4EE;
         background-image: url('{{ asset('img/kinvoo-pattern.svg') }}');
