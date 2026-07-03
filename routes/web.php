@@ -4,12 +4,17 @@ use App\Http\Controllers\CompanyProfileController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProfessionalProfileController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\TalentoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('home');
+
+// SEO técnico
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
+Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
 
 // Buscador y vista pública del talento (solo perfiles publicados).
 Route::get('/talento', [TalentoController::class, 'index'])->name('talento.index');

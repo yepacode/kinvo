@@ -1,5 +1,19 @@
 <x-public-layout title="Kinvoo · La red profesional para la industria fitness"
                  description="Kinvoo conecta a coaches, instructores y staff del fitness con estudios, gimnasios y marcas que buscan talento.">
+    <x-slot name="head">
+        <script type="application/ld+json">
+        {!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => 'Kinvoo',
+            'description' => 'La red profesional para la industria fitness.',
+            'url' => url('/'),
+            'logo' => asset('favicon.svg'),
+            'email' => 'hola@gokinvoo.com',
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+        </script>
+    </x-slot>
+
     {{-- Hero --}}
     <section class="px-6">
         <div class="mx-auto max-w-3xl py-20 text-center sm:py-28">

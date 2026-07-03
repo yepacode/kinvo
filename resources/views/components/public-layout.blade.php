@@ -9,11 +9,13 @@
         @if ($description)
             <meta name="description" content="{{ $description }}">
         @endif
+        <link rel="canonical" href="{{ url()->current() }}">
         <meta property="og:title" content="{{ $title }}">
         @if ($description)
             <meta property="og:description" content="{{ $description }}">
         @endif
         <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
 
         {{ $head ?? '' }}
 
