@@ -21,6 +21,9 @@
                             Mi empresa
                         </x-nav-link>
                     @endif
+                    <x-nav-link :href="route('saves.index')" :active="request()->routeIs('saves.*')">
+                        Guardados
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -83,6 +86,9 @@
                     Mi empresa
                 </x-responsive-nav-link>
             @endif
+            <x-responsive-nav-link :href="route('saves.index')" :active="request()->routeIs('saves.*')">
+                Guardados
+            </x-responsive-nav-link>
         </div>
 
         <div class="pt-4 pb-1 border-t border-line">

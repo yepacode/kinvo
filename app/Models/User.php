@@ -89,6 +89,20 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasOne(ProfessionalProfile::class);
     }
 
+    public function saves(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Save::class);
+    }
+
+    /** ¿El usuario guardó este modelo (perfil, oferta, etc.)? */
+    public function haGuardado(\Illuminate\Database\Eloquent\Model $model): bool
+    {
+        return $this->saves()
+            ->where('saveable_type', $model->getMorphClass())
+            ->where('saveable_id', $model->getKey())
+            ->exists();
+    }
+
     public function companyProfile(): HasOne
     {
         return $this->hasOne(CompanyProfile::class);

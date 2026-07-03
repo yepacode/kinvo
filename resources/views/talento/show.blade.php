@@ -64,14 +64,17 @@
             </div>
 
             <div class="space-y-8 px-6 py-8">
-                {{-- Contactar: visible solo para contratantes con cuenta activa --}}
+                {{-- Acciones: contactar (solo contratantes activos) + guardar (cualquier usuario) --}}
                 @auth
-                    @if (auth()->user()->esContratante() && auth()->user()->estaActivo())
-                        <a href="{{ route('contacto.create', $profile->slug) }}"
-                           class="flex items-center justify-center rounded-full bg-sage px-7 py-3 text-sm font-600 text-cream transition hover:bg-ink">
-                            Contactar a {{ \Illuminate\Support\Str::before($profile->user->name, ' ') }}
-                        </a>
-                    @endif
+                    <div class="flex flex-col gap-3 sm:flex-row">
+                        @if (auth()->user()->esContratante() && auth()->user()->estaActivo())
+                            <a href="{{ route('contacto.create', $profile->slug) }}"
+                               class="flex flex-1 items-center justify-center rounded-full bg-sage px-7 py-3 text-sm font-600 text-cream transition hover:bg-ink">
+                                Contactar a {{ \Illuminate\Support\Str::before($profile->user->name, ' ') }}
+                            </a>
+                        @endif
+                        <x-save-button :profile="$profile" />
+                    </div>
                 @else
                     <a href="{{ route('login') }}"
                        class="flex items-center justify-center rounded-full border border-line px-7 py-3 text-sm font-500 text-warmgray transition hover:border-sage hover:text-sage">

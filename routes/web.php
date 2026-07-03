@@ -5,6 +5,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProfessionalProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SaveController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\TalentoController;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +40,10 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/notificaciones', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notificaciones/leer-todo', [NotificationController::class, 'readAll'])->name('notifications.readAll');
     Route::get('/notificaciones/{id}/abrir', [NotificationController::class, 'open'])->name('notifications.open');
+
+    // Guardados / favoritos
+    Route::get('/guardados', [SaveController::class, 'index'])->name('saves.index');
+    Route::post('/talento/{professionalProfile:slug}/guardar', [SaveController::class, 'toggleProfile'])->name('saves.toggleProfile');
 });
 
 // Perfiles autoeditables (requieren cuenta activa).
