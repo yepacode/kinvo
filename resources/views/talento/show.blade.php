@@ -28,6 +28,12 @@
     </x-slot>
 
     <div class="mx-auto max-w-3xl px-6 py-10">
+        @if (session('status') === 'contacto-enviado')
+            <div class="mb-6 rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm text-sage">
+                ✓ Tu mensaje fue enviado a {{ $profile->user->name }}. Te contactará al correo que dejaste.
+            </div>
+        @endif
+
         <div class="overflow-hidden rounded-2xl border border-line bg-white">
             {{-- Encabezado --}}
             <div class="flex flex-col items-center gap-4 border-b border-line bg-beige/50 px-6 py-8 text-center sm:flex-row sm:text-left">
@@ -58,6 +64,21 @@
             </div>
 
             <div class="space-y-8 px-6 py-8">
+                {{-- Contactar: visible solo para contratantes con cuenta activa --}}
+                @auth
+                    @if (auth()->user()->esContratante() && auth()->user()->estaActivo())
+                        <a href="{{ route('contacto.create', $profile->slug) }}"
+                           class="flex items-center justify-center rounded-full bg-sage px-7 py-3 text-sm font-600 text-cream transition hover:bg-ink">
+                            Contactar a {{ \Illuminate\Support\Str::before($profile->user->name, ' ') }}
+                        </a>
+                    @endif
+                @else
+                    <a href="{{ route('login') }}"
+                       class="flex items-center justify-center rounded-full border border-line px-7 py-3 text-sm font-500 text-warmgray transition hover:border-sage hover:text-sage">
+                        Inicia sesión como contratante para contactar
+                    </a>
+                @endauth
+
                 {{-- Bio --}}
                 @if ($profile->bio)
                     <div>

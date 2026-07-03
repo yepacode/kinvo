@@ -57,6 +57,11 @@ class ProfessionalProfile extends Model
         return $this->belongsToMany(Certification::class);
     }
 
+    public function contacts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Contact::class);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

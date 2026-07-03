@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CompanyProfileController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProfessionalProfileController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TalentoController;
@@ -36,6 +37,10 @@ Route::middleware(['auth', 'cuenta.activa'])->group(function () {
 
     Route::get('/mi-empresa', [CompanyProfileController::class, 'edit'])->name('company.profile.edit');
     Route::put('/mi-empresa', [CompanyProfileController::class, 'update'])->name('company.profile.update');
+
+    // Contactar a un profesional (solo contratantes, validado en el controller).
+    Route::get('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'create'])->name('contacto.create');
+    Route::post('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'store'])->name('contacto.store');
 });
 
 require __DIR__.'/auth.php';

@@ -77,6 +77,36 @@ class DemoSeeder extends Seeder
             $dp->disciplines()->sync(Discipline::whereIn('slug', $discs)->pluck('id'));
         }
 
+        // Contratante demo (activo) para probar el flujo de contacto.
+        $contratante = User::updateOrCreate(
+            ['email' => 'demo.gym@gokinvoo.com'],
+            [
+                'name' => 'Estudio Zen',
+                'password' => Hash::make('password'),
+                'nivel' => RolUsuario::Contractor,
+                'estado' => EstadoUsuario::Activo,
+                'email_verified_at' => now(),
+            ]
+        );
+        $contratante->companyProfile()->firstOrCreate([], [
+            'company_name' => 'Estudio Zen',
+            'sector' => 'Estudio de yoga',
+            'location_id' => Location::where('ciudad', 'Ciudad de México')->value('id'),
+        ]);
+
+        // Un contacto de ejemplo para la bitácora del owner.
+        $p->contacts()->firstOrCreate(
+            ['contact_email' => 'demo.gym@gokinvoo.com'],
+            [
+                'contractor_user_id' => $contratante->id,
+                'contact_name' => 'Estudio Zen',
+                'contact_phone' => '+52 55 1234 5678',
+                'message' => 'Hola Ana, buscamos una coach de fuerza para clases grupales. ¿Te interesa?',
+                'estado' => \App\Enums\EstadoContacto::NoLeido,
+            ]
+        );
+
         $this->command->info('Demo listo → /talento (buscador) · perfil /talento/'.$p->fresh()->slug);
+        $this->command->info('Contratante demo: demo.gym@gokinvoo.com / password');
     }
 }
