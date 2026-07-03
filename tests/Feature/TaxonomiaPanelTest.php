@@ -46,8 +46,9 @@ class TaxonomiaPanelTest extends TestCase
     {
         $profesional = User::factory()->create(); // Professional activo por defecto
 
+        // No admin: en vez de 403 se le redirige a su propia área.
         $this->actingAs($profesional)
             ->get('/admin/disciplines')
-            ->assertStatus(403);
+            ->assertRedirect(route('dashboard'));
     }
 }

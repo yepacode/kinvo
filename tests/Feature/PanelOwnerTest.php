@@ -25,13 +25,13 @@ class PanelOwnerTest extends TestCase
             ->assertSee('Pendiente Perez');
     }
 
-    public function test_no_admin_no_accede_a_usuarios(): void
+    public function test_no_admin_es_redirigido_fuera_del_panel(): void
     {
         $profesional = User::factory()->create();
 
         $this->actingAs($profesional)
             ->get('/admin/users')
-            ->assertStatus(403);
+            ->assertRedirect(route('dashboard'));
     }
 
     public function test_owner_aprueba_a_un_usuario_pendiente(): void
