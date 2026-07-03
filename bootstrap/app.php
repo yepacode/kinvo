@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'cuenta.activa' => \App\Http\Middleware\EnsureCuentaActiva::class,
+            'nocache' => \App\Http\Middleware\NoCacheAutenticado::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
