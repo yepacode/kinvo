@@ -10,7 +10,7 @@
         @include('partials.head-assets')
     </head>
     <body class="font-sans text-ink antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-cream">
+        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0">
             <div>
                 <a href="/" class="font-serif text-3xl font-500 tracking-tight text-ink">Kinvoo</a>
             </div>
