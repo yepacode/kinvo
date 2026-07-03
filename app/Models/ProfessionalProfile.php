@@ -73,4 +73,34 @@ class ProfessionalProfile extends Model
     {
         return 'slug';
     }
+
+    /** Checklist de completitud del perfil: etiqueta => ¿está listo? */
+    public function checklistPerfil(): array
+    {
+        return [
+            'Foto' => filled($this->photo_path),
+            'Titular' => filled($this->headline),
+            'Presentación (bio)' => filled($this->bio),
+            'Años de experiencia' => ! is_null($this->years_experience),
+            'Modalidad' => ! is_null($this->modalidad),
+            'Ubicación' => ! is_null($this->location_id),
+            'Disciplinas' => $this->disciplines()->exists(),
+            'Certificaciones' => $this->certifications()->exists(),
+            'Redes o sitio web' => collect($this->socials ?? [])->filter()->isNotEmpty(),
+        ];
+    }
+
+    /** Porcentaje de perfil completo (0–100). */
+    public function porcentajeCompleto(): int
+    {
+        $items = $this->checklistPerfil();
+
+        return (int) round(count(array_filter($items)) / count($items) * 100);
+    }
+
+    /** Campos que aún faltan por llenar. */
+    public function faltantesPerfil(): array
+    {
+        return array_keys(array_filter($this->checklistPerfil(), fn ($listo) => ! $listo));
+    }
 }

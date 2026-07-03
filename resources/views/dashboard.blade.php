@@ -16,6 +16,24 @@
                         Tu perfil está <strong>oculto</strong>. Complétalo y publícalo para que te encuentren.
                     @endif
                 </p>
+                @if ($profile)
+                    @php $pct = $profile->porcentajeCompleto(); $faltan = $profile->faltantesPerfil(); @endphp
+                    <div class="mt-5">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="font-500 text-ink">Perfil completo</span>
+                            <span class="font-600 text-sage">{{ $pct }}%</span>
+                        </div>
+                        <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-beige">
+                            <div class="h-full rounded-full bg-sage transition-all" style="width: {{ $pct }}%"></div>
+                        </div>
+                        @if (! empty($faltan))
+                            <p class="mt-2 text-xs text-warmgray">
+                                Te falta: {{ implode(', ', $faltan) }}.
+                            </p>
+                        @endif
+                    </div>
+                @endif
+
                 <div class="mt-6 flex flex-wrap gap-3">
                     <a href="{{ route('professional.profile.edit') }}"
                        class="rounded-full bg-sage px-6 py-2.5 text-sm font-600 text-cream transition hover:bg-ink">

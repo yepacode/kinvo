@@ -37,6 +37,7 @@ class TalentoController extends Controller
             ->when($filtros['modalidad'] ?? null, fn ($query, $m) => $query->where('modalidad', $m))
             ->when($filtros['discipline_id'] ?? null, fn ($query, $id) => $query->whereHas('disciplines', fn ($d) => $d->where('disciplines.id', $id)))
             ->when($filtros['certification_id'] ?? null, fn ($query, $id) => $query->whereHas('certifications', fn ($c) => $c->where('certifications.id', $id)))
+            ->orderByDesc('is_verified')
             ->latest('updated_at')
             ->paginate(12)
             ->withQueryString();
