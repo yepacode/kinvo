@@ -52,12 +52,42 @@ class TalentoController extends Controller
     }
 
     /** Vista pública del perfil de un profesional (solo si está publicado). */
-    public function show(ProfessionalProfile $professionalProfile): View
+    public function show(Request $request, ProfessionalProfile $professionalProfile): View
     {
         abort_unless($professionalProfile->is_published, 404);
+
+        $this->registrarVista($request, $professionalProfile);
 
         $professionalProfile->load(['disciplines', 'certifications', 'location', 'user']);
 
         return view('talento.show', ['profile' => $professionalProfile]);
+    }
+
+    /** Registra una vista del perfil, sin contar al dueño ni recargas repetidas. */
+    private function registrarVista(Request $request, ProfessionalProfile $profile): void
+    {
+        $viewer = $request->user();
+
+        // El dueño viendo su propio perfil no cuenta.
+        if ($viewer && $viewer->id === $profile->user_id) {
+            return;
+        }
+
+        if ($viewer) {
+            $yaHoy = $profile->views()
+                ->where('viewer_user_id', $viewer->id)
+                ->whereDate('created_at', today())
+                ->exists();
+            if (! $yaHoy) {
+                $profile->views()->create(['viewer_user_id' => $viewer->id]);
+            }
+        } else {
+            // Anónimo: una vez por sesión para no inflar con recargas.
+            $key = 'pv_'.$profile->id;
+            if (! $request->session()->has($key)) {
+                $profile->views()->create(['viewer_user_id' => null]);
+                $request->session()->put($key, true);
+            }
+        }
     }
 }

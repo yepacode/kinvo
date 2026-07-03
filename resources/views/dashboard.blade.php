@@ -29,6 +29,32 @@
                     @endif
                 </div>
             </div>
+
+            {{-- Quién vio tu perfil --}}
+            @if ($profile)
+                @php
+                    $totalVistas = $profile->views()->count();
+                    $vistasRecientes = $profile->views()->with('viewer')->latest()->take(6)->get();
+                @endphp
+                <div class="mt-6 rounded-2xl border border-line bg-white p-6">
+                    <div class="flex items-baseline justify-between">
+                        <h3 class="font-serif text-xl font-500 text-ink">Quién vio tu perfil</h3>
+                        <span class="text-2xl font-500 text-sage">{{ $totalVistas }}</span>
+                    </div>
+                    @if ($vistasRecientes->isEmpty())
+                        <p class="mt-2 text-sm text-warmgray">Aún nadie ha visto tu perfil. Publícalo y compártelo para empezar.</p>
+                    @else
+                        <ul class="mt-4 divide-y divide-line/60">
+                            @foreach ($vistasRecientes as $v)
+                                <li class="flex items-center justify-between py-2 text-sm">
+                                    <span class="text-ink">{{ $v->viewer?->name ?? 'Alguien' }}</span>
+                                    <span class="text-warmgray">{{ $v->created_at->diffForHumans() }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+            @endif
         @elseif (auth()->user()->esContratante())
             <div class="rounded-2xl border border-line bg-white p-8">
                 <p class="text-sm font-500 uppercase tracking-widest text-sage">Contratante</p>
