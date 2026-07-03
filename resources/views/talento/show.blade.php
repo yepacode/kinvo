@@ -45,7 +45,7 @@
                     @endif
                 </div>
                 <div class="min-w-0">
-                    <h1 class="font-serif text-3xl font-500 text-ink">{{ $nombre }}</h1>
+                    <h1 class="font-serif text-3xl font-500 text-ink">{{ $nombre }} <x-verified-badge :profile="$profile" /></h1>
                     @if ($profile->headline)
                         <p class="mt-1 text-lg text-sage">{{ $profile->headline }}</p>
                     @endif

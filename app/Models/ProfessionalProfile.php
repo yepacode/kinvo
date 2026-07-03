@@ -13,12 +13,14 @@ class ProfessionalProfile extends Model
     protected $fillable = [
         'user_id', 'slug', 'photo_path', 'headline', 'bio',
         'years_experience', 'modalidad', 'location_id', 'phone',
-        'socials', 'is_published',
+        'socials', 'is_published', 'is_verified', 'verified_at',
     ];
 
     protected $casts = [
         'socials' => 'array',
         'is_published' => 'boolean',
+        'is_verified' => 'boolean',
+        'verified_at' => 'datetime',
         'modalidad' => ModalidadTrabajo::class,
     ];
 

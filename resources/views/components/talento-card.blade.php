@@ -11,7 +11,7 @@
             @endif
         </div>
         <div class="min-w-0">
-            <h3 class="truncate font-serif text-lg font-500 text-ink group-hover:text-sage">{{ $profile->user->name }}</h3>
+            <h3 class="truncate font-serif text-lg font-500 text-ink group-hover:text-sage">{{ $profile->user->name }} <x-verified-badge :profile="$profile" /></h3>
             @if ($profile->headline)
                 <p class="truncate text-sm text-warmgray">{{ $profile->headline }}</p>
             @endif

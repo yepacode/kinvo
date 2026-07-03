@@ -40,6 +40,8 @@ class DemoSeeder extends Seeder
             'modalidad' => 'hibrido',
             'location_id' => Location::where('ciudad', 'Guadalajara')->value('id'),
             'is_published' => true,
+            'is_verified' => true,
+            'verified_at' => now(),
         ]);
         $p->disciplines()->sync(
             Discipline::whereIn('slug', ['entrenamiento-funcional', 'crossfit', 'musculacion'])->pluck('id')
