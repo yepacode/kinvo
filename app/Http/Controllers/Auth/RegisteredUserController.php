@@ -52,6 +52,17 @@ class RegisteredUserController extends Controller
             'estado' => EstadoUsuario::Pendiente, // aprobación activada
         ]);
 
+        // Perfil vacío según el rol, listo para autoeditar.
+        if ($rol === RolUsuario::Contractor) {
+            $user->companyProfile()->create([
+                'company_name' => $user->name,
+            ]);
+        } else {
+            $user->professionalProfile()->create([
+                'headline' => null,
+            ]);
+        }
+
         event(new Registered($user));
 
         Auth::login($user);
