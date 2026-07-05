@@ -1,14 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-serif text-2xl font-500 text-ink">Hola, {{ \Illuminate\Support\Str::before(auth()->user()->name, ' ') }}</h2>
+        <h2 class="font-serif text-2xl font-medium text-ink">Hola, {{ \Illuminate\Support\Str::before(auth()->user()->name, ' ') }}</h2>
     </x-slot>
 
     <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
         @if (auth()->user()->esProfesional())
             @php $profile = auth()->user()->professionalProfile; @endphp
             <div class="rounded-2xl border border-line bg-white p-8">
-                <p class="text-sm font-500 uppercase tracking-widest text-sage">Profesional</p>
-                <h3 class="mt-2 font-serif text-2xl font-500 text-ink">Tu perfil en Kinvoo</h3>
+                <p class="text-sm font-medium uppercase tracking-widest text-sage">Profesional</p>
+                <h3 class="mt-2 font-serif text-2xl font-medium text-ink">Tu perfil en Kinvoo</h3>
                 <p class="mt-2 text-warmgray">
                     @if ($profile && $profile->is_published)
                         Tu perfil está <strong class="text-sage">publicado</strong> y visible para contratantes.
@@ -20,8 +20,8 @@
                     @php $pct = $profile->porcentajeCompleto(); $faltan = $profile->faltantesPerfil(); @endphp
                     <div class="mt-5">
                         <div class="flex items-center justify-between text-sm">
-                            <span class="font-500 text-ink">Perfil completo</span>
-                            <span class="font-600 text-sage">{{ $pct }}%</span>
+                            <span class="font-medium text-ink">Perfil completo</span>
+                            <span class="font-semibold text-sage">{{ $pct }}%</span>
                         </div>
                         <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-beige">
                             <div class="h-full rounded-full bg-sage transition-all" style="width: {{ $pct }}%"></div>
@@ -36,12 +36,12 @@
 
                 <div class="mt-6 flex flex-wrap gap-3">
                     <a href="{{ route('professional.profile.edit') }}"
-                       class="rounded-full bg-sage px-6 py-2.5 text-sm font-600 text-cream transition hover:bg-ink">
+                       class="rounded-full bg-sage px-6 py-2.5 text-sm font-semibold text-cream transition hover:bg-ink">
                         Editar mi perfil
                     </a>
                     @if ($profile && $profile->is_published)
                         <a href="{{ route('talento.show', $profile->slug) }}" target="_blank"
-                           class="rounded-full border border-line px-6 py-2.5 text-sm font-500 text-warmgray transition hover:border-sage hover:text-sage">
+                           class="rounded-full border border-line px-6 py-2.5 text-sm font-medium text-warmgray transition hover:border-sage hover:text-sage">
                             Ver perfil público ↗
                         </a>
                     @endif
@@ -56,8 +56,8 @@
                 @endphp
                 <div class="mt-6 rounded-2xl border border-line bg-white p-6">
                     <div class="flex items-baseline justify-between">
-                        <h3 class="font-serif text-xl font-500 text-ink">Quién vio tu perfil</h3>
-                        <span class="text-2xl font-500 text-sage">{{ $totalVistas }}</span>
+                        <h3 class="font-serif text-xl font-medium text-ink">Quién vio tu perfil</h3>
+                        <span class="text-2xl font-medium text-sage">{{ $totalVistas }}</span>
                     </div>
                     @if ($vistasRecientes->isEmpty())
                         <p class="mt-2 text-sm text-warmgray">Aún nadie ha visto tu perfil. Publícalo y compártelo para empezar.</p>
@@ -75,16 +75,16 @@
             @endif
         @elseif (auth()->user()->esContratante())
             <div class="rounded-2xl border border-line bg-white p-8">
-                <p class="text-sm font-500 uppercase tracking-widest text-sage">Contratante</p>
-                <h3 class="mt-2 font-serif text-2xl font-500 text-ink">Encuentra talento fitness</h3>
+                <p class="text-sm font-medium uppercase tracking-widest text-sage">Contratante</p>
+                <h3 class="mt-2 font-serif text-2xl font-medium text-ink">Encuentra talento fitness</h3>
                 <p class="mt-2 text-warmgray">Explora perfiles de profesionales o completa los datos de tu empresa.</p>
                 <div class="mt-6 flex flex-wrap gap-3">
                     <a href="{{ route('talento.index') }}"
-                       class="rounded-full bg-sage px-6 py-2.5 text-sm font-600 text-cream transition hover:bg-ink">
+                       class="rounded-full bg-sage px-6 py-2.5 text-sm font-semibold text-cream transition hover:bg-ink">
                         Buscar talento
                     </a>
                     <a href="{{ route('company.profile.edit') }}"
-                       class="rounded-full border border-line px-6 py-2.5 text-sm font-500 text-warmgray transition hover:border-sage hover:text-sage">
+                       class="rounded-full border border-line px-6 py-2.5 text-sm font-medium text-warmgray transition hover:border-sage hover:text-sage">
                         Editar mi empresa
                     </a>
                 </div>

@@ -109,12 +109,14 @@ class SiteSetting extends Model
         ];
     }
 
-    /** Mapa de overrides guardados en BD (cacheado). Tolerante si la tabla no existe aún. */
+    /** Mapa de overrides guardados en BD (cacheado 1h). Tolerante si la tabla no existe aún. */
     public static function overrides(): array
     {
         try {
-            return Cache::rememberForever(self::CACHE_KEY, fn () => static::query()->pluck('value', 'key')->all());
+            // TTL de seguridad: si alguien edita `settings` por fuera de set(), se auto-sana en 1h.
+            return Cache::remember(self::CACHE_KEY, 3600, fn () => static::query()->pluck('value', 'key')->all());
         } catch (\Throwable $e) {
+            report($e); // no romper la landing, pero dejar rastro del fallo real
             return [];
         }
     }

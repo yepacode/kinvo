@@ -2,7 +2,7 @@
                  description="Encuentra coaches, instructores y profesionales del fitness por disciplina, ubicación y modalidad.">
     <div class="mx-auto max-w-5xl px-6 py-10">
         <div class="text-center">
-            <h1 class="font-serif text-4xl font-500 text-ink">Encuentra talento fitness</h1>
+            <h1 class="font-serif text-4xl font-medium text-ink">Encuentra talento fitness</h1>
             <p class="mt-2 text-warmgray">Filtra por disciplina, ubicación, modalidad o certificación.</p>
         </div>
 
@@ -43,7 +43,7 @@
 
                 <div class="flex gap-2">
                     <button type="submit"
-                            class="flex-1 rounded-full bg-sage px-5 py-2 text-sm font-600 text-cream transition hover:bg-ink">
+                            class="flex-1 rounded-full bg-sage px-5 py-2 text-sm font-semibold text-cream transition hover:bg-ink">
                         Buscar
                     </button>
                     <a href="{{ route('talento.index') }}"
@@ -60,7 +60,7 @@
         @if ($profiles->isEmpty())
             <div class="mt-4 rounded-2xl border border-dashed border-line bg-white/60 px-6 py-16 text-center">
                 <p class="text-3xl">🔍</p>
-                <p class="mt-3 font-serif text-xl font-500 text-ink">Sin resultados</p>
+                <p class="mt-3 font-serif text-xl font-medium text-ink">Sin resultados</p>
                 <p class="mt-1 text-sm text-warmgray">Prueba con otros filtros o limpia la búsqueda.</p>
             </div>
         @else

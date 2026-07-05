@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-serif text-2xl font-500 text-ink">Mi perfil profesional</h2>
+            <h2 class="font-serif text-2xl font-medium text-ink">Mi perfil profesional</h2>
             @if ($profile->is_published)
                 <a href="{{ route('talento.show', $profile->slug) }}" target="_blank"
                    class="text-sm text-sage underline hover:text-ink">Ver perfil público ↗</a>
@@ -31,7 +31,7 @@
             <div class="flex items-center gap-5">
                 <div class="h-20 w-20 shrink-0 overflow-hidden rounded-full border border-line bg-beige">
                     @if ($profile->photo_path)
-                        <img src="{{ Storage::url($profile->photo_path) }}" alt="Foto" class="h-full w-full object-cover">
+                        <img src="{{ Storage::url($profile->photo_path) }}" alt="Foto de perfil actual" class="h-full w-full object-cover">
                     @else
                         <div class="flex h-full w-full items-center justify-center text-2xl text-warmgray">🏋️</div>
                     @endif
@@ -39,7 +39,7 @@
                 <div>
                     <x-input-label for="photo" :value="'Foto de perfil'" />
                     <input id="photo" name="photo" type="file" accept="image/*"
-                           class="mt-1 block text-sm text-warmgray file:mr-3 file:rounded-full file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-500 file:text-cream hover:file:bg-ink">
+                           class="mt-1 block text-sm text-warmgray file:mr-3 file:rounded-full file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-cream hover:file:bg-ink">
                     <x-input-error :messages="$errors->get('photo')" class="mt-1" />
                 </div>
             </div>
@@ -162,7 +162,7 @@
 
             <div class="flex justify-end">
                 <button type="submit"
-                        class="rounded-full bg-sage px-7 py-2.5 text-sm font-600 text-cream shadow-sm transition hover:bg-ink">
+                        class="rounded-full bg-sage px-7 py-2.5 text-sm font-semibold text-cream shadow-sm transition hover:bg-ink">
                     Guardar cambios
                 </button>
             </div>

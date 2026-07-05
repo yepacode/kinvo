@@ -10,7 +10,7 @@ class SeoController extends Controller
     /** Mapa del sitio con las URLs públicas indexables. */
     public function sitemap(): Response
     {
-        $perfiles = ProfessionalProfile::where('is_published', true)
+        $perfiles = ProfessionalProfile::visiblePublicamente()
             ->select('slug', 'updated_at')
             ->orderByDesc('updated_at')
             ->get();

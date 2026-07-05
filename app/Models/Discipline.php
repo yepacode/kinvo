@@ -19,6 +19,9 @@ class Discipline extends Model
                 $d->slug = Str::slug($d->nombre);
             }
         });
+
+        // No permitir borrar una disciplina en uso (evita desasociar perfiles en silencio).
+        static::deleting(fn (Discipline $d) => $d->professionals()->doesntExist());
     }
 
     public function professionals(): BelongsToMany

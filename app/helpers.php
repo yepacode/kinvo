@@ -21,7 +21,9 @@ if (! function_exists('landing_rich')) {
     {
         $raw = (string) SiteSetting::get($key, '');
         $safe = e($raw);
-        $safe = preg_replace('/\*(.+?)\*/s', '<em>$1</em>', $safe);
+        // *palabra* -> <em>palabra</em>. Sólo pares en la misma línea, sin anidar,
+        // para no generar <em> mal formados con asteriscos sueltos o dobles.
+        $safe = preg_replace('/\*([^*\n]+)\*/', '<em>$1</em>', $safe);
         $safe = nl2br($safe);
 
         return new HtmlString($safe);

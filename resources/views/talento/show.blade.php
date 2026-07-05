@@ -45,7 +45,7 @@
                     @endif
                 </div>
                 <div class="min-w-0">
-                    <h1 class="font-serif text-3xl font-500 text-ink">{{ $nombre }} <x-verified-badge :profile="$profile" /></h1>
+                    <h1 class="font-serif text-3xl font-medium text-ink">{{ $nombre }} <x-verified-badge :profile="$profile" /></h1>
                     @if ($profile->headline)
                         <p class="mt-1 text-lg text-sage">{{ $profile->headline }}</p>
                     @endif
@@ -69,7 +69,7 @@
                     <div class="flex flex-col gap-3 sm:flex-row">
                         @if (auth()->user()->esContratante() && auth()->user()->estaActivo())
                             <a href="{{ route('contacto.create', $profile->slug) }}"
-                               class="flex flex-1 items-center justify-center rounded-full bg-sage px-7 py-3 text-sm font-600 text-cream transition hover:bg-ink">
+                               class="flex flex-1 items-center justify-center rounded-full bg-sage px-7 py-3 text-sm font-semibold text-cream transition hover:bg-ink">
                                 Contactar a {{ \Illuminate\Support\Str::before($profile->user->name, ' ') }}
                             </a>
                         @endif
@@ -77,7 +77,7 @@
                     </div>
                 @else
                     <a href="{{ route('login') }}"
-                       class="flex items-center justify-center rounded-full border border-line px-7 py-3 text-sm font-500 text-warmgray transition hover:border-sage hover:text-sage">
+                       class="flex items-center justify-center rounded-full border border-line px-7 py-3 text-sm font-medium text-warmgray transition hover:border-sage hover:text-sage">
                         Inicia sesión como contratante para contactar
                     </a>
                 @endauth
@@ -85,7 +85,7 @@
                 {{-- Bio --}}
                 @if ($profile->bio)
                     <div>
-                        <h2 class="font-serif text-xl font-500 text-ink">Sobre {{ \Illuminate\Support\Str::before($nombre, ' ') }}</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">Sobre {{ \Illuminate\Support\Str::before($nombre, ' ') }}</h2>
                         <p class="mt-2 whitespace-pre-line text-warmgray">{{ $profile->bio }}</p>
                     </div>
                 @endif
@@ -93,7 +93,7 @@
                 {{-- Disciplinas --}}
                 @if ($profile->disciplines->isNotEmpty())
                     <div>
-                        <h2 class="font-serif text-xl font-500 text-ink">Disciplinas</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">Disciplinas</h2>
                         <div class="mt-3 flex flex-wrap gap-2">
                             @foreach ($profile->disciplines as $d)
                                 <span class="rounded-full bg-sage/10 px-3 py-1 text-sm text-sage">{{ $d->nombre }}</span>
@@ -105,7 +105,7 @@
                 {{-- Certificaciones --}}
                 @if ($profile->certifications->isNotEmpty())
                     <div>
-                        <h2 class="font-serif text-xl font-500 text-ink">Certificaciones</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">Certificaciones</h2>
                         <div class="mt-3 flex flex-wrap gap-2">
                             @foreach ($profile->certifications as $c)
                                 <span class="rounded-full border border-line px-3 py-1 text-sm text-ink">{{ $c->nombre }}</span>

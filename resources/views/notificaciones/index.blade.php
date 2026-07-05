@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-serif text-2xl font-500 text-ink">Notificaciones</h2>
+            <h2 class="font-serif text-2xl font-medium text-ink">Notificaciones</h2>
             @if (auth()->user()->unreadNotifications()->count() > 0)
                 <form method="POST" action="{{ route('notifications.readAll') }}">
                     @csrf
@@ -18,7 +18,7 @@
                    class="flex gap-4 border-b border-line/60 px-5 py-4 transition hover:bg-cream {{ is_null($n->read_at) ? 'bg-sage/5' : '' }}">
                     <span class="text-2xl">{{ $n->data['icono'] ?? '🔔' }}</span>
                     <div class="min-w-0 flex-1">
-                        <p class="text-sm font-500 text-ink">{{ $n->data['titulo'] ?? 'Notificación' }}</p>
+                        <p class="text-sm font-medium text-ink">{{ $n->data['titulo'] ?? 'Notificación' }}</p>
                         <p class="text-sm text-warmgray">{{ $n->data['mensaje'] ?? '' }}</p>
                         <p class="mt-1 text-xs text-warmgray">{{ $n->created_at->diffForHumans() }}</p>
                     </div>

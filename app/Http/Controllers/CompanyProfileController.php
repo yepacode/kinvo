@@ -42,7 +42,7 @@ class CompanyProfileController extends Controller
             'description' => ['nullable', 'string', 'max:2000'],
             'website' => ['nullable', 'url:http,https', 'max:200'],
             'location_id' => ['nullable', 'exists:locations,id'],
-            'logo' => ['nullable', 'image', 'max:2048'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=4000,max_height=4000'],
         ]);
 
         if ($request->hasFile('logo')) {

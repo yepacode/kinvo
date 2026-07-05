@@ -19,6 +19,9 @@ class Certification extends Model
                 $c->slug = Str::slug($c->nombre);
             }
         });
+
+        // No permitir borrar una certificación en uso.
+        static::deleting(fn (Certification $c) => $c->professionals()->doesntExist());
     }
 
     public function professionals(): BelongsToMany

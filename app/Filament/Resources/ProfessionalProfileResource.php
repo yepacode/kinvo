@@ -54,7 +54,7 @@ class ProfessionalProfileResource extends Resource
                     ->label('Ver')
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->url(fn (ProfessionalProfile $r) => route('talento.show', $r->slug), shouldOpenInNewTab: true)
-                    ->visible(fn (ProfessionalProfile $r) => $r->is_published),
+                    ->visible(fn (ProfessionalProfile $r) => $r->esVisiblePublicamente()),
                 Tables\Actions\Action::make('verificar')
                     ->label('Verificar')
                     ->icon('heroicon-o-check-badge')

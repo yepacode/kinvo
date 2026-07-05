@@ -57,6 +57,14 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
+    protected static function booted(): void
+    {
+        // Las notificaciones son polimórficas (sin FK): limpiarlas al borrar el usuario.
+        static::deleting(function (User $user) {
+            $user->notifications()->delete();
+        });
+    }
+
     /**
      * Solo el owner (rol Admin) accede al panel Filament.
      */

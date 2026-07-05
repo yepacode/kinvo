@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-serif text-2xl font-500 text-ink">Mi empresa</h2>
+        <h2 class="font-serif text-2xl font-medium text-ink">Mi empresa</h2>
     </x-slot>
 
     <div class="mx-auto max-w-2xl px-4 py-8 sm:px-6">
@@ -19,7 +19,7 @@
             <div class="flex items-center gap-5">
                 <div class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-line bg-beige">
                     @if ($profile->logo_path)
-                        <img src="{{ Storage::url($profile->logo_path) }}" alt="Logo" class="h-full w-full object-cover">
+                        <img src="{{ Storage::url($profile->logo_path) }}" alt="Logo de la empresa" class="h-full w-full object-cover">
                     @else
                         <div class="flex h-full w-full items-center justify-center text-2xl text-warmgray">🏢</div>
                     @endif
@@ -27,7 +27,7 @@
                 <div>
                     <x-input-label for="logo" :value="'Logo'" />
                     <input id="logo" name="logo" type="file" accept="image/*"
-                           class="mt-1 block text-sm text-warmgray file:mr-3 file:rounded-full file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-500 file:text-cream hover:file:bg-ink">
+                           class="mt-1 block text-sm text-warmgray file:mr-3 file:rounded-full file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-cream hover:file:bg-ink">
                     <x-input-error :messages="$errors->get('logo')" class="mt-1" />
                 </div>
             </div>
@@ -74,7 +74,7 @@
 
             <div class="flex justify-end">
                 <button type="submit"
-                        class="rounded-full bg-sage px-7 py-2.5 text-sm font-600 text-cream shadow-sm transition hover:bg-ink">
+                        class="rounded-full bg-sage px-7 py-2.5 text-sm font-semibold text-cream shadow-sm transition hover:bg-ink">
                     Guardar cambios
                 </button>
             </div>

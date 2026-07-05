@@ -1,5 +1,5 @@
 <x-guest-layout>
-    <h1 class="mb-1 text-center font-serif text-2xl font-500 text-ink">Crea tu cuenta</h1>
+    <h1 class="mb-1 text-center font-serif text-2xl font-medium text-ink">Crea tu cuenta</h1>
     <p class="mb-6 text-center text-sm text-warmgray">Únete a la red profesional del fitness</p>
 
     <form method="POST" action="{{ route('register') }}">
@@ -15,7 +15,7 @@
                            {{ $tipo === 'professional' ? 'checked' : '' }} required>
                     <div class="rounded-xl border border-line bg-white px-4 py-3 text-center transition peer-checked:border-sage peer-checked:bg-sage/5 peer-checked:ring-1 peer-checked:ring-sage">
                         <div class="text-lg">🏋️</div>
-                        <div class="mt-1 text-sm font-600 text-ink">Soy profesional</div>
+                        <div class="mt-1 text-sm font-semibold text-ink">Soy profesional</div>
                         <div class="text-xs text-warmgray">Coach, instructor, staff</div>
                     </div>
                 </label>
@@ -24,7 +24,7 @@
                            {{ $tipo === 'contractor' ? 'checked' : '' }}>
                     <div class="rounded-xl border border-line bg-white px-4 py-3 text-center transition peer-checked:border-sage peer-checked:bg-sage/5 peer-checked:ring-1 peer-checked:ring-sage">
                         <div class="text-lg">🏢</div>
-                        <div class="mt-1 text-sm font-600 text-ink">Busco talento</div>
+                        <div class="mt-1 text-sm font-semibold text-ink">Busco talento</div>
                         <div class="text-xs text-warmgray">Estudio, gimnasio, marca</div>
                     </div>
                 </label>
@@ -66,7 +66,7 @@
             </a>
 
             <button type="submit"
-                    class="rounded-full bg-sage px-6 py-2.5 text-sm font-600 text-cream shadow-sm transition hover:bg-ink">
+                    class="rounded-full bg-sage px-6 py-2.5 text-sm font-semibold text-cream shadow-sm transition hover:bg-ink">
                 Registrarme
             </button>
         </div>

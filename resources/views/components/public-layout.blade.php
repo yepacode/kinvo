@@ -24,7 +24,7 @@
     <body class="min-h-screen bg-cream font-sans text-ink antialiased">
         <header class="border-b border-line/70">
             <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-                <a href="/" class="font-serif text-2xl font-500 tracking-tight text-ink">Kinvoo</a>
+                <a href="/" class="font-serif text-2xl font-medium tracking-tight text-ink">Kinvoo</a>
                 <nav class="flex items-center gap-4 text-sm">
                     <a href="{{ route('talento.index') }}" class="text-warmgray hover:text-sage">Buscar talento</a>
                     @auth
@@ -32,7 +32,7 @@
                     @else
                         <a href="{{ route('login') }}" class="text-warmgray hover:text-sage">Entrar</a>
                         <a href="{{ route('register') }}"
-                           class="rounded-full bg-sage px-4 py-2 font-500 text-cream hover:bg-ink">Únete</a>
+                           class="rounded-full bg-sage px-4 py-2 font-medium text-cream hover:bg-ink">Únete</a>
                     @endauth
                 </nav>
             </div>

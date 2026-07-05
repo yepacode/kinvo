@@ -4,7 +4,7 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="font-serif text-2xl font-500 tracking-tight text-ink">Kinvoo</a>
+                    <a href="{{ route('dashboard') }}" class="font-serif text-2xl font-medium tracking-tight text-ink">Kinvoo</a>
                 </div>
 
                 <!-- Navigation Links -->

@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'cuenta.activa' => \App\Http\Middleware\EnsureCuentaActiva::class,
             'nocache' => \App\Http\Middleware\NoCacheAutenticado::class,
         ]);
+
+        // Cabeceras de seguridad en todas las respuestas web (anti-clickjacking, nosniff).
+        $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Si un usuario autenticado NO admin recibe 403 en el panel /admin,

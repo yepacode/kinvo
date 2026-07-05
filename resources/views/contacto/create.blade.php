@@ -3,7 +3,7 @@
         <a href="{{ route('talento.show', $profile->slug) }}" class="text-sm text-warmgray hover:text-sage">← Volver al perfil</a>
 
         <div class="mt-4 rounded-2xl border border-line bg-white p-6 sm:p-8">
-            <h1 class="font-serif text-2xl font-500 text-ink">Contactar a {{ $profile->user->name }}</h1>
+            <h1 class="font-serif text-2xl font-medium text-ink">Contactar a {{ $profile->user->name }}</h1>
             <p class="mt-1 text-sm text-warmgray">Tu mensaje llegará a su correo. También podrá ver tus datos de contacto.</p>
 
             <form method="POST" action="{{ route('contacto.store', $profile->slug) }}" class="mt-6 space-y-5">
@@ -41,7 +41,7 @@
 
                 <div class="flex justify-end">
                     <button type="submit"
-                            class="rounded-full bg-sage px-7 py-2.5 text-sm font-600 text-cream shadow-sm transition hover:bg-ink">
+                            class="rounded-full bg-sage px-7 py-2.5 text-sm font-semibold text-cream shadow-sm transition hover:bg-ink">
                         Enviar mensaje
                     </button>
                 </div>

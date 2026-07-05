@@ -120,7 +120,15 @@ class UserResource extends Resource
                     ->color('danger')
                     ->requiresConfirmation()
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Activo)
-                    ->action(fn (User $u) => $u->forceFill(['estado' => EstadoUsuario::Suspendido])->save()),
+                    ->action(function (User $u) {
+                        $u->forceFill(['estado' => EstadoUsuario::Suspendido])->save();
+                        // Al suspender: ocultar el perfil (despublicar) y revocar la verificación.
+                        $u->professionalProfile?->update([
+                            'is_published' => false,
+                            'is_verified' => false,
+                            'verified_at' => null,
+                        ]);
+                    }),
                 Tables\Actions\Action::make('reactivar')
                     ->label('Reactivar')
                     ->icon('heroicon-o-arrow-path')

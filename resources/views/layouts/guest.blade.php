@@ -12,7 +12,7 @@
     <body class="font-sans text-ink antialiased">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0">
             <div>
-                <a href="/" class="font-serif text-3xl font-500 tracking-tight text-ink">Kinvoo</a>
+                <a href="/" class="font-serif text-3xl font-medium tracking-tight text-ink">Kinvoo</a>
             </div>
 
             <div class="w-full sm:max-w-md mt-6 px-6 py-6 bg-white border border-line shadow-sm overflow-hidden sm:rounded-2xl">

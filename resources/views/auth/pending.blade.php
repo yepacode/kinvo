@@ -4,7 +4,7 @@
             <span class="text-2xl">⏳</span>
         </div>
 
-        <h1 class="font-serif text-2xl font-500 text-ink">Cuenta en revisión</h1>
+        <h1 class="font-serif text-2xl font-medium text-ink">Cuenta en revisión</h1>
 
         <p class="mt-3 text-sm text-warmgray">
             @if (auth()->user()?->estado === \App\Enums\EstadoUsuario::Suspendido)
@@ -20,7 +20,7 @@
         <form method="POST" action="{{ route('logout') }}" class="mt-8">
             @csrf
             <button type="submit"
-                    class="rounded-full border border-line px-5 py-2 text-sm font-500 text-warmgray transition hover:border-sage hover:text-sage">
+                    class="rounded-full border border-line px-5 py-2 text-sm font-medium text-warmgray transition hover:border-sage hover:text-sage">
                 Cerrar sesión
             </button>
         </form>

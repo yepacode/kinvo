@@ -13,20 +13,21 @@ class SaveController extends Controller
     /** Guarda o quita de guardados un perfil profesional. */
     public function toggleProfile(Request $request, ProfessionalProfile $professionalProfile): RedirectResponse
     {
-        $existing = Save::where('user_id', $request->user()->id)
-            ->where('saveable_type', $professionalProfile->getMorphClass())
-            ->where('saveable_id', $professionalProfile->id)
-            ->first();
+        abort_unless($professionalProfile->esVisiblePublicamente(), 404);
 
+        $atributos = [
+            'user_id' => $request->user()->id,
+            'saveable_type' => $professionalProfile->getMorphClass(),
+            'saveable_id' => $professionalProfile->id,
+        ];
+
+        // Idempotente: evita 500 por la clave única ante doble envío.
+        $existing = Save::where($atributos)->first();
         if ($existing) {
             $existing->delete();
             $msg = 'quitado';
         } else {
-            Save::create([
-                'user_id' => $request->user()->id,
-                'saveable_type' => $professionalProfile->getMorphClass(),
-                'saveable_id' => $professionalProfile->id,
-            ]);
+            Save::firstOrCreate($atributos);
             $msg = 'guardado';
         }
 
@@ -41,7 +42,7 @@ class SaveController extends Controller
             ->pluck('saveable_id');
 
         $profiles = ProfessionalProfile::whereIn('id', $ids)
-            ->where('is_published', true)
+            ->visiblePublicamente()
             ->with(['user:id,name', 'location', 'disciplines'])
             ->latest('updated_at')
             ->paginate(12);

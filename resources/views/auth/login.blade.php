@@ -1,5 +1,5 @@
 <x-guest-layout>
-    <h1 class="mb-1 text-center font-serif text-2xl font-500 text-ink">Inicia sesión</h1>
+    <h1 class="mb-1 text-center font-serif text-2xl font-medium text-ink">Inicia sesión</h1>
     <p class="mb-6 text-center text-sm text-warmgray">Bienvenido de vuelta a Kinvoo</p>
 
     <!-- Session Status -->
@@ -38,7 +38,7 @@
             @endif
 
             <button type="submit"
-                    class="rounded-full bg-sage px-6 py-2.5 text-sm font-600 text-cream shadow-sm transition hover:bg-ink">
+                    class="rounded-full bg-sage px-6 py-2.5 text-sm font-semibold text-cream shadow-sm transition hover:bg-ink">
                 Entrar
             </button>
         </div>

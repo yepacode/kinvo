@@ -54,7 +54,7 @@ class ProfessionalProfileController extends Controller
             'disciplines.*' => ['exists:disciplines,id'],
             'certifications' => ['array'],
             'certifications.*' => ['exists:certifications,id'],
-            'photo' => ['nullable', 'image', 'max:2048'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=4000,max_height=4000'],
             'is_published' => ['nullable', 'boolean'],
         ]);
 
