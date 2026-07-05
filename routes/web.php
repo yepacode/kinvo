@@ -31,10 +31,25 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified', 'cuenta.activa', 'nocache'])->name('dashboard');
 
+// Ajustes de cuenta (Breeze) — accesible aunque la cuenta esté pendiente.
 Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Áreas del producto — requieren cuenta ACTIVA (aprobada).
+Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
+    Route::get('/mi-perfil', [ProfessionalProfileController::class, 'edit'])->name('professional.profile.edit');
+    Route::put('/mi-perfil', [ProfessionalProfileController::class, 'update'])->name('professional.profile.update');
+
+    Route::get('/mi-empresa', [CompanyProfileController::class, 'edit'])->name('company.profile.edit');
+    Route::put('/mi-empresa', [CompanyProfileController::class, 'update'])->name('company.profile.update');
+
+    // Contactar a un profesional (solo contratantes, validado en el controller). Con rate limit anti-spam.
+    Route::get('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'create'])->name('contacto.create');
+    Route::post('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'store'])
+        ->middleware('throttle:8,1')->name('contacto.store');
 
     // Notificaciones (campana)
     Route::get('/notificaciones', [NotificationController::class, 'index'])->name('notifications.index');
@@ -44,19 +59,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // Guardados / favoritos
     Route::get('/guardados', [SaveController::class, 'index'])->name('saves.index');
     Route::post('/talento/{professionalProfile:slug}/guardar', [SaveController::class, 'toggleProfile'])->name('saves.toggleProfile');
-});
-
-// Perfiles autoeditables (requieren cuenta activa).
-Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
-    Route::get('/mi-perfil', [ProfessionalProfileController::class, 'edit'])->name('professional.profile.edit');
-    Route::put('/mi-perfil', [ProfessionalProfileController::class, 'update'])->name('professional.profile.update');
-
-    Route::get('/mi-empresa', [CompanyProfileController::class, 'edit'])->name('company.profile.edit');
-    Route::put('/mi-empresa', [CompanyProfileController::class, 'update'])->name('company.profile.update');
-
-    // Contactar a un profesional (solo contratantes, validado en el controller).
-    Route::get('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'create'])->name('contacto.create');
-    Route::post('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'store'])->name('contacto.store');
 });
 
 require __DIR__.'/auth.php';

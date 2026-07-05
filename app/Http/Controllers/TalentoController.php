@@ -8,6 +8,7 @@ use App\Models\Discipline;
 use App\Models\Location;
 use App\Models\ProfessionalProfile;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class TalentoController extends Controller
@@ -20,17 +21,19 @@ class TalentoController extends Controller
             'location_id' => ['nullable', 'integer', 'exists:locations,id'],
             'discipline_id' => ['nullable', 'integer', 'exists:disciplines,id'],
             'certification_id' => ['nullable', 'integer', 'exists:certifications,id'],
-            'modalidad' => ['nullable', 'string'],
+            'modalidad' => ['nullable', Rule::in(array_column(ModalidadTrabajo::cases(), 'value'))],
         ]);
 
         $profiles = ProfessionalProfile::query()
-            ->where('is_published', true)
+            ->visiblePublicamente()
             ->with(['user:id,name', 'location', 'disciplines'])
             ->when($filtros['q'] ?? null, function ($query, $q) {
-                $query->where(function ($sub) use ($q) {
-                    $sub->where('headline', 'like', "%{$q}%")
-                        ->orWhere('bio', 'like', "%{$q}%")
-                        ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$q}%"));
+                // Case-insensitive y portable (SQLite dev / PostgreSQL prod); escapa comodines % _ \.
+                $term = '%'.addcslashes(mb_strtolower($q), '\\%_').'%';
+                $query->where(function ($sub) use ($term) {
+                    $sub->whereRaw('lower(headline) like ? escape ?', [$term, '\\'])
+                        ->orWhereRaw('lower(bio) like ? escape ?', [$term, '\\'])
+                        ->orWhereHas('user', fn ($u) => $u->whereRaw('lower(name) like ? escape ?', [$term, '\\']));
                 });
             })
             ->when($filtros['location_id'] ?? null, fn ($query, $id) => $query->where('location_id', $id))
@@ -55,7 +58,7 @@ class TalentoController extends Controller
     /** Vista pública del perfil de un profesional (solo si está publicado). */
     public function show(Request $request, ProfessionalProfile $professionalProfile): View
     {
-        abort_unless($professionalProfile->is_published, 404);
+        abort_unless($professionalProfile->esVisiblePublicamente(), 404);
 
         $this->registrarVista($request, $professionalProfile);
 

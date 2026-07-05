@@ -49,7 +49,7 @@ class ProfessionalProfileController extends Controller
             'phone' => ['nullable', 'string', 'max:40'],
             'instagram' => ['nullable', 'string', 'max:120'],
             'tiktok' => ['nullable', 'string', 'max:120'],
-            'web' => ['nullable', 'url', 'max:200'],
+            'web' => ['nullable', 'url:http,https', 'max:200'],
             'disciplines' => ['array'],
             'disciplines.*' => ['exists:disciplines,id'],
             'certifications' => ['array'],

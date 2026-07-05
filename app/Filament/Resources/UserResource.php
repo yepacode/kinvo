@@ -111,7 +111,7 @@ class UserResource extends Resource
                     ->requiresConfirmation()
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Pendiente)
                     ->action(function (User $u) {
-                        $u->update(['estado' => EstadoUsuario::Activo]);
+                        $u->forceFill(['estado' => EstadoUsuario::Activo])->save();
                         $u->notify(new \App\Notifications\CuentaAprobadaNotification());
                     }),
                 Tables\Actions\Action::make('suspender')
@@ -120,13 +120,13 @@ class UserResource extends Resource
                     ->color('danger')
                     ->requiresConfirmation()
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Activo)
-                    ->action(fn (User $u) => $u->update(['estado' => EstadoUsuario::Suspendido])),
+                    ->action(fn (User $u) => $u->forceFill(['estado' => EstadoUsuario::Suspendido])->save()),
                 Tables\Actions\Action::make('reactivar')
                     ->label('Reactivar')
                     ->icon('heroicon-o-arrow-path')
                     ->color('success')
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Suspendido)
-                    ->action(fn (User $u) => $u->update(['estado' => EstadoUsuario::Activo])),
+                    ->action(fn (User $u) => $u->forceFill(['estado' => EstadoUsuario::Activo])->save()),
             ])
             ->bulkActions([]);
     }

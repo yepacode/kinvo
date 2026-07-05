@@ -48,9 +48,12 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+        ]);
+        // nivel/estado no son mass-assignable: se setean explícitamente.
+        $user->forceFill([
             'nivel' => $rol,
             'estado' => EstadoUsuario::Pendiente, // aprobación activada
-        ]);
+        ])->save();
 
         // Perfil vacío según el rol, listo para autoeditar.
         if ($rol === RolUsuario::Contractor) {

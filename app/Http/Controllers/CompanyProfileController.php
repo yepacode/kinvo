@@ -40,7 +40,7 @@ class CompanyProfileController extends Controller
             'company_name' => ['required', 'string', 'max:150'],
             'sector' => ['nullable', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'website' => ['nullable', 'url', 'max:200'],
+            'website' => ['nullable', 'url:http,https', 'max:200'],
             'location_id' => ['nullable', 'exists:locations,id'],
             'logo' => ['nullable', 'image', 'max:2048'],
         ]);

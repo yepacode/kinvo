@@ -18,15 +18,18 @@ class DatabaseSeeder extends Seeder
         $this->call(TaxonomiaSeeder::class);
 
         // Owner de Kinvoo (acceso al panel Filament).
-        User::updateOrCreate(
+        $owner = User::updateOrCreate(
             ['email' => 'hola@gokinvoo.com'],
             [
                 'name' => 'Kinvoo Admin',
                 'password' => Hash::make('password'), // cambiar en producción
-                'nivel' => RolUsuario::Admin,
-                'estado' => EstadoUsuario::Activo,
-                'email_verified_at' => now(),
             ]
         );
+        // nivel/estado no son mass-assignable → forceFill.
+        $owner->forceFill([
+            'nivel' => RolUsuario::Admin,
+            'estado' => EstadoUsuario::Activo,
+            'email_verified_at' => now(),
+        ])->save();
     }
 }

@@ -74,6 +74,19 @@ class ProfessionalProfile extends Model
         return 'slug';
     }
 
+    /** Solo perfiles publicados cuyo dueño está activo (no suspendido/pendiente). */
+    public function scopeVisiblePublicamente($query)
+    {
+        return $query->where('is_published', true)
+            ->whereHas('user', fn ($u) => $u->where('estado', \App\Enums\EstadoUsuario::Activo->value));
+    }
+
+    /** ¿Este perfil es visible al público (publicado + dueño activo)? */
+    public function esVisiblePublicamente(): bool
+    {
+        return $this->is_published && $this->user?->estaActivo();
+    }
+
     /** Checklist de completitud del perfil: etiqueta => ¿está listo? */
     public function checklistPerfil(): array
     {

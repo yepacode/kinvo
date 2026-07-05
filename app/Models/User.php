@@ -26,9 +26,11 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
-        'nivel',
-        'estado',
     ];
+
+    // OJO seguridad: `nivel` y `estado` NO son asignables en masa (fuera de $fillable).
+    // Se setean SIEMPRE de forma explícita (registro, aprobación, seeders) para evitar
+    // escalado de privilegios si algún endpoint futuro hiciera update($request->all()).
 
     /**
      * The attributes that should be hidden for serialization.

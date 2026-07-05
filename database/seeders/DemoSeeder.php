@@ -17,20 +17,20 @@ use Illuminate\Support\Str;
  */
 class DemoSeeder extends Seeder
 {
+    /** Crea/actualiza un usuario demo activo (nivel/estado no son mass-assignable → forceFill). */
+    private function usuario(string $email, string $name, RolUsuario $rol): User
+    {
+        $u = User::updateOrCreate(['email' => $email], ['name' => $name, 'password' => Hash::make('password')]);
+        $u->forceFill(['nivel' => $rol, 'estado' => EstadoUsuario::Activo, 'email_verified_at' => now()])->save();
+
+        return $u;
+    }
+
     public function run(): void
     {
         $this->call(TaxonomiaSeeder::class);
 
-        $u = User::updateOrCreate(
-            ['email' => 'demo.coach@gokinvoo.com'],
-            [
-                'name' => 'Ana Torres',
-                'password' => Hash::make('password'),
-                'nivel' => RolUsuario::Professional,
-                'estado' => EstadoUsuario::Activo,
-                'email_verified_at' => now(),
-            ]
-        );
+        $u = $this->usuario('demo.coach@gokinvoo.com', 'Ana Torres', RolUsuario::Professional);
 
         $p = $u->professionalProfile()->firstOrCreate([]);
         $p->update([
@@ -58,16 +58,7 @@ class DemoSeeder extends Seeder
             ['Jorge Pineda', 'Especialista en calistenia', 'hibrido', 'Tijuana', ['calistenia', 'entrenamiento-funcional']],
         ];
         foreach ($demo as [$nombre, $headline, $mod, $ciudad, $discs]) {
-            $du = User::updateOrCreate(
-                ['email' => Str::slug($nombre).'@demo.gokinvoo.com'],
-                [
-                    'name' => $nombre,
-                    'password' => Hash::make('password'),
-                    'nivel' => RolUsuario::Professional,
-                    'estado' => EstadoUsuario::Activo,
-                    'email_verified_at' => now(),
-                ]
-            );
+            $du = $this->usuario(Str::slug($nombre).'@demo.gokinvoo.com', $nombre, RolUsuario::Professional);
             $dp = $du->professionalProfile()->firstOrCreate([]);
             $dp->update([
                 'headline' => $headline,
@@ -80,16 +71,7 @@ class DemoSeeder extends Seeder
         }
 
         // Contratante demo (activo) para probar el flujo de contacto.
-        $contratante = User::updateOrCreate(
-            ['email' => 'demo.gym@gokinvoo.com'],
-            [
-                'name' => 'Estudio Zen',
-                'password' => Hash::make('password'),
-                'nivel' => RolUsuario::Contractor,
-                'estado' => EstadoUsuario::Activo,
-                'email_verified_at' => now(),
-            ]
-        );
+        $contratante = $this->usuario('demo.gym@gokinvoo.com', 'Estudio Zen', RolUsuario::Contractor);
         $contratante->companyProfile()->firstOrCreate([], [
             'company_name' => 'Estudio Zen',
             'sector' => 'Estudio de yoga',

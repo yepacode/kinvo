@@ -67,7 +67,7 @@ class ContactController extends Controller
     /** Solo contratantes con cuenta activa pueden contactar perfiles publicados. */
     private function autorizar(Request $request, ProfessionalProfile $profile): void
     {
-        abort_unless($profile->is_published, 404);
+        abort_unless($profile->esVisiblePublicamente(), 404);
 
         $user = $request->user();
         abort_unless($user && $user->esContratante() && $user->estaActivo(), 403);
