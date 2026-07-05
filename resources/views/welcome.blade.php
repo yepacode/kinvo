@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kinvoo — Where talent meets fitness</title>
-<meta name="description" content="Kinvoo, la red profesional para la industria fitness. Comunidad, oportunidades y respaldo para coaches, instructores y estudios.">
+<title>{{ landing('seo_title') }}</title>
+<meta name="description" content="{{ landing('seo_description') }}">
 <link rel="canonical" href="{{ url('/') }}">
-<meta property="og:title" content="Kinvoo — Where talent meets fitness">
-<meta property="og:description" content="La red profesional para la industria fitness.">
+<meta property="og:title" content="{{ landing('seo_title') }}">
+<meta property="og:description" content="{{ landing('seo_description') }}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ url('/') }}">
+<meta property="og:image" content="{{ landing_image('seo_og_image', 'img/landing/hero.jpg') }}">
 <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,8 +19,8 @@
 {!! json_encode([
     '@context' => 'https://schema.org',
     '@type' => 'Organization',
-    'name' => 'Kinvoo',
-    'description' => 'La red profesional para la industria fitness.',
+    'name' => landing('brand_name'),
+    'description' => landing('seo_description'),
     'url' => url('/'),
     'logo' => asset('favicon.svg'),
     'email' => 'hola@gokinvoo.com',
@@ -302,8 +303,8 @@ footer {
 <!-- NAV -->
 <nav>
   <div class="logo-block">
-    <a href="{{ url('/') }}" class="logo">kinvoo</a>
-    <span class="nav-sub">Where talent meets fitness.</span>
+    <a href="{{ url('/') }}" class="logo">{{ landing('brand_name') }}</a>
+    <span class="nav-sub">{{ landing('brand_tagline') }}</span>
   </div>
   <ul class="nav-links">
     <li><a href="#nosotros">Nosotros</a></li>
@@ -321,78 +322,63 @@ footer {
 <!-- HERO -->
 <section class="hero">
   <div class="hero-left">
-    <p class="hero-eyebrow">Bienvenido a Kinvoo</p>
-    <h1 class="hero-h1">La red profesional<br>para la industria<br><em>fitness.</em></h1>
-    <p class="hero-body">Para las personas que sostienen el wellness todos los días. Comunidad, oportunidades y respaldo — en un solo lugar.</p>
+    <p class="hero-eyebrow">{{ landing('hero_eyebrow') }}</p>
+    <h1 class="hero-h1">{!! landing_rich('hero_title') !!}</h1>
+    <p class="hero-body">{{ landing('hero_body') }}</p>
     <div class="hero-actions">
-      <a href="{{ route('register') }}" class="btn-primary">Únete a la comunidad</a>
-      <a href="{{ route('talento.index') }}" class="btn-text">Explora el talento</a>
+      <a href="{{ route('register') }}" class="btn-primary">{{ landing('hero_cta1') }}</a>
+      <a href="{{ route('talento.index') }}" class="btn-text">{{ landing('hero_cta2') }}</a>
     </div>
   </div>
   <div class="hero-right">
-    <img class="hero-img" src="{{ asset('img/landing/hero.jpg') }}" alt="Comunidad fitness" />
+    <img class="hero-img" src="{{ landing_image('hero_image', 'img/landing/hero.jpg') }}" alt="Comunidad fitness" />
     <div class="hero-overlay"></div>
-    <span class="hero-pill">Where talent meets fitness.</span>
+    <span class="hero-pill">{{ landing('hero_pill') }}</span>
   </div>
 </section>
 
 <!-- STATEMENT -->
 <section class="statement" id="nosotros">
-  <p class="st-label">Nuestra misión</p>
-  <p class="st-text">El fitness ya cambió el mundo.<br>Kinvoo impulsa a las personas <em>que lo hacen posible cada día.</em></p>
+  <p class="st-label">{{ landing('mission_label') }}</p>
+  <p class="st-text">{!! landing_rich('mission_text') !!}</p>
 </section>
 
 <!-- PILLARS -->
 <div class="pillars-wrap">
   <div class="pillars-header">
-    <p class="section-label">Por qué Kinvoo</p>
-    <p class="section-h">Lo que el fitness profesional necesita ahora.</p>
+    <p class="section-label">{{ landing('pillars_label') }}</p>
+    <p class="section-h">{{ landing('pillars_heading') }}</p>
   </div>
   <div class="pillars">
+    @foreach ([1,2,3,4] as $i)
     <div class="pillar">
-      <p class="pillar-num">01</p>
-      <p class="pillar-title">Comunidad</p>
-      <p class="pillar-body">Una red hecha para ti. Conexión real, pertenencia real.</p>
+      <p class="pillar-num">0{{ $i }}</p>
+      <p class="pillar-title">{{ landing("pillar{$i}_title") }}</p>
+      <p class="pillar-body">{{ landing("pillar{$i}_body") }}</p>
     </div>
-    <div class="pillar">
-      <p class="pillar-num">02</p>
-      <p class="pillar-title">Oportunidades</p>
-      <p class="pillar-body">Conecta con estudios y marcas. Encuentra tu siguiente paso.</p>
-    </div>
-    <div class="pillar">
-      <p class="pillar-num">03</p>
-      <p class="pillar-title">Beneficios</p>
-      <p class="pillar-body">Salud, respaldo legal y bienestar. Para que la experiencia fitness sea tan buena por dentro como por fuera.</p>
-    </div>
-    <div class="pillar">
-      <p class="pillar-num">04</p>
-      <p class="pillar-title">Crecimiento</p>
-      <p class="pillar-body">Tu carrera merece estructura, desarrollo y un lugar al que pertenecer.</p>
-    </div>
+    @endforeach
   </div>
 </div>
 
 <!-- PHOTO DIVIDER -->
 <div class="photo-divider">
-  <img src="{{ asset('img/landing/divider.jpg') }}" alt="Movimiento fitness" />
+  <img src="{{ landing_image('divider_image', 'img/landing/divider.jpg') }}" alt="Movimiento fitness" />
   <div class="photo-divider-overlay"></div>
 </div>
 
 <!-- SESSIONS -->
 <section class="sessions-wrap" id="sessions">
   <div class="sessions-left">
-    <p class="section-label">Kinvoo Sessions</p>
-    <h2 class="sessions-h">La conversación que el talento wellness <em>necesitaba tener.</em></h2>
-    <p class="sessions-body">Encuentros íntimos y curados para hablar de lo que realmente importa. Con las personas correctas, en el momento correcto.</p>
-    <a href="#unete" class="btn-primary">Quiero asistir</a>
+    <p class="section-label">{{ landing('sessions_label') }}</p>
+    <h2 class="sessions-h">{!! landing_rich('sessions_heading') !!}</h2>
+    <p class="sessions-body">{{ landing('sessions_body') }}</p>
+    <a href="#unete" class="btn-primary">{{ landing('sessions_cta') }}</a>
   </div>
   <div class="sessions-right">
     <div class="topics">
-      <div class="topic"><span class="tn">01</span><span class="tt">Crecimiento y desarrollo profesional</span></div>
-      <div class="topic"><span class="tn">02</span><span class="tt">Comunidad e identidad profesional</span></div>
-      <div class="topic"><span class="tn">03</span><span class="tt">Bienestar del talento wellness</span></div>
-      <div class="topic"><span class="tn">04</span><span class="tt">Beneficios y respaldo profesional</span></div>
-      <div class="topic"><span class="tn">05</span><span class="tt">El futuro del trabajo y el bienestar</span></div>
+      @foreach ([1,2,3,4,5] as $i)
+      <div class="topic"><span class="tn">0{{ $i }}</span><span class="tt">{{ landing("session_topic_{$i}") }}</span></div>
+      @endforeach
     </div>
   </div>
 </section>
@@ -401,52 +387,44 @@ footer {
 <section class="for-who" id="comunidad">
   <div class="for-who-header">
     <div>
-      <p class="section-label">Para quién</p>
-      <h2 class="fw-h">Hecho para quienes<br><em>mueven el fitness.</em></h2>
+      <p class="section-label">{{ landing('forwho_label') }}</p>
+      <h2 class="fw-h">{!! landing_rich('forwho_heading') !!}</h2>
     </div>
-    <p class="fw-body">El ecosistema donde el talento y las oportunidades del fitness se encuentran, crecen y se sostienen juntos.</p>
+    <p class="fw-body">{{ landing('forwho_body') }}</p>
   </div>
   <div class="cards">
+    @foreach ([1,2,3] as $i)
     <div class="card">
-      <p class="card-label">Talento</p>
-      <p class="card-title">Coaches e Instructores</p>
-      <p class="card-body">Los que construyen experiencias todos los días y merecen una comunidad a su altura.</p>
+      <p class="card-label">{{ landing("card{$i}_label") }}</p>
+      <p class="card-title">{{ landing("card{$i}_title") }}</p>
+      <p class="card-body">{{ landing("card{$i}_body") }}</p>
     </div>
-    <div class="card">
-      <p class="card-label">Marcas</p>
-      <p class="card-title">Estudios y Marcas</p>
-      <p class="card-body">Encuentra y retén el mejor talento. Construye un equipo que crezca contigo.</p>
-    </div>
-    <div class="card">
-      <p class="card-label">Operación</p>
-      <p class="card-title">El talento que hace vivir los estudios</p>
-      <p class="card-body">Front desk, studio managers, staff operativo — los que sostienen la experiencia desde adentro.</p>
-    </div>
+    @endforeach
   </div>
 </section>
 
 <!-- QUOTE -->
 <section class="quote-full">
-  <p class="quote-text">"El fitness evolucionó. La manera en que cuidamos a quienes lo sostienen, <em>también.</em>"</p>
-  <p class="quote-attr">— Kinvoo Community</p>
+  <p class="quote-text">{!! landing_rich('quote_text') !!}</p>
+  <p class="quote-attr">{{ landing('quote_attr') }}</p>
 </section>
 
 <!-- JOIN -->
 <section class="join" id="unete">
   <div class="join-left">
-    <p class="join-label">Únete a Kinvoo</p>
-    <h2 class="join-h">Where <em>talent</em><br>meets fitness.</h2>
+    <p class="join-label">{{ landing('join_label') }}</p>
+    <h2 class="join-h">{!! landing_rich('join_heading') !!}</h2>
   </div>
   <div class="join-right">
-    <p class="join-body">Sé parte desde el inicio. Estamos construyendo algo que la industria necesitaba — y queremos que estés adentro.</p>
+    <p class="join-body">{{ landing('join_body') }}</p>
     <div class="join-actions">
-      <a href="{{ route('register') }}" class="btn-primary">Crear mi cuenta</a>
+      <a href="{{ route('register') }}" class="btn-primary">{{ landing('join_cta') }}</a>
     </div>
-    <p class="form-note">¿Eres talento o estudio? Elige abajo.</p>
+    <p class="form-note">{{ landing('join_note') }}</p>
     <div class="toggles">
-      <a href="{{ route('register') }}" class="tog">Soy talento fitness</a>
-      <a href="{{ route('register') }}" class="tog">Soy estudio / marca</a>
-      <a href="mailto:hola@gokinvoo.com?subject=Quiero asistir a una sesión" class="tog">Quiero asistir a una sesión</a>
+      <a href="{{ route('register') }}" class="tog">{{ landing('join_tog1') }}</a>
+      <a href="{{ route('register') }}" class="tog">{{ landing('join_tog2') }}</a>
+      <a href="mailto:hola@gokinvoo.com?subject=Quiero asistir a una sesión" class="tog">{{ landing('join_tog3') }}</a>
     </div>
   </div>
 </section>
@@ -454,8 +432,8 @@ footer {
 <!-- FOOTER -->
 <footer>
   <div>
-    <span class="footer-logo">kinvoo</span>
-    <span class="footer-tag">Where talent meets fitness.</span>
+    <span class="footer-logo">{{ landing('brand_name') }}</span>
+    <span class="footer-tag">{{ landing('footer_tag') }}</span>
   </div>
   <ul class="footer-links">
     <li><a href="#nosotros">Nosotros</a></li>
@@ -463,7 +441,7 @@ footer {
     <li><a href="#comunidad">Comunidad</a></li>
     <li><a href="mailto:hola@gokinvoo.com">hola@gokinvoo.com</a></li>
   </ul>
-  <p class="footer-copy">© 2026 Kinvoo. Todos los derechos reservados.</p>
+  <p class="footer-copy">{{ landing('footer_copy') }}</p>
 </footer>
 
 </body>
