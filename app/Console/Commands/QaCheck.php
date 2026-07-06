@@ -2,35 +2,42 @@
 
 namespace App\Console\Commands;
 
-use App\Models\ProfessionalProfile;
+use App\Enums\RolUsuario;
 use App\Models\User;
 use Illuminate\Console\Command;
 
 class QaCheck extends Command
 {
-    protected $signature = 'qa:check';
+    protected $signature = 'qa:users';
 
-    protected $description = 'Verifica escenarios borde del QA seeder';
+    protected $description = 'Lista cuentas representativas por rol';
 
     public function handle(): int
     {
-        $sus = User::where('email', 'qa.suspendido@kinvoo.test')->first()?->professionalProfile;
-        $this->line('Suspendido visible públicamente: '.($sus?->esVisiblePublicamente() ? 'SÍ (BUG)' : 'NO (ok)'));
+        $muestra = [
+            'hola@gokinvoo.com',
+            'qa.pro0@kinvoo.test',
+            'qa.completo@kinvoo.test',
+            'qa.vacio@kinvoo.test',
+            'qa.pendiente@kinvoo.test',
+            'qa.suspendido@kinvoo.test',
+            'qa.gym0@kinvoo.test',
+            'qa.gympend1@kinvoo.test',
+        ];
 
-        $slugs = ProfessionalProfile::whereHas('user', fn ($q) => $q->whereIn('email', ['qa.juan1@kinvoo.test', 'qa.juan2@kinvoo.test']))
-            ->pluck('slug')->all();
-        $this->line('Slugs colisión Juan: '.implode(', ', $slugs));
+        foreach ($muestra as $email) {
+            $u = User::where('email', $email)->first();
+            if (! $u) {
+                $this->line($email.' → (no existe)');
+                continue;
+            }
+            $this->line(str_pad($email, 30).' | '.str_pad($u->nivel->label(), 13).' | '.$u->estado->label());
+        }
 
-        $xss = User::where('email', 'qa.xss@kinvoo.test')->first()?->professionalProfile;
-        $this->line('Slug XSS: '.$xss?->slug);
-
-        $vacio = User::where('email', 'qa.vacio@kinvoo.test')->first()?->professionalProfile;
-        $this->line('Perfil vacío %: '.$vacio?->porcentajeCompleto().' | publicado: '.($vacio?->is_published ? 'sí' : 'no'));
-
-        $full = User::where('email', 'qa.completo@kinvoo.test')->first()?->professionalProfile;
-        $this->line('Perfil completo %: '.$full?->porcentajeCompleto());
-
-        $this->line('Visibles en buscador: '.ProfessionalProfile::visiblePublicamente()->count());
+        $this->newLine();
+        $this->line('Totales → Profesionales activos: '.User::where('nivel', RolUsuario::Professional->value)->count()
+            .' | Contratantes: '.User::where('nivel', RolUsuario::Contractor->value)->count()
+            .' | Admin: '.User::where('nivel', RolUsuario::Admin->value)->count());
 
         return self::SUCCESS;
     }
