@@ -6,7 +6,7 @@
     <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
         @if (auth()->user()->esProfesional())
             @php $profile = auth()->user()->professionalProfile; @endphp
-            <div class="rounded-2xl border border-line bg-white p-8">
+            <div class="rounded-2xl border border-line bg-white p-6 sm:p-8">
                 <p class="text-sm font-medium uppercase tracking-widest text-sage">Profesional</p>
                 <h3 class="mt-2 font-serif text-2xl font-medium text-ink">Tu perfil en Kinvoo</h3>
                 <p class="mt-2 text-warmgray">
@@ -74,7 +74,7 @@
                 </div>
             @endif
         @elseif (auth()->user()->esContratante())
-            <div class="rounded-2xl border border-line bg-white p-8">
+            <div class="rounded-2xl border border-line bg-white p-6 sm:p-8">
                 <p class="text-sm font-medium uppercase tracking-widest text-sage">Contratante</p>
                 <h3 class="mt-2 font-serif text-2xl font-medium text-ink">Encuentra talento fitness</h3>
                 <p class="mt-2 text-warmgray">Explora perfiles de profesionales o completa los datos de tu empresa.</p>

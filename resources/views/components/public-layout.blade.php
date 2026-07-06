@@ -23,10 +23,12 @@
     </head>
     <body class="min-h-screen bg-cream font-sans text-ink antialiased">
         <header class="border-b border-line/70">
-            <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-                <a href="/" class="font-serif text-2xl font-medium tracking-tight text-ink">Kinvoo</a>
-                <nav class="flex items-center gap-4 text-sm">
-                    <a href="{{ route('talento.index') }}" class="text-warmgray hover:text-sage">Buscar talento</a>
+            <div class="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-4 sm:px-6">
+                <a href="/" class="font-serif text-xl font-medium tracking-tight text-ink sm:text-2xl">Kinvoo</a>
+                <nav class="flex items-center gap-3 text-sm sm:gap-4">
+                    <a href="{{ route('talento.index') }}" class="text-warmgray hover:text-sage">
+                        <span class="sm:hidden">Talento</span><span class="hidden sm:inline">Buscar talento</span>
+                    </a>
                     @auth
                         <a href="{{ auth()->user()->homeRoute() }}" class="text-warmgray hover:text-sage">Mi cuenta</a>
                     @else
