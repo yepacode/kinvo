@@ -30,6 +30,23 @@ class NotificationController extends Controller
         $notification = $request->user()->notifications()->findOrFail($id);
         $notification->markAsRead();
 
-        return redirect($notification->data['url'] ?? route('dashboard'));
+        return redirect($this->destinoSeguro($notification->data['url'] ?? null));
+    }
+
+    /**
+     * Devuelve siempre una ruta del mismo host. Las notificaciones antiguas
+     * guardaban URL absolutas: si se generaron con otro APP_URL, el navegador
+     * iría a un host inalcanzable. Nos quedamos solo con path + query.
+     */
+    private function destinoSeguro(?string $url): string
+    {
+        if (! $url) {
+            return route('dashboard', absolute: false);
+        }
+
+        $path = parse_url($url, PHP_URL_PATH) ?: '/';
+        $query = parse_url($url, PHP_URL_QUERY);
+
+        return $query ? $path.'?'.$query : $path;
     }
 }

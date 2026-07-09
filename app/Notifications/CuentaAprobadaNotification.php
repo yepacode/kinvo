@@ -18,7 +18,7 @@ class CuentaAprobadaNotification extends Notification
             'icono' => '✅',
             'titulo' => '¡Tu cuenta fue aprobada!',
             'mensaje' => 'Ya puedes completar y publicar tu perfil en Kinvoo.',
-            'url' => $notifiable->homeRoute(),
+            'url' => $notifiable->homeRoute(absolute: false),
         ];
     }
 }

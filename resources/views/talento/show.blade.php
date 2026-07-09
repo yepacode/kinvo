@@ -10,7 +10,7 @@
     <x-slot name="head">
         <script type="application/ld+json">
         {!! json_encode(array_filter([
-            '@context' => 'https://schema.org',
+            '@'.'context' => 'https://schema.org',
             '@type' => 'Person',
             'name' => $nombre,
             'jobTitle' => $profile->headline,
@@ -41,7 +41,7 @@
                     @if ($profile->photo_path)
                         <img src="{{ Storage::url($profile->photo_path) }}" alt="{{ $nombre }}" class="h-full w-full object-cover">
                     @else
-                        <div class="flex h-full w-full items-center justify-center text-4xl text-warmgray">🏋️</div>
+                        <div class="flex h-full w-full items-center justify-center text-4xl text-warmgray" aria-hidden="true">🏋️</div>
                     @endif
                 </div>
                 <div class="min-w-0">
@@ -51,7 +51,7 @@
                     @endif
                     <div class="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-warmgray sm:justify-start">
                         @if ($profile->location)
-                            <span>📍 {{ $profile->location->etiqueta() }}</span>
+                            <span><span aria-hidden="true">📍</span> {{ $profile->location->etiqueta() }}</span>
                         @endif
                         @if ($profile->modalidad)
                             <span>· {{ $profile->modalidad->label() }}</span>
@@ -102,33 +102,54 @@
                     </div>
                 @endif
 
-                {{-- Certificaciones --}}
-                @if ($profile->certifications->isNotEmpty())
+                {{-- Idiomas --}}
+                @if (! empty($profile->languages))
                     <div>
-                        <h2 class="font-serif text-xl font-medium text-ink">Certificaciones</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">Idiomas</h2>
                         <div class="mt-3 flex flex-wrap gap-2">
-                            @foreach ($profile->certifications as $c)
-                                <span class="rounded-full border border-line px-3 py-1 text-sm text-ink">{{ $c->nombre }}</span>
+                            @foreach ($profile->idiomasLegibles() as $idioma)
+                                <span class="rounded-full bg-beige px-3 py-1 text-sm text-ink">{{ $idioma }}</span>
                             @endforeach
                         </div>
                     </div>
                 @endif
 
-                {{-- Contacto / redes (el botón "Contactar" para contratantes llega en F5) --}}
-                @php $s = $profile->socials ?? []; @endphp
-                @if (! empty($s['web']) || ! empty($s['instagram']) || ! empty($s['tiktok']))
-                    <div class="flex flex-wrap gap-4 border-t border-line pt-6 text-sm">
-                        @if (! empty($s['web']))
-                            <a href="{{ $s['web'] }}" target="_blank" rel="noopener" class="text-sage underline hover:text-ink">Sitio web ↗</a>
-                        @endif
-                        @if (! empty($s['instagram']))
-                            <span class="text-warmgray">Instagram: {{ $s['instagram'] }}</span>
-                        @endif
-                        @if (! empty($s['tiktok']))
-                            <span class="text-warmgray">TikTok: {{ $s['tiktok'] }}</span>
-                        @endif
+                {{-- Disponibilidad --}}
+                @php $dispo = $profile->disponibilidadPorDia(); @endphp
+                @if (! empty($dispo))
+                    <div>
+                        <h2 class="font-serif text-xl font-medium text-ink">Disponibilidad</h2>
+                        <dl class="mt-3 divide-y divide-line overflow-hidden rounded-xl border border-line">
+                            @foreach ($dispo as $dia => $franjas)
+                                <div class="flex items-center justify-between px-4 py-2 text-sm odd:bg-cream/50">
+                                    <dt class="text-warmgray">{{ $dia }}</dt>
+                                    <dd class="font-medium text-sage">{{ $franjas }}</dd>
+                                </div>
+                            @endforeach
+                        </dl>
                     </div>
                 @endif
+
+                {{-- Certificaciones (texto) --}}
+                @if ($profile->certifications_text)
+                    <div>
+                        <h2 class="font-serif text-xl font-medium text-ink">Certificaciones</h2>
+                        <p class="mt-2 whitespace-pre-line text-warmgray">{{ $profile->certifications_text }}</p>
+                    </div>
+                @endif
+
+                {{-- Contenido multimedia --}}
+                @if ($profile->media_url)
+                    <div>
+                        <h2 class="font-serif text-xl font-medium text-ink">Contenido multimedia</h2>
+                        <a href="{{ $profile->media_url }}" target="_blank" rel="noopener"
+                           class="mt-2 inline-flex items-center gap-2 text-sage underline hover:text-ink">
+                            Ver contenido ↗
+                        </a>
+                    </div>
+                @endif
+
+                {{-- Los datos de contacto son privados: la conexión pasa por Kinvoo (botón "Contactar"). --}}
             </div>
         </div>
     </div>

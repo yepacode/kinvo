@@ -10,12 +10,30 @@
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>
+    <url>
+        <loc>{{ route('legal.privacidad') }}</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.3</priority>
+    </url>
+    <url>
+        <loc>{{ route('legal.terminos') }}</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.3</priority>
+    </url>
     @foreach ($perfiles as $p)
     <url>
         <loc>{{ route('talento.show', $p->slug) }}</loc>
         <lastmod>{{ $p->updated_at->toAtomString() }}</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
+    </url>
+    @endforeach
+    @foreach ($estudios as $e)
+    <url>
+        <loc>{{ route('estudio.show', $e->slug) }}</loc>
+        <lastmod>{{ $e->updated_at->toAtomString() }}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
     </url>
     @endforeach
 </urlset>

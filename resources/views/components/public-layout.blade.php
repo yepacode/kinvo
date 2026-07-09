@@ -45,8 +45,12 @@
         </main>
 
         <footer class="mt-16 border-t border-line/70">
-            <div class="mx-auto max-w-5xl px-6 py-6 text-center text-sm text-warmgray">
-                Kinvoo · La red profesional para la industria fitness
+            <div class="mx-auto flex max-w-5xl flex-col items-center gap-2 px-6 py-6 text-center text-sm text-warmgray">
+                <nav class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+                    <a href="{{ route('legal.privacidad') }}" class="hover:text-sage">Aviso de Privacidad</a>
+                    <a href="{{ route('legal.terminos') }}" class="hover:text-sage">Términos y Condiciones</a>
+                </nav>
+                <p>{{ landing('footer_copy') }}</p>
             </div>
         </footer>
     </body>

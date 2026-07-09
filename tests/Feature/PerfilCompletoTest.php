@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Certification;
 use App\Models\Discipline;
 use App\Models\Location;
 use App\Models\User;
@@ -25,20 +24,21 @@ class PerfilCompletoTest extends TestCase
     {
         $loc = Location::create(['ciudad' => 'Guadalajara', 'region' => 'Jalisco']);
         $disc = Discipline::create(['nombre' => 'Yoga', 'slug' => 'yoga']);
-        $cert = Certification::create(['nombre' => 'NASM', 'slug' => 'nasm']);
 
         $profile = User::factory()->create()->professionalProfile()->create([
             'is_published' => true,
             'photo_path' => 'perfiles/foto.jpg',
             'headline' => 'Coach',
+            'birthdate' => '1990-01-01',
             'bio' => 'Mi presentación completa.',
             'years_experience' => 5,
             'modalidad' => 'presencial',
+            'availability' => ['lun_am', 'mar_pm'],
+            'languages' => ['es', 'en'],
+            'certifications_text' => 'NASM, RYT-200',
             'location_id' => $loc->id,
-            'socials' => ['web' => 'https://x.com'],
         ]);
         $profile->disciplines()->sync([$disc->id]);
-        $profile->certifications()->sync([$cert->id]);
 
         $this->assertSame(100, $profile->fresh()->porcentajeCompleto());
         $this->assertEmpty($profile->fresh()->faltantesPerfil());

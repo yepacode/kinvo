@@ -29,7 +29,7 @@
             @forelse ($ultimas as $n)
                 <a href="{{ route('notifications.open', $n->id) }}"
                    class="flex gap-3 border-b border-line/60 px-4 py-3 transition hover:bg-cream {{ is_null($n->read_at) ? 'bg-sage/5' : '' }}">
-                    <span class="text-lg">{{ $n->data['icono'] ?? '🔔' }}</span>
+                    <span class="text-lg" aria-hidden="true">{{ $n->data['icono'] ?? '🔔' }}</span>
                     <div class="min-w-0">
                         <p class="truncate text-sm font-medium text-ink">{{ $n->data['titulo'] ?? 'Notificación' }}</p>
                         <p class="truncate text-xs text-warmgray">{{ $n->data['mensaje'] ?? '' }}</p>

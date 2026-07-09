@@ -36,6 +36,19 @@ class SeoTest extends TestCase
     {
         $this->get('/')
             ->assertSee('rel="canonical"', false)
-            ->assertSee('"@type":"Organization"', false);
+            ->assertSee('"@context":"https:\/\/schema.org"', false)
+            ->assertSee('"@type":"Organization"', false)
+            // El @context NO debe compilarse como directiva Blade (bug de JSON-LD).
+            ->assertDontSee('__contextArgs', false);
+    }
+
+    public function test_json_ld_del_talento_es_valido(): void
+    {
+        $profile = User::factory()->create(['name' => 'Coach JSON'])
+            ->professionalProfile()->create(['headline' => 'Coach', 'is_published' => true]);
+
+        $this->get(route('talento.show', $profile->slug))
+            ->assertSee('"@context":"https:\/\/schema.org"', false)
+            ->assertDontSee('__contextArgs', false);
     }
 }

@@ -22,7 +22,7 @@ class NuevoContactoNotification extends Notification
             'icono' => '✉️',
             'titulo' => 'Nuevo contacto de '.$this->contact->contact_name,
             'mensaje' => Str::limit($this->contact->message, 90),
-            'url' => route('dashboard'),
+            'url' => route('professional.contactos', absolute: false),
         ];
     }
 }

@@ -1,7 +1,7 @@
 <x-guest-layout>
     <div class="text-center">
         <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-beige">
-            <span class="text-2xl">⏳</span>
+            <span class="text-2xl" aria-hidden="true">⏳</span>
         </div>
 
         <h1 class="font-serif text-2xl font-medium text-ink">Cuenta en revisión</h1>

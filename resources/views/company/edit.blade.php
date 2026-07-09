@@ -1,9 +1,25 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-serif text-2xl font-medium text-ink">Mi empresa</h2>
+        <div class="flex items-center justify-between">
+            <h2 class="font-serif text-2xl font-medium text-ink">Mi empresa</h2>
+            @if (auth()->user()->estaActivo() && $profile->slug)
+                <a href="{{ route('estudio.show', $profile->slug) }}" target="_blank"
+                   class="text-sm text-sage underline hover:text-ink">Ver perfil público ↗</a>
+            @endif
+        </div>
     </x-slot>
 
     <div class="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+        {{-- Mensaje de bienvenida --}}
+        <div class="mb-6 rounded-2xl border border-sage/30 bg-sage/5 px-5 py-5">
+            <h3 class="font-serif text-lg font-medium text-ink">{{ landing('welcome_studio_title') }}</h3>
+            <div class="mt-2 space-y-2 whitespace-pre-line text-sm leading-relaxed text-warmgray">{{ landing('welcome_studio_body') }}</div>
+            <p class="mt-3 text-sm text-warmgray">Antes de comenzar, revisa nuestros
+                <a href="{{ route('legal.terminos') }}" target="_blank" class="text-sage underline hover:text-ink">Términos y Condiciones</a> y el
+                <a href="{{ route('legal.privacidad') }}" target="_blank" class="text-sage underline hover:text-ink">Aviso de Privacidad</a>.
+            </p>
+        </div>
+
         @if (session('status') === 'empresa-actualizada')
             <div class="mb-6 rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm text-sage">
                 ✓ Los datos de tu empresa se guardaron correctamente.
@@ -21,7 +37,7 @@
                     @if ($profile->logo_path)
                         <img src="{{ Storage::url($profile->logo_path) }}" alt="Logo de la empresa" class="h-full w-full object-cover">
                     @else
-                        <div class="flex h-full w-full items-center justify-center text-2xl text-warmgray">🏢</div>
+                        <div class="flex h-full w-full items-center justify-center text-2xl text-warmgray" aria-hidden="true">🏢</div>
                     @endif
                 </div>
                 <div>
@@ -33,29 +49,73 @@
             </div>
 
             <div>
-                <x-input-label for="company_name" :value="'Nombre de la empresa'" />
+                <x-input-label for="company_name" :value="'Nombre del estudio / gym'" />
                 <x-text-input id="company_name" name="company_name" type="text" class="mt-1 block w-full"
                               :value="old('company_name', $profile->company_name)" required maxlength="150" />
                 <x-input-error :messages="$errors->get('company_name')" class="mt-1" />
             </div>
 
+            <div>
+                <x-input-label for="disciplines_text" :value="'Disciplina'" />
+                <x-text-input id="disciplines_text" name="disciplines_text" type="text" class="mt-1 block w-full"
+                              :value="old('disciplines_text', $profile->disciplines_text)" maxlength="300"
+                              placeholder="Ej. Yoga, Spinning, Crossfit, Pilates..." />
+                <x-input-error :messages="$errors->get('disciplines_text')" class="mt-1" />
+            </div>
+
+            {{-- Ubicación: estado de México + dirección con CP --}}
             <div class="grid gap-5 sm:grid-cols-2">
                 <div>
-                    <x-input-label for="sector" :value="'Sector'" />
-                    <x-text-input id="sector" name="sector" type="text" class="mt-1 block w-full"
-                                  :value="old('sector', $profile->sector)" placeholder="Gimnasio, estudio, marca..." />
-                </div>
-                <div>
-                    <x-input-label for="location_id" :value="'Ubicación'" />
-                    <select id="location_id" name="location_id"
+                    <x-input-label for="estado" :value="'Estado (México)'" />
+                    <select id="estado" name="estado"
                             class="mt-1 block w-full rounded-md border-line shadow-sm focus:border-sage focus:ring-sage">
-                        <option value="">—</option>
-                        @foreach ($locations as $loc)
-                            <option value="{{ $loc->id }}" @selected((int) old('location_id', $profile->location_id) === $loc->id)>{{ $loc->etiqueta() }}</option>
+                        <option value="">— Selecciona —</option>
+                        @foreach ($estados as $estado)
+                            <option value="{{ $estado }}" @selected(old('estado', $profile->estado) === $estado)>{{ $estado }}</option>
                         @endforeach
                     </select>
+                    <x-input-error :messages="$errors->get('estado')" class="mt-1" />
+                </div>
+                <div>
+                    <x-input-label for="postal_code" :value="'Código Postal (CP)'" />
+                    <x-text-input id="postal_code" name="postal_code" type="text" inputmode="numeric" class="mt-1 block w-full"
+                                  :value="old('postal_code', $profile->postal_code)" maxlength="10" placeholder="11560" />
+                    <p class="mt-1 text-xs text-warmgray">Nos ayuda a ubicar la colonia exacta.</p>
+                    <x-input-error :messages="$errors->get('postal_code')" class="mt-1" />
                 </div>
             </div>
+
+            <div>
+                <x-input-label for="address" :value="'Dirección del estudio'" />
+                <x-text-input id="address" name="address" type="text" class="mt-1 block w-full"
+                              :value="old('address', $profile->address)" maxlength="255"
+                              placeholder="Calle y número" />
+                <x-input-error :messages="$errors->get('address')" class="mt-1" />
+            </div>
+
+            {{-- Datos de contacto (privados, solo los ve Kinvoo) --}}
+            <fieldset class="rounded-xl border border-line bg-cream/40 p-4">
+                <legend class="px-1 text-sm font-semibold text-ink">Datos de contacto</legend>
+                <p class="mb-3 text-xs text-warmgray"><span aria-hidden="true">🔒</span> Son privados: solo los ve Kinvoo para coordinar cada conexión.</p>
+                <div class="grid gap-4 sm:grid-cols-3">
+                    <div>
+                        <x-input-label for="contact_name" :value="'Nombre de contacto'" />
+                        <x-text-input id="contact_name" name="contact_name" type="text" class="mt-1 block w-full"
+                                      :value="old('contact_name', $profile->contact_name)" maxlength="150" />
+                    </div>
+                    <div>
+                        <x-input-label for="contact_phone" :value="'Teléfono'" />
+                        <x-text-input id="contact_phone" name="contact_phone" type="text" class="mt-1 block w-full"
+                                      :value="old('contact_phone', $profile->contact_phone)" placeholder="+52 ..." />
+                    </div>
+                    <div>
+                        <x-input-label for="contact_email" :value="'Email'" />
+                        <x-text-input id="contact_email" name="contact_email" type="email" class="mt-1 block w-full"
+                                      :value="old('contact_email', $profile->contact_email)" />
+                        <x-input-error :messages="$errors->get('contact_email')" class="mt-1" />
+                    </div>
+                </div>
+            </fieldset>
 
             <div>
                 <x-input-label for="website" :value="'Sitio web'" />
@@ -65,10 +125,17 @@
             </div>
 
             <div>
+                <x-input-label for="media_url" :value="'Contenido multimedia (opcional)'" />
+                <x-text-input id="media_url" name="media_url" type="url" class="mt-1 block w-full"
+                              :value="old('media_url', $profile->media_url)" placeholder="https://... video o galería" />
+                <x-input-error :messages="$errors->get('media_url')" class="mt-1" />
+            </div>
+
+            <div>
                 <x-input-label for="description" :value="'Descripción'" />
                 <textarea id="description" name="description" rows="4" maxlength="2000"
                           class="mt-1 block w-full rounded-md border-line shadow-sm focus:border-sage focus:ring-sage"
-                          placeholder="Cuenta qué hace tu empresa y qué tipo de talento buscas.">{{ old('description', $profile->description) }}</textarea>
+                          placeholder="Cuenta qué hace tu estudio y qué tipo de talento buscas.">{{ old('description', $profile->description) }}</textarea>
                 <x-input-error :messages="$errors->get('description')" class="mt-1" />
             </div>
 

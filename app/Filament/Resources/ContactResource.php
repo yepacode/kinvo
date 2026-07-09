@@ -5,11 +5,13 @@ namespace App\Filament\Resources;
 use App\Enums\EstadoContacto;
 use App\Filament\Resources\ContactResource\Pages;
 use App\Models\Contact;
+use Filament\Forms\Components\DatePicker;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ContactResource extends Resource
 {
@@ -79,6 +81,26 @@ class ContactResource extends Resource
                         EstadoContacto::NoLeido->value => 'No leído',
                         EstadoContacto::Leido->value => 'Leído',
                     ]),
+                Tables\Filters\Filter::make('rango')
+                    ->label('Fecha')
+                    ->form([
+                        DatePicker::make('desde')->label('Desde'),
+                        DatePicker::make('hasta')->label('Hasta'),
+                    ])
+                    ->query(fn (Builder $query, array $data) => $query
+                        ->when($data['desde'] ?? null, fn (Builder $q, $d) => $q->whereDate('created_at', '>=', $d))
+                        ->when($data['hasta'] ?? null, fn (Builder $q, $d) => $q->whereDate('created_at', '<=', $d)))
+                    ->indicateUsing(function (array $data): array {
+                        $ind = [];
+                        if ($data['desde'] ?? null) {
+                            $ind[] = 'Desde '.$data['desde'];
+                        }
+                        if ($data['hasta'] ?? null) {
+                            $ind[] = 'Hasta '.$data['hasta'];
+                        }
+
+                        return $ind;
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()

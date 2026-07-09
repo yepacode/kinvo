@@ -37,6 +37,9 @@ class RegisteredUserController extends Controller
             'tipo' => ['required', 'in:professional,contractor'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'acepta_legales' => ['accepted'],
+        ], [
+            'acepta_legales.accepted' => 'Debes aceptar los Términos y Condiciones y el Aviso de Privacidad.',
         ]);
 
         // El tipo de registro define el rol; nunca se crea un Admin desde el registro público.

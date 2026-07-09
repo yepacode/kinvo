@@ -113,4 +113,9 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    | Correo del owner de Kinvoo que recibe copia de cada contacto (bitácora).
+    */
+    'owner_address' => env('MAIL_OWNER_ADDRESS', 'hola@gokinvoo.com'),
+
 ];

@@ -63,6 +63,22 @@ class NotificacionesTest extends TestCase
         $this->assertNotNull($n->fresh()->read_at);
     }
 
+    public function test_abrir_notificacion_con_url_de_otro_host_redirige_al_host_actual(): void
+    {
+        // Notificaciones antiguas guardaban URL absolutas; si el APP_URL cambió,
+        // el destino apuntaría a un host inalcanzable. open() debe quedarse con path+query.
+        $user = User::factory()->create();
+        $user->notify(new CuentaAprobadaNotification());
+        $n = $user->notifications()->first();
+        $data = $n->data;
+        $data['url'] = 'http://host-viejo-inalcanzable.test/dashboard?ref=mail';
+        $n->forceFill(['data' => $data])->save();
+
+        $this->actingAs($user)
+            ->get(route('notifications.open', $n->id))
+            ->assertRedirect('/dashboard?ref=mail');
+    }
+
     public function test_marcar_todo_leido(): void
     {
         $user = User::factory()->create();

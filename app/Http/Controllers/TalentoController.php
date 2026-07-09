@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ModalidadTrabajo;
-use App\Models\Certification;
 use App\Models\Discipline;
 use App\Models\Location;
 use App\Models\ProfessionalProfile;
@@ -20,7 +19,6 @@ class TalentoController extends Controller
             'q' => ['nullable', 'string', 'max:100'],
             'location_id' => ['nullable', 'integer', 'exists:locations,id'],
             'discipline_id' => ['nullable', 'integer', 'exists:disciplines,id'],
-            'certification_id' => ['nullable', 'integer', 'exists:certifications,id'],
             'modalidad' => ['nullable', Rule::in(array_column(ModalidadTrabajo::cases(), 'value'))],
         ]);
 
@@ -39,7 +37,6 @@ class TalentoController extends Controller
             ->when($filtros['location_id'] ?? null, fn ($query, $id) => $query->where('location_id', $id))
             ->when($filtros['modalidad'] ?? null, fn ($query, $m) => $query->where('modalidad', $m))
             ->when($filtros['discipline_id'] ?? null, fn ($query, $id) => $query->whereHas('disciplines', fn ($d) => $d->where('disciplines.id', $id)))
-            ->when($filtros['certification_id'] ?? null, fn ($query, $id) => $query->whereHas('certifications', fn ($c) => $c->where('certifications.id', $id)))
             ->orderByDesc('is_verified')
             ->latest('updated_at')
             ->paginate(12)
@@ -50,7 +47,6 @@ class TalentoController extends Controller
             'filtros' => $filtros,
             'locations' => Location::where('activo', true)->orderBy('ciudad')->get(),
             'disciplines' => Discipline::where('activo', true)->orderBy('nombre')->get(),
-            'certifications' => Certification::where('activo', true)->orderBy('nombre')->get(),
             'modalidades' => ModalidadTrabajo::opciones(),
         ]);
     }
@@ -62,7 +58,7 @@ class TalentoController extends Controller
 
         $this->registrarVista($request, $professionalProfile);
 
-        $professionalProfile->load(['disciplines', 'certifications', 'location', 'user']);
+        $professionalProfile->load(['disciplines', 'location', 'user']);
 
         return view('talento.show', ['profile' => $professionalProfile]);
     }

@@ -14,10 +14,12 @@
 <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@500,700,900&display=swap" rel="stylesheet">
 <script type="application/ld+json">
 {!! json_encode([
-    '@context' => 'https://schema.org',
+    '@'.'context' => 'https://schema.org',
     '@type' => 'Organization',
     'name' => landing('brand_name'),
     'description' => landing('seo_description'),
@@ -283,7 +285,6 @@ footer {
   .pillars-wrap { padding: 0 1.5rem 5rem; }
   .pillars-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
   .pillars { grid-template-columns: 1fr 1fr; gap: 2rem; }
-  .photo-divider { height: 50vw; }
   .sessions-wrap { grid-template-columns: 1fr; gap: 3rem; padding: 5rem 1.5rem; }
   .for-who { padding: 5rem 1.5rem; }
   .for-who-header { grid-template-columns: 1fr; gap: 1.5rem; }
@@ -294,6 +295,69 @@ footer {
   footer { grid-template-columns: 1fr; gap: 1.5rem; text-align: center; padding: 2rem 1.5rem; }
   .footer-copy { text-align: center; }
   .footer-links { flex-wrap: wrap; justify-content: center; }
+}
+
+/* ============================================================
+   DIRECCIÓN EDITORIAL (doc WEB KINVOO)
+   Satoshi Bold en titulares · cuerpo Inter light en gris cálido
+   #4A4843 · contraste de escala dramático.
+   ============================================================ */
+:root { --body: #4A4843; }
+
+.hero-h1, .st-text, .sessions-h, .fw-h, .join-h, .quote-text,
+.card-title, .section-h {
+  font-family: 'Satoshi', 'Inter', sans-serif;
+  font-style: normal;
+}
+/* Titulares: bold de verdad, grandes, tracking apretado */
+.hero-h1, .st-text, .sessions-h, .fw-h, .join-h { font-weight: 700; letter-spacing: -0.03em; }
+.quote-text { font-weight: 700; }
+.card-title { font-weight: 700; letter-spacing: -0.02em; }
+.section-h  { font-weight: 500; font-style: normal; }
+
+/* Énfasis *palabra* en salvia (sin itálica serif) */
+.hero-h1 em, .st-text em, .sessions-h em, .fw-h em, .join-h em { font-style: normal; color: var(--sage); }
+.quote-text em { font-style: normal; color: var(--citron); }
+
+/* Escala dramática: titular enorme que ocupa el ancho */
+.hero-h1    { font-size: clamp(3.4rem, 8vw, 8rem); line-height: 0.95; letter-spacing: -0.04em; }
+.join-h     { font-size: clamp(2.8rem, 6vw, 5.5rem); line-height: 0.98; }
+.st-text    { font-size: clamp(2.2rem, 4.5vw, 3.8rem); line-height: 1.16; }
+.sessions-h { font-size: clamp(2.4rem, 5vw, 4.2rem); line-height: 1.04; }
+.fw-h       { font-size: clamp(2.4rem, 5vw, 4.2rem); line-height: 1.04; }
+.quote-text { font-size: clamp(2rem, 4.2vw, 3.6rem); }
+
+/* Cuerpo: gris cálido, nunca negro puro */
+.hero-body, .sessions-body, .fw-body, .card-body, .pillar-body, .join-body { color: var(--body); }
+
+/* Números editoriales en Satoshi */
+.pillar-num, .tn { font-family: 'Satoshi', 'Inter', sans-serif; font-weight: 700; }
+
+/* Índice editorial: 01 · 02 · 03 antes de cada label (como revista) */
+.sec-no {
+  font-family: 'Satoshi', 'Inter', sans-serif; font-weight: 700;
+  color: var(--sage-l); margin-right: .6rem; letter-spacing: .02em;
+}
+
+/* "Dato flotante": frase mínima desalineada sobre la foto (firma visual) */
+.photo-divider-overlay { background: linear-gradient(to top right, rgba(20,18,14,.6) 0%, rgba(20,18,14,.22) 42%, transparent 72%); }
+.float-data { position: absolute; left: clamp(1.5rem, 5vw, 4.5rem); bottom: clamp(1.5rem, 5vw, 3.5rem); z-index: 2; max-width: 85%; }
+.float-data .fd-k { display: block; font-size: .58rem; letter-spacing: .26em; text-transform: uppercase; color: var(--citron); margin-bottom: .9rem; }
+.float-data .fd-t {
+  display: block; font-family: 'Satoshi', 'Inter', sans-serif; font-weight: 700;
+  font-size: clamp(1.9rem, 4.2vw, 3.4rem); line-height: 1.0; letter-spacing: -.03em; color: #F7F4EE;
+}
+
+/* Acceso compacto en móvil (Entrar/Únete) — oculto en escritorio */
+.nav-mobile { display: none; }
+.nav-mobile a { color: var(--body); text-decoration: none; font-size: .74rem; letter-spacing: .05em; }
+.nav-mobile a.nav-cta { color: var(--deep); border-bottom: 1px solid var(--deep); padding-bottom: .1rem; }
+
+@media (max-width: 768px) {
+  .hero-h1 { font-size: clamp(2.8rem, 13vw, 4.5rem); }
+  .photo-divider { height: 62vw; }
+  .float-data { left: 1.5rem; bottom: 1.5rem; }
+  .nav-mobile { display: flex; gap: 1.3rem; align-items: center; }
 }
 @endverbatim
 </style>
@@ -317,6 +381,15 @@ footer {
       <li><a href="{{ route('register') }}" class="nav-cta">Únete</a></li>
     @endauth
   </ul>
+  {{-- Acceso compacto en móvil (el menú completo se oculta) --}}
+  <div class="nav-mobile">
+    @auth
+      <a href="{{ auth()->user()->homeRoute() }}" class="nav-cta">Mi cuenta</a>
+    @else
+      <a href="{{ route('login') }}">Entrar</a>
+      <a href="{{ route('register') }}" class="nav-cta">Únete</a>
+    @endauth
+  </div>
 </nav>
 
 <!-- HERO -->
@@ -339,7 +412,7 @@ footer {
 
 <!-- STATEMENT -->
 <section class="statement" id="nosotros">
-  <p class="st-label">{{ landing('mission_label') }}</p>
+  <p class="st-label"><span class="sec-no">01</span>{{ landing('mission_label') }}</p>
   <p class="st-text">{!! landing_rich('mission_text') !!}</p>
 </section>
 
@@ -347,13 +420,13 @@ footer {
 <div class="pillars-wrap">
   <div class="pillars-header">
     <p class="section-label">{{ landing('pillars_label') }}</p>
-    <p class="section-h">{{ landing('pillars_heading') }}</p>
+    <h2 class="section-h">{{ landing('pillars_heading') }}</h2>
   </div>
   <div class="pillars">
     @foreach ([1,2,3,4] as $i)
     <div class="pillar">
       <p class="pillar-num">0{{ $i }}</p>
-      <p class="pillar-title">{{ landing("pillar{$i}_title") }}</p>
+      <h3 class="pillar-title">{{ landing("pillar{$i}_title") }}</h3>
       <p class="pillar-body">{{ landing("pillar{$i}_body") }}</p>
     </div>
     @endforeach
@@ -364,12 +437,16 @@ footer {
 <div class="photo-divider">
   <img src="{{ landing_image('divider_image', 'img/landing/divider.jpg') }}" alt="Movimiento fitness" />
   <div class="photo-divider-overlay"></div>
+  <div class="float-data">
+    <span class="fd-k">Kinvoo · Comunidad</span>
+    <span class="fd-t" lang="en">Where talent<br>meets fitness.</span>
+  </div>
 </div>
 
 <!-- SESSIONS -->
 <section class="sessions-wrap" id="sessions">
   <div class="sessions-left">
-    <p class="section-label">{{ landing('sessions_label') }}</p>
+    <p class="section-label"><span class="sec-no">02</span>{{ landing('sessions_label') }}</p>
     <h2 class="sessions-h">{!! landing_rich('sessions_heading') !!}</h2>
     <p class="sessions-body">{{ landing('sessions_body') }}</p>
     <a href="#unete" class="btn-primary">{{ landing('sessions_cta') }}</a>
@@ -387,7 +464,7 @@ footer {
 <section class="for-who" id="comunidad">
   <div class="for-who-header">
     <div>
-      <p class="section-label">{{ landing('forwho_label') }}</p>
+      <p class="section-label"><span class="sec-no">03</span>{{ landing('forwho_label') }}</p>
       <h2 class="fw-h">{!! landing_rich('forwho_heading') !!}</h2>
     </div>
     <p class="fw-body">{{ landing('forwho_body') }}</p>
@@ -396,7 +473,7 @@ footer {
     @foreach ([1,2,3] as $i)
     <div class="card">
       <p class="card-label">{{ landing("card{$i}_label") }}</p>
-      <p class="card-title">{{ landing("card{$i}_title") }}</p>
+      <h3 class="card-title">{{ landing("card{$i}_title") }}</h3>
       <p class="card-body">{{ landing("card{$i}_body") }}</p>
     </div>
     @endforeach
@@ -412,7 +489,7 @@ footer {
 <!-- JOIN -->
 <section class="join" id="unete">
   <div class="join-left">
-    <p class="join-label">{{ landing('join_label') }}</p>
+    <p class="join-label"><span class="sec-no">04</span>{{ landing('join_label') }}</p>
     <h2 class="join-h">{!! landing_rich('join_heading') !!}</h2>
   </div>
   <div class="join-right">
@@ -438,7 +515,8 @@ footer {
   <ul class="footer-links">
     <li><a href="#nosotros">Nosotros</a></li>
     <li><a href="#sessions">Sessions</a></li>
-    <li><a href="#comunidad">Comunidad</a></li>
+    <li><a href="{{ route('legal.privacidad') }}">Aviso de Privacidad</a></li>
+    <li><a href="{{ route('legal.terminos') }}">Términos y Condiciones</a></li>
     <li><a href="mailto:hola@gokinvoo.com">hola@gokinvoo.com</a></li>
   </ul>
   <p class="footer-copy">{{ landing('footer_copy') }}</p>

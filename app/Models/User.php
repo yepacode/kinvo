@@ -121,18 +121,18 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Ruta de aterrizaje según rol y estado (usada tras login/registro).
      */
-    public function homeRoute(): string
+    public function homeRoute(bool $absolute = true): string
     {
         if ($this->esAdmin()) {
-            return route('filament.admin.pages.dashboard');
+            return route('filament.admin.pages.dashboard', absolute: $absolute);
         }
 
         // Aprobación activada: mientras no esté activo, va al aviso de cuenta pendiente.
         if (! $this->estaActivo()) {
-            return route('account.pending');
+            return route('account.pending', absolute: $absolute);
         }
 
         // Áreas por rol (buscador del contratante y panel del profesional llegan en F3/F4).
-        return route('dashboard');
+        return route('dashboard', absolute: $absolute);
     }
 }

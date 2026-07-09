@@ -11,8 +11,8 @@
  * Paleta y tipografías extraídas de la landing (gokinvoo.com).
  */
 @theme {
-    /* Tipografías */
-    --font-serif: 'Cormorant Garamond', ui-serif, Georgia, 'Times New Roman', serif;
+    /* Tipografías — titulares en Satoshi (dirección editorial del cliente) */
+    --font-serif: 'Satoshi', 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
@@ -23,6 +23,6 @@
     --color-ink: #1C1C1A;         /* casi-negro — texto, header/footer */
     --color-cream: #F7F4EE;       /* crema — fondo base */
     --color-beige: #EFECE4;       /* beige — cards, secciones alternas */
-    --color-warmgray: #8A8A78;    /* topo cálido — texto secundario */
+    --color-warmgray: #6E6E5F;    /* topo cálido — texto secundario (contraste AA) */
     --color-line: #E0DDD5;        /* bordes, divisores */
 }

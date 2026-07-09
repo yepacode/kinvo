@@ -13,6 +13,23 @@ use Illuminate\View\View;
 
 class ContactController extends Controller
 {
+    /** Bandeja del profesional: contactos que le han enviado (los marca como leídos). */
+    public function recibidos(Request $request): View
+    {
+        $user = $request->user();
+        abort_unless($user->esProfesional(), 403);
+
+        $profile = $user->professionalProfile()->firstOrCreate([]);
+        $contactos = $profile->contacts()->latest()->paginate(15);
+
+        // Marcar como leídos los no leídos (después de paginar, para que la vista
+        // aún pueda resaltar cuáles llegaron sin leer en esta visita).
+        $profile->contacts()->where('estado', EstadoContacto::NoLeido->value)
+            ->update(['estado' => EstadoContacto::Leido->value]);
+
+        return view('professional.contactos', ['contactos' => $contactos]);
+    }
+
     /** Muestra el formulario para contactar a un profesional. */
     public function create(Request $request, ProfessionalProfile $professionalProfile): View
     {

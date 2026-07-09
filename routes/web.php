@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CompanyProfileController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\ProfessionalProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
@@ -18,9 +19,20 @@ Route::get('/', function () {
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
 
+// Páginas legales (públicas, editables desde el panel).
+Route::get('/aviso-de-privacidad', [LegalController::class, 'privacidad'])->name('legal.privacidad');
+Route::get('/terminos-y-condiciones', [LegalController::class, 'terminos'])->name('legal.terminos');
+
+// Descarga del adjunto privado de certificaciones (solo admin; validado en el controller).
+Route::get('/panel/certificacion/{professionalProfile}', [ProfessionalProfileController::class, 'certificacion'])
+    ->middleware('auth')->name('admin.certificacion');
+
 // Buscador y vista pública del talento (solo perfiles publicados).
 Route::get('/talento', [TalentoController::class, 'index'])->name('talento.index');
 Route::get('/talento/{professionalProfile:slug}', [TalentoController::class, 'show'])->name('talento.show');
+
+// Página pública del estudio (solo si el dueño está activo).
+Route::get('/estudio/{companyProfile:slug}', [CompanyProfileController::class, 'show'])->name('estudio.show');
 
 // Aviso de cuenta pendiente/suspendida (no pasa por el gate de estado).
 Route::get('/cuenta/pendiente', function () {
@@ -42,6 +54,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
     Route::get('/mi-perfil', [ProfessionalProfileController::class, 'edit'])->name('professional.profile.edit');
     Route::put('/mi-perfil', [ProfessionalProfileController::class, 'update'])->name('professional.profile.update');
+
+    // Bandeja de contactos recibidos (profesional).
+    Route::get('/mis-contactos', [ContactController::class, 'recibidos'])->name('professional.contactos');
 
     Route::get('/mi-empresa', [CompanyProfileController::class, 'edit'])->name('company.profile.edit');
     Route::put('/mi-empresa', [CompanyProfileController::class, 'update'])->name('company.profile.update');

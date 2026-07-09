@@ -27,6 +27,7 @@ class RegistrationTest extends TestCase
             'email' => 'coach@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'acepta_legales' => '1',
         ]);
 
         $this->assertAuthenticated();
@@ -45,11 +46,28 @@ class RegistrationTest extends TestCase
             'email' => 'gym@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'acepta_legales' => '1',
         ]);
 
         $user = User::where('email', 'gym@example.com')->first();
         $this->assertSame(RolUsuario::Contractor, $user->nivel);
         $this->assertSame(EstadoUsuario::Pendiente, $user->estado);
+    }
+
+    public function test_registration_requires_accepting_legal_terms(): void
+    {
+        $response = $this->post('/register', [
+            'name' => 'Sin Aceptar',
+            'tipo' => 'professional',
+            'email' => 'legal@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            // acepta_legales ausente
+        ]);
+
+        $response->assertSessionHasErrors('acepta_legales');
+        $this->assertGuest();
+        $this->assertNull(User::where('email', 'legal@example.com')->first());
     }
 
     public function test_registration_requires_a_valid_tipo(): void

@@ -16,7 +16,7 @@
             @forelse ($notifications as $n)
                 <a href="{{ route('notifications.open', $n->id) }}"
                    class="flex gap-4 border-b border-line/60 px-5 py-4 transition hover:bg-cream {{ is_null($n->read_at) ? 'bg-sage/5' : '' }}">
-                    <span class="text-2xl">{{ $n->data['icono'] ?? '🔔' }}</span>
+                    <span class="text-2xl" aria-hidden="true">{{ $n->data['icono'] ?? '🔔' }}</span>
                     <div class="min-w-0 flex-1">
                         <p class="text-sm font-medium text-ink">{{ $n->data['titulo'] ?? 'Notificación' }}</p>
                         <p class="text-sm text-warmgray">{{ $n->data['mensaje'] ?? '' }}</p>

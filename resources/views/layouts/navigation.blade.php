@@ -4,7 +4,7 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="font-serif text-2xl font-medium tracking-tight text-ink">Kinvoo</a>
+                    <a href="{{ url('/') }}" class="font-serif text-2xl font-medium tracking-tight text-ink">Kinvoo</a>
                 </div>
 
                 <!-- Navigation Links -->
@@ -15,6 +15,9 @@
                     @if (auth()->user()->esProfesional())
                         <x-nav-link :href="route('professional.profile.edit')" :active="request()->routeIs('professional.profile.*')">
                             Mi perfil
+                        </x-nav-link>
+                        <x-nav-link :href="route('professional.contactos')" :active="request()->routeIs('professional.contactos')">
+                            Contactos
                         </x-nav-link>
                     @elseif (auth()->user()->esContratante())
                         <x-nav-link :href="route('company.profile.edit')" :active="request()->routeIs('company.profile.*')">
@@ -72,8 +75,11 @@
                         <span class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-lime px-1 text-[10px] font-semibold text-ink">{{ $unreadNav > 9 ? '9+' : $unreadNav }}</span>
                     @endif
                 </a>
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-warmgray hover:bg-beige focus:outline-none transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                <button @click="open = ! open" type="button"
+                        aria-controls="mobile-menu" :aria-expanded="open ? 'true' : 'false'"
+                        :aria-label="open ? 'Cerrar menú' : 'Abrir menú'"
+                        class="inline-flex items-center justify-center p-2 rounded-md text-warmgray hover:bg-beige focus:outline-none focus-visible:ring-2 focus-visible:ring-sage transition duration-150 ease-in-out">
+                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -83,7 +89,7 @@
     </div>
 
     <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden" id="mobile-menu">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 Inicio

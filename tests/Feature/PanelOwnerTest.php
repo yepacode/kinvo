@@ -69,6 +69,7 @@ class PanelOwnerTest extends TestCase
 
         Livewire::test(ResumenStats::class)
             ->assertSee('Pendientes de aprobación')
-            ->assertSee('Contactos del mes');
+            ->assertSee('Contactos')
+            ->assertSee('total en la plataforma');
     }
 }

@@ -11,18 +11,91 @@ use Illuminate\Support\Str;
 class ProfessionalProfile extends Model
 {
     protected $fillable = [
-        'user_id', 'slug', 'photo_path', 'headline', 'bio',
-        'years_experience', 'modalidad', 'location_id', 'phone',
+        'user_id', 'slug', 'full_name', 'photo_path', 'headline', 'birthdate', 'bio',
+        'years_experience', 'modalidad', 'availability', 'languages',
+        'certifications_text', 'certification_file_path', 'media_url',
+        'location_id', 'phone',
         'socials', 'is_published', 'is_verified', 'verified_at',
     ];
 
     protected $casts = [
         'socials' => 'array',
+        'availability' => 'array',
+        'languages' => 'array',
+        'birthdate' => 'date',
         'is_published' => 'boolean',
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
         'modalidad' => ModalidadTrabajo::class,
     ];
+
+    /** Días de disponibilidad (clave => etiqueta). */
+    public const DIAS = [
+        'lun' => 'Lunes',
+        'mar' => 'Martes',
+        'mie' => 'Miércoles',
+        'jue' => 'Jueves',
+        'vie' => 'Viernes',
+        'fds' => 'Fines de semana',
+    ];
+
+    /** Franjas horarias. */
+    public const FRANJAS = [
+        'am' => 'AM',
+        'pm' => 'PM',
+    ];
+
+    /** Idiomas soportados (solo inglés y español). */
+    public const IDIOMAS = [
+        'es' => 'Español',
+        'en' => 'Inglés',
+    ];
+
+    /** Todas las claves válidas de disponibilidad (lun_am, lun_pm, ...). */
+    public static function slotsDisponibilidad(): array
+    {
+        $slots = [];
+        foreach (array_keys(self::DIAS) as $dia) {
+            foreach (array_keys(self::FRANJAS) as $franja) {
+                $slots[] = $dia.'_'.$franja;
+            }
+        }
+
+        return $slots;
+    }
+
+    /** ¿El profesional marcó este slot (día_franja)? */
+    public function tieneDisponibilidad(string $slot): bool
+    {
+        return in_array($slot, $this->availability ?? [], true);
+    }
+
+    /** Etiquetas legibles de los idiomas seleccionados. */
+    public function idiomasLegibles(): array
+    {
+        return collect($this->languages ?? [])
+            ->map(fn ($cod) => self::IDIOMAS[$cod] ?? $cod)
+            ->all();
+    }
+
+    /** Resumen legible de disponibilidad por día: ["Lunes" => "AM · PM", ...]. */
+    public function disponibilidadPorDia(): array
+    {
+        $resumen = [];
+        foreach (self::DIAS as $dia => $etiquetaDia) {
+            $franjas = [];
+            foreach (self::FRANJAS as $franja => $etiquetaFranja) {
+                if ($this->tieneDisponibilidad($dia.'_'.$franja)) {
+                    $franjas[] = $etiquetaFranja;
+                }
+            }
+            if ($franjas) {
+                $resumen[$etiquetaDia] = implode(' · ', $franjas);
+            }
+        }
+
+        return $resumen;
+    }
 
     protected static function booted(): void
     {
@@ -52,11 +125,6 @@ class ProfessionalProfile extends Model
     public function disciplines(): BelongsToMany
     {
         return $this->belongsToMany(Discipline::class);
-    }
-
-    public function certifications(): BelongsToMany
-    {
-        return $this->belongsToMany(Certification::class);
     }
 
     public function contacts(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -93,13 +161,15 @@ class ProfessionalProfile extends Model
         return [
             'Foto' => filled($this->photo_path),
             'Titular' => filled($this->headline),
+            'Fecha de nacimiento' => ! is_null($this->birthdate),
             'Presentación (bio)' => filled($this->bio),
             'Años de experiencia' => ! is_null($this->years_experience),
             'Modalidad' => ! is_null($this->modalidad),
+            'Disponibilidad' => collect($this->availability ?? [])->isNotEmpty(),
+            'Idiomas' => collect($this->languages ?? [])->isNotEmpty(),
             'Ubicación' => ! is_null($this->location_id),
             'Disciplinas' => $this->disciplines()->exists(),
-            'Certificaciones' => $this->certifications()->exists(),
-            'Redes o sitio web' => collect($this->socials ?? [])->filter()->isNotEmpty(),
+            'Certificaciones' => filled($this->certifications_text),
         ];
     }
 

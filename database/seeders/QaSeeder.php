@@ -6,7 +6,6 @@ use App\Enums\EstadoContacto;
 use App\Enums\EstadoUsuario;
 use App\Enums\ModalidadTrabajo;
 use App\Enums\RolUsuario;
-use App\Models\Certification;
 use App\Models\Discipline;
 use App\Models\Location;
 use App\Models\ProfessionalProfile;
@@ -24,7 +23,6 @@ use Illuminate\Support\Str;
 class QaSeeder extends Seeder
 {
     private array $slugsDisciplinas;
-    private array $slugsCertificaciones;
     private array $ciudades;
     private array $modalidades;
 
@@ -33,7 +31,6 @@ class QaSeeder extends Seeder
         $this->call(TaxonomiaSeeder::class);
 
         $this->slugsDisciplinas = Discipline::pluck('slug')->all();
-        $this->slugsCertificaciones = Certification::pluck('slug')->all();
         $this->ciudades = Location::pluck('ciudad')->all();
         $this->modalidades = array_column(ModalidadTrabajo::cases(), 'value');
 
@@ -51,7 +48,6 @@ class QaSeeder extends Seeder
                 'is_verified' => (bool) rand(0, 1),
                 'con_foto' => (bool) rand(0, 1),
                 'discs' => $f->randomElements($this->slugsDisciplinas, rand(1, 4)),
-                'certs' => $f->randomElements($this->slugsCertificaciones, rand(0, 3)),
             ]);
         }
 
@@ -91,7 +87,7 @@ class QaSeeder extends Seeder
             'con_foto' => true,
             'socials' => ['web' => 'https://carla.example.com', 'instagram' => '@carla', 'tiktok' => '@carla'],
             'discs' => ['yoga', 'pilates'],
-            'certs' => ['nasm-cpt'],
+            'completo' => true,
         ]);
 
         // ---- Contratantes ----
@@ -159,10 +155,18 @@ class QaSeeder extends Seeder
 
     private function perfilProfesional(User $u, array $data): void
     {
+        $completo = $data['completo'] ?? false;
         $p = $u->professionalProfile()->firstOrCreate([]);
         $p->update([
             'headline' => $data['headline'] ?? null,
             'bio' => $data['bio'] ?? null,
+            // Campos nuevos (Lotes B): si el perfil es "completo" o publicado, se llenan
+            // para que el % de completitud sea real y las secciones nuevas tengan contenido.
+            'birthdate' => ($completo || ($data['is_published'] ?? false)) ? '1992-04-15' : null,
+            'availability' => ($completo || ($data['is_published'] ?? false)) ? ['lun_am', 'mie_pm', 'vie_am', 'fds_am'] : null,
+            'languages' => ($completo || ($data['is_published'] ?? false)) ? ['es', 'en'] : null,
+            'certifications_text' => ($completo || ($data['is_published'] ?? false)) ? 'NASM-CPT, Instructor certificado, Primeros auxilios' : null,
+            'media_url' => $completo ? 'https://youtube.com/watch?v=qa-demo' : null,
             'years_experience' => $data['years_experience'] ?? null,
             'modalidad' => $data['modalidad'] ?? null,
             'location_id' => Location::where('ciudad', fake('es_ES')->randomElement($this->ciudades))->value('id'),
@@ -170,13 +174,10 @@ class QaSeeder extends Seeder
             'is_published' => $data['is_published'] ?? false,
             'is_verified' => $data['is_verified'] ?? false,
             'verified_at' => ($data['is_verified'] ?? false) ? now() : null,
-            'photo_path' => ($data['con_foto'] ?? false) ? 'perfiles/placeholder.jpg' : null,
+            'photo_path' => ($data['con_foto'] ?? false || $completo) ? 'perfiles/placeholder.jpg' : null,
         ]);
         if (! empty($data['discs'])) {
             $p->disciplines()->sync(Discipline::whereIn('slug', $data['discs'])->pluck('id'));
-        }
-        if (! empty($data['certs'])) {
-            $p->certifications()->sync(Certification::whereIn('slug', $data['certs'])->pluck('id'));
         }
     }
 

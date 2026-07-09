@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 class Certification extends Model
@@ -12,6 +11,8 @@ class Certification extends Model
 
     protected $casts = ['activo' => 'boolean'];
 
+    // Catálogo de referencia. Desde el rediseño, los profesionales capturan sus
+    // certificaciones como texto libre (no se enlazan a esta taxonomía).
     protected static function booted(): void
     {
         static::saving(function (Certification $c) {
@@ -19,14 +20,6 @@ class Certification extends Model
                 $c->slug = Str::slug($c->nombre);
             }
         });
-
-        // No permitir borrar una certificación en uso.
-        static::deleting(fn (Certification $c) => $c->professionals()->doesntExist());
-    }
-
-    public function professionals(): BelongsToMany
-    {
-        return $this->belongsToMany(ProfessionalProfile::class);
     }
 
     public function nombreLocalizado(): string

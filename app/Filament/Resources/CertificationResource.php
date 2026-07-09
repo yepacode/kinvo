@@ -57,10 +57,6 @@ class CertificationResource extends Resource
                     ->label('Nombre (EN)')
                     ->searchable()
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('professionals_count')
-                    ->label('Profesionales')
-                    ->counts('professionals')
-                    ->badge(),
                 Tables\Columns\IconColumn::make('activo')
                     ->label('Activa')
                     ->boolean(),

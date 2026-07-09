@@ -7,7 +7,7 @@
             @if ($profile->photo_path)
                 <img src="{{ Storage::url($profile->photo_path) }}" alt="{{ $profile->user->name }}" class="h-full w-full object-cover">
             @else
-                <div class="flex h-full w-full items-center justify-center text-2xl text-warmgray">🏋️</div>
+                <div class="flex h-full w-full items-center justify-center text-2xl text-warmgray" aria-hidden="true">🏋️</div>
             @endif
         </div>
         <div class="min-w-0">
@@ -20,7 +20,7 @@
 
     <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-warmgray">
         @if ($profile->location)
-            <span>📍 {{ $profile->location->etiqueta() }}</span>
+            <span><span aria-hidden="true">📍</span> {{ $profile->location->etiqueta() }}</span>
         @endif
         @if ($profile->modalidad)
             <span>· {{ $profile->modalidad->label() }}</span>

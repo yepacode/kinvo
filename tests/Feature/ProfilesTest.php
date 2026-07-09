@@ -23,6 +23,7 @@ class ProfilesTest extends TestCase
             'email' => 'ana@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'acepta_legales' => '1',
         ]);
 
         $user = User::where('email', 'ana@example.com')->first();
@@ -38,6 +39,7 @@ class ProfilesTest extends TestCase
             'email' => 'gym@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'acepta_legales' => '1',
         ]);
 
         $user = User::where('email', 'gym@example.com')->first();
@@ -116,10 +118,17 @@ class ProfilesTest extends TestCase
 
         $this->actingAs($user)->put('/mi-empresa', [
             'company_name' => 'Estudio Zen',
-            'sector' => 'Estudio de yoga',
+            'disciplines_text' => 'Yoga, Pilates',
+            'estado' => 'Jalisco',
+            'postal_code' => '44100',
+            'contact_name' => 'Ana',
+            'contact_email' => 'ana@zen.example.com',
             'website' => 'https://zen.example.com',
         ])->assertRedirect(route('company.profile.edit'));
 
-        $this->assertSame('Estudio Zen', $user->companyProfile()->first()->company_name);
+        $empresa = $user->companyProfile()->first();
+        $this->assertSame('Estudio Zen', $empresa->company_name);
+        $this->assertSame('Jalisco', $empresa->estado);
+        $this->assertSame('Yoga, Pilates', $empresa->disciplines_text);
     }
 }

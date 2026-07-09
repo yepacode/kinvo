@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CompanyProfile;
 use App\Models\ProfessionalProfile;
 use Illuminate\Http\Response;
 
@@ -15,8 +16,13 @@ class SeoController extends Controller
             ->orderByDesc('updated_at')
             ->get();
 
+        $estudios = CompanyProfile::visiblePublicamente()
+            ->select('slug', 'updated_at')
+            ->orderByDesc('updated_at')
+            ->get();
+
         return response()
-            ->view('seo.sitemap', ['perfiles' => $perfiles])
+            ->view('seo.sitemap', ['perfiles' => $perfiles, 'estudios' => $estudios])
             ->header('Content-Type', 'application/xml');
     }
 
