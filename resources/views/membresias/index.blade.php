@@ -1,5 +1,11 @@
 <x-public-layout :title="landing('membership_title').' · Kinvoo'" :description="landing('membership_body')">
     <div class="mx-auto max-w-5xl px-6 py-14 sm:py-20">
+        @if (session('status') === 'membresia-requerida')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
+                Para acceder al directorio de talento necesitas una <strong>membresía activa</strong>. Elige un plan abajo o escríbenos.
+            </div>
+        @endif
+
         <header class="mx-auto max-w-2xl text-center">
             <p class="text-xs font-medium uppercase tracking-[0.24em] text-sage">{{ landing('membership_eyebrow') }}</p>
             <h1 class="mt-3 font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl">{{ landing('membership_title') }}</h1>

@@ -20,6 +20,16 @@
             </p>
         </div>
 
+        @if (auth()->user()->tieneMembresiaActiva())
+            <div class="mb-6 rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm text-sage">
+                ✓ Tu membresía está activa{{ auth()->user()->membership_expires_at ? ' hasta el '.auth()->user()->membership_expires_at->format('d/m/Y') : '' }}. Tienes acceso al directorio de talento.
+            </div>
+        @else
+            <div class="mb-6 rounded-xl border border-lime/40 bg-lime/10 px-4 py-3 text-sm text-ink">
+                Tu membresía no está activa. <a href="{{ route('membresias.index') }}" class="font-medium text-sage underline hover:text-ink">Ver planes</a> para acceder al directorio de talento.
+            </div>
+        @endif
+
         @if (session('status') === 'empresa-actualizada')
             <div class="mb-6 rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm text-sage">
                 ✓ Los datos de tu empresa se guardaron correctamente.

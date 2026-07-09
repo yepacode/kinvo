@@ -55,11 +55,20 @@ class UserFactory extends Factory
         ]);
     }
 
-    /** Usuario contratante. */
+    /** Usuario contratante (con membresía activa por defecto). */
     public function contratante(): static
     {
         return $this->state(fn (array $attributes) => [
             'nivel' => RolUsuario::Contractor,
+            'membership_expires_at' => now()->addMonth(),
+        ]);
+    }
+
+    /** Contratante sin membresía activa (para probar el gate al directorio). */
+    public function sinMembresia(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'membership_expires_at' => null,
         ]);
     }
 

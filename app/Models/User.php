@@ -54,6 +54,7 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'nivel' => RolUsuario::class,
             'estado' => EstadoUsuario::class,
+            'membership_expires_at' => 'date',
         ];
     }
 
@@ -92,6 +93,18 @@ class User extends Authenticatable implements FilamentUser
     public function estaActivo(): bool
     {
         return $this->estado === EstadoUsuario::Activo;
+    }
+
+    public function membershipPlan(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Plan::class, 'membership_plan_id');
+    }
+
+    /** ¿Tiene una membresía vigente (vence hoy o en el futuro)? */
+    public function tieneMembresiaActiva(): bool
+    {
+        return $this->membership_expires_at !== null
+            && $this->membership_expires_at->gte(today());
     }
 
     public function professionalProfile(): HasOne

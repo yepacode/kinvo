@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'cuenta.activa' => \App\Http\Middleware\EnsureCuentaActiva::class,
             'nocache' => \App\Http\Middleware\NoCacheAutenticado::class,
+            'membresia' => \App\Http\Middleware\EnsureContractorMembership::class,
         ]);
 
         // Cabeceras de seguridad en todas las respuestas web (anti-clickjacking, nosniff).

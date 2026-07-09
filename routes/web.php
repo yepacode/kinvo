@@ -32,8 +32,10 @@ Route::get('/panel/certificacion/{professionalProfile}', [ProfessionalProfileCon
     ->middleware('auth')->name('admin.certificacion');
 
 // Buscador y vista pública del talento (solo perfiles publicados).
-Route::get('/talento', [TalentoController::class, 'index'])->name('talento.index');
-Route::get('/talento/{professionalProfile:slug}', [TalentoController::class, 'show'])->name('talento.show');
+// El middleware 'membresia' solo bloquea a contratantes sin membresía vigente;
+// visitantes anónimos y profesionales pasan sin restricción.
+Route::get('/talento', [TalentoController::class, 'index'])->middleware('membresia')->name('talento.index');
+Route::get('/talento/{professionalProfile:slug}', [TalentoController::class, 'show'])->middleware('membresia')->name('talento.show');
 
 // Página pública del estudio (solo si el dueño está activo).
 Route::get('/estudio/{companyProfile:slug}', [CompanyProfileController::class, 'show'])->name('estudio.show');
@@ -66,9 +68,10 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
     Route::put('/mi-empresa', [CompanyProfileController::class, 'update'])->name('company.profile.update');
 
     // Contactar a un profesional (solo contratantes, validado en el controller). Con rate limit anti-spam.
-    Route::get('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'create'])->name('contacto.create');
+    Route::get('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'create'])
+        ->middleware('membresia')->name('contacto.create');
     Route::post('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'store'])
-        ->middleware('throttle:8,1')->name('contacto.store');
+        ->middleware(['membresia', 'throttle:8,1'])->name('contacto.store');
 
     // Notificaciones (campana)
     Route::get('/notificaciones', [NotificationController::class, 'index'])->name('notifications.index');

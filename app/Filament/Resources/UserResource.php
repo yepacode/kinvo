@@ -112,6 +112,12 @@ class UserResource extends Resource
                     Infolists\Components\TextEntry::make('companyProfile.contact_email')->label('Email (privado)')->copyable()->placeholder('—'),
                     Infolists\Components\TextEntry::make('companyProfile.media_url')->label('Multimedia')
                         ->url(fn (User $record) => $record->companyProfile->media_url)->openUrlInNewTab()->placeholder('—'),
+                    Infolists\Components\TextEntry::make('membershipPlan.nombre')->label('Plan de membresía')->placeholder('Sin plan'),
+                    Infolists\Components\TextEntry::make('membership_expires_at')->label('Membresía vence')
+                        ->date('d/m/Y')
+                        ->badge()
+                        ->color(fn (User $record) => $record->tieneMembresiaActiva() ? 'success' : 'danger')
+                        ->placeholder('Sin membresía'),
                 ])->columns(2),
         ]);
     }
@@ -138,6 +144,13 @@ class UserResource extends Resource
                         EstadoUsuario::Activo => 'success',
                         EstadoUsuario::Suspendido => 'danger',
                     }),
+                Tables\Columns\TextColumn::make('membresia')
+                    ->label('Membresía')
+                    ->state(fn (User $u) => $u->esContratante()
+                        ? ($u->tieneMembresiaActiva() ? 'Activa' : 'Sin membresía')
+                        : '—')
+                    ->badge()
+                    ->color(fn (string $state) => $state === 'Activa' ? 'success' : 'gray'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Registro')
                     ->date('d/m/Y')
@@ -212,6 +225,28 @@ class UserResource extends Resource
                     ->color('success')
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Suspendido)
                     ->action(fn (User $u) => $u->forceFill(['estado' => EstadoUsuario::Activo])->save()),
+                Tables\Actions\Action::make('membresia')
+                    ->label('Membresía')
+                    ->icon('heroicon-o-credit-card')
+                    ->color('warning')
+                    ->visible(fn (User $u) => $u->esContratante())
+                    ->fillForm(fn (User $u) => [
+                        'membership_plan_id' => $u->membership_plan_id,
+                        'membership_expires_at' => $u->membership_expires_at,
+                    ])
+                    ->form([
+                        \Filament\Forms\Components\Select::make('membership_plan_id')
+                            ->label('Plan')
+                            ->options(\App\Models\Plan::orderBy('orden')->pluck('nombre', 'id'))
+                            ->searchable(),
+                        \Filament\Forms\Components\DatePicker::make('membership_expires_at')
+                            ->label('Vence el')
+                            ->helperText('Deja vacío para quitar la membresía (queda inactiva).'),
+                    ])
+                    ->action(fn (User $u, array $data) => $u->forceFill([
+                        'membership_plan_id' => $data['membership_plan_id'] ?? null,
+                        'membership_expires_at' => $data['membership_expires_at'] ?? null,
+                    ])->save()),
             ])
             ->bulkActions([]);
     }
