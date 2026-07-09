@@ -37,7 +37,8 @@ class SecurityHeaders
                 "img-src 'self' data:",
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com",
                 "font-src 'self' data: https://fonts.gstatic.com https://api.fontshare.com https://cdn.fontshare.com",
-                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+                // 'unsafe-eval' es necesario para Alpine.js (evalúa x-show/@click con Function()).
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
                 "connect-src 'self'",
                 "form-action 'self'",
             ]);
