@@ -3,6 +3,7 @@
 use App\Http\Controllers\CompanyProfileController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\LegalController;
+use App\Http\Controllers\MembresiaController;
 use App\Http\Controllers\ProfessionalProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
@@ -18,6 +19,9 @@ Route::get('/', function () {
 // SEO técnico
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
+
+// Membresías (planes públicos).
+Route::get('/membresias', [MembresiaController::class, 'index'])->name('membresias.index');
 
 // Páginas legales (públicas, editables desde el panel).
 Route::get('/aviso-de-privacidad', [LegalController::class, 'privacidad'])->name('legal.privacidad');

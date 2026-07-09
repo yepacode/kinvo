@@ -11,6 +11,11 @@
         <priority>0.9</priority>
     </url>
     <url>
+        <loc>{{ route('membresias.index') }}</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>{{ route('legal.privacidad') }}</loc>
         <changefreq>yearly</changefreq>
         <priority>0.3</priority>

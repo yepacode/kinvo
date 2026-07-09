@@ -1,0 +1,77 @@
+<x-public-layout :title="landing('membership_title').' · Kinvoo'" :description="landing('membership_body')">
+    <div class="mx-auto max-w-5xl px-6 py-14 sm:py-20">
+        <header class="mx-auto max-w-2xl text-center">
+            <p class="text-xs font-medium uppercase tracking-[0.24em] text-sage">{{ landing('membership_eyebrow') }}</p>
+            <h1 class="mt-3 font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl">{{ landing('membership_title') }}</h1>
+            <p class="mt-4 text-warmgray">{{ landing('membership_body') }}</p>
+        </header>
+
+        @php
+            $grupos = [
+                ['titulo' => landing('membership_individual_title'), 'planes' => $individuales],
+                ['titulo' => landing('membership_studio_title'), 'planes' => $estudios],
+            ];
+        @endphp
+
+        @foreach ($grupos as $grupo)
+            @continue($grupo['planes']->isEmpty())
+            <section class="mt-14">
+                <h2 class="font-serif text-2xl font-medium text-ink">{{ $grupo['titulo'] }}</h2>
+                <div class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($grupo['planes'] as $plan)
+                        <div class="relative flex flex-col rounded-2xl border bg-white p-6 {{ $plan->destacado ? 'border-sage ring-1 ring-sage' : 'border-line' }}">
+                            @if ($plan->destacado)
+                                <span class="absolute -top-3 left-6 rounded-full bg-sage px-3 py-1 text-xs font-medium text-cream">Recomendado</span>
+                            @endif
+
+                            <h3 class="font-serif text-xl font-medium text-ink">{{ $plan->nombre }}</h3>
+
+                            <p class="mt-2 text-ink">
+                                @if (! is_null($plan->precio))
+                                    <span class="text-2xl font-semibold">${{ number_format($plan->precio, 0) }}</span>
+                                    <span class="text-sm text-warmgray">{{ $plan->moneda }} / {{ $plan->periodoLabel() }}</span>
+                                @else
+                                    <span class="text-lg font-medium text-warmgray">A consultar</span>
+                                @endif
+                            </p>
+
+                            @if ($plan->descripcion)
+                                <p class="mt-3 text-sm text-warmgray">{{ $plan->descripcion }}</p>
+                            @endif
+
+                            @if (! empty($plan->beneficios))
+                                <ul class="mt-4 space-y-2 text-sm text-ink/90">
+                                    @foreach ($plan->beneficios as $beneficio)
+                                        <li class="flex items-start gap-2">
+                                            <span class="mt-0.5 text-sage" aria-hidden="true">✓</span>
+                                            <span>{{ $beneficio }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+
+                            @if ($plan->cobertura)
+                                <p class="mt-4 border-t border-line pt-3 text-xs text-warmgray">
+                                    <span class="font-medium text-ink">Cobertura:</span> {{ $plan->cobertura }}
+                                </p>
+                            @endif
+
+                            <a href="{{ route('register') }}"
+                               class="mt-6 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition {{ $plan->destacado ? 'bg-sage text-cream hover:bg-ink' : 'border border-line text-ink hover:border-sage hover:text-sage' }}">
+                                Únete
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endforeach
+
+        @if ($individuales->isEmpty() && $estudios->isEmpty())
+            <p class="mt-14 text-center text-warmgray">Pronto publicaremos nuestros planes de membresía.</p>
+        @endif
+
+        @if (landing('membership_note'))
+            <p class="mt-12 text-center text-xs text-warmgray">{{ landing('membership_note') }}</p>
+        @endif
+    </div>
+</x-public-layout>

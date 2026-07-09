@@ -127,6 +127,15 @@ class ConfiguracionSitio extends Page implements HasForms
                             ->image()->disk('public')->directory('landing')->imageEditor(),
                     ]),
 
+                    Tabs\Tab::make('Membresías')->icon('heroicon-o-credit-card')->schema([
+                        TextInput::make('membership_eyebrow')->label('Antetítulo'),
+                        TextInput::make('membership_title')->label('Título'),
+                        Textarea::make('membership_body')->label('Introducción')->rows(3),
+                        TextInput::make('membership_individual_title')->label('Título grupo · Talento'),
+                        TextInput::make('membership_studio_title')->label('Título grupo · Estudios'),
+                        TextInput::make('membership_note')->label('Nota al pie'),
+                    ]),
+
                     Tabs\Tab::make('Mensajes')->icon('heroicon-o-hand-raised')->schema([
                         TextInput::make('welcome_pro_title')->label('Bienvenida Profesional · Título'),
                         Textarea::make('welcome_pro_body')->label('Bienvenida Profesional · Texto')->rows(10)

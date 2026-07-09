@@ -136,6 +136,14 @@ Nos da gusto tenerte aquí. Kinvoo conecta a los estudios con la gente que hace 
 Una vez que completes el perfil de tu estudio, nuestro equipo lo revisará y lo activará en un máximo de 24 horas.
 TXT,
 
+            // Membresías (página pública de planes)
+            'membership_eyebrow' => 'Membresías',
+            'membership_title' => 'Elige tu membresía',
+            'membership_body' => 'Planes pensados para el talento y para los estudios. Únete a la red y accede a la comunidad, las oportunidades y el respaldo de Kinvoo.',
+            'membership_note' => 'Los precios y beneficios pueden variar. Escríbenos si tienes dudas.',
+            'membership_individual_title' => 'Para talento (persona física)',
+            'membership_studio_title' => 'Para estudios y marcas',
+
             // Legales — Aviso de Privacidad
             'legal_privacy_title' => 'Aviso de Privacidad',
             'legal_privacy_updated' => 'Última actualización: 2026',
