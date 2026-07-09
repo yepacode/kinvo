@@ -10,8 +10,12 @@ class CompanyProfile extends Model
 {
     protected $fillable = [
         'user_id', 'company_name', 'slug', 'sector', 'disciplines_text', 'logo_path',
-        'description', 'website', 'location_id', 'estado', 'address', 'postal_code',
+        'description', 'website', 'location_id', 'estado', 'address', 'postal_code', 'show_address',
         'contact_name', 'contact_phone', 'contact_email', 'media_url',
+    ];
+
+    protected $casts = [
+        'show_address' => 'boolean',
     ];
 
     /** Estados de México para el selector de ubicación del estudio. */

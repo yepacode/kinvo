@@ -18,10 +18,10 @@
             'description' => $profile->description ? strip_tags($profile->description) : null,
             'image' => $profile->logo_path ? Storage::url($profile->logo_path) : null,
             'url' => $profile->website ?: null,
-            'address' => ($profile->estado || $profile->address) ? array_filter([
+            'address' => ($profile->estado || ($profile->show_address && $profile->address)) ? array_filter([
                 '@type' => 'PostalAddress',
-                'streetAddress' => $profile->address,
-                'postalCode' => $profile->postal_code,
+                'streetAddress' => $profile->show_address ? $profile->address : null,
+                'postalCode' => $profile->show_address ? $profile->postal_code : null,
                 'addressRegion' => $profile->estado,
                 'addressCountry' => 'MX',
             ]) : null,
@@ -69,13 +69,16 @@
                     </div>
                 @endif
 
-                {{-- Ubicación --}}
-                @if ($profile->address || $profile->estado)
+                {{-- Ubicación: dirección exacta solo si el estudio la habilitó; si no, solo el estado. --}}
+                @php
+                    $ubicacionPartes = $profile->show_address
+                        ? collect([$profile->address, $profile->postal_code, $profile->estado])->filter()
+                        : collect([$profile->estado])->filter();
+                @endphp
+                @if ($ubicacionPartes->isNotEmpty())
                     <div>
                         <h2 class="font-serif text-xl font-medium text-ink">Ubicación</h2>
-                        <p class="mt-2 text-warmgray">
-                            {{ collect([$profile->address, $profile->postal_code, $profile->estado])->filter()->implode(', ') }}
-                        </p>
+                        <p class="mt-2 text-warmgray">{{ $ubicacionPartes->implode(', ') }}</p>
                     </div>
                 @endif
 

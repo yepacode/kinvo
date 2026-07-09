@@ -101,6 +101,13 @@
                               :value="old('address', $profile->address)" maxlength="255"
                               placeholder="Calle y número" />
                 <x-input-error :messages="$errors->get('address')" class="mt-1" />
+                <label for="show_address" class="mt-2 flex items-start gap-2 text-sm text-warmgray">
+                    <input type="hidden" name="show_address" value="0">
+                    <input type="checkbox" id="show_address" name="show_address" value="1"
+                           class="mt-0.5 rounded border-line text-sage focus:ring-sage"
+                           @checked(old('show_address', $profile->show_address))>
+                    Mostrar mi dirección exacta en mi perfil público. Si lo dejas desmarcado, solo se mostrará el estado.
+                </label>
             </div>
 
             {{-- Datos de contacto (privados, solo los ve Kinvoo) --}}

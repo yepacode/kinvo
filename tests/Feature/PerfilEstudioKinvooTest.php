@@ -107,6 +107,29 @@ class PerfilEstudioKinvooTest extends TestCase
             ->assertDontSee('privado@gym.mx');
     }
 
+    public function test_direccion_del_estudio_es_opt_in_en_el_perfil_publico(): void
+    {
+        $user = User::factory()->contratante()->create();
+        $profile = $user->companyProfile()->create([
+            'company_name' => 'Gym Dirección',
+            'estado' => 'Jalisco',
+            'address' => 'Calle Secreta 99',
+            'postal_code' => '44100',
+            'show_address' => false,
+        ]);
+
+        // Por defecto NO se muestra la dirección exacta, solo el estado.
+        $this->get(route('estudio.show', $profile->slug))
+            ->assertOk()
+            ->assertSee('Jalisco')
+            ->assertDontSee('Calle Secreta 99');
+
+        // Con el opt-in activado, sí se muestra.
+        $profile->update(['show_address' => true]);
+        $this->get(route('estudio.show', $profile->slug))
+            ->assertSee('Calle Secreta 99');
+    }
+
     public function test_estudio_de_usuario_no_activo_da_404(): void
     {
         $user = User::factory()->contratante()->create();
