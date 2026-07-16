@@ -5,12 +5,13 @@ namespace App\Mail;
 use App\Models\Contact;
 use App\Models\ProfessionalProfile;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class NuevoContacto extends Mailable
+class NuevoContacto extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

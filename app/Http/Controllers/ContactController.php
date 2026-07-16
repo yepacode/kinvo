@@ -68,13 +68,24 @@ class ContactController extends Controller
 
         $professionalProfile->loadMissing('user');
 
-        // Aviso al profesional y al owner. En dev el driver 'log' escribe en laravel.log.
-        Mail::to($professionalProfile->user->email)
-            ->cc(config('mail.owner_address', 'hola@gokinvoo.com'))
-            ->send(new NuevoContacto($contact, $professionalProfile));
+        // Aviso por correo al profesional y al owner. El mailable está en cola
+        // (ShouldQueue), así que NO se conecta al SMTP durante la petición.
+        // Además va en try/catch: si el correo/cola falla, el contacto YA quedó
+        // guardado y el usuario ve el "enviado" — nunca un 500.
+        try {
+            Mail::to($professionalProfile->user->email)
+                ->cc(config('mail.owner_address', 'hola@gokinvoo.com'))
+                ->queue(new NuevoContacto($contact, $professionalProfile));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         // Notificación in-app (campana) para el profesional.
-        $professionalProfile->user->notify(new NuevoContactoNotification($contact));
+        try {
+            $professionalProfile->user->notify(new NuevoContactoNotification($contact));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return redirect()
             ->route('talento.show', $professionalProfile->slug)

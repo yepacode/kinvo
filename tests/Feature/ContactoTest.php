@@ -76,7 +76,31 @@ class ContactoTest extends TestCase
             'estado' => EstadoContacto::NoLeido->value,
         ]);
 
-        Mail::assertSent(NuevoContacto::class);
+        Mail::assertQueued(NuevoContacto::class); // el correo va en cola, no síncrono
+    }
+
+    public function test_contacto_se_guarda_aunque_el_correo_falle(): void
+    {
+        // Simula el bug de producción: SMTP caído/lento. El contacto debe guardarse
+        // y el usuario ver el "enviado", nunca un 500.
+        Mail::shouldReceive('to')->andThrow(new \RuntimeException('SMTP caído'));
+
+        $profile = $this->perfilPublicado();
+        $contratante = User::factory()->contratante()->create();
+
+        $this->actingAs($contratante)
+            ->post(route('contacto.store', $profile->slug), [
+                'contact_name' => 'Estudio X',
+                'contact_email' => 'x@example.com',
+                'message' => 'Queremos trabajar contigo pronto.',
+            ])
+            ->assertRedirect(route('talento.show', $profile->slug))
+            ->assertSessionHas('status', 'contacto-enviado');
+
+        $this->assertDatabaseHas('contacts', [
+            'professional_profile_id' => $profile->id,
+            'contact_email' => 'x@example.com',
+        ]);
     }
 
     public function test_profesional_no_puede_contactar(): void
