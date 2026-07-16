@@ -107,6 +107,15 @@
                 </label>
             </div>
 
+            <div>
+                <x-input-label for="colonia" :value="'Colonia'" />
+                <x-text-input id="colonia" name="colonia" type="text" class="mt-1 block w-full"
+                              :value="old('colonia', $profile->colonia)" maxlength="120"
+                              placeholder="Ej. Roma Norte, Del Valle, Polanco…" />
+                <p class="mt-1 text-xs text-warmgray">Opcional. Se muestra en tu perfil público solo si activas mostrar dirección.</p>
+                <x-input-error :messages="$errors->get('colonia')" class="mt-1" />
+            </div>
+
             {{-- Datos de contacto (privados, solo los ve Kinvoo) --}}
             <fieldset class="rounded-xl border border-line bg-cream/40 p-4">
                 <legend class="px-1 text-sm font-semibold text-ink">Datos de contacto</legend>

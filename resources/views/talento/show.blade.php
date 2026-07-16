@@ -17,12 +17,13 @@
             'description' => $profile->bio ? strip_tags($profile->bio) : null,
             'image' => $profile->photo_path ? Storage::url($profile->photo_path) : null,
             'knowsAbout' => $profile->disciplines->pluck('nombre')->all() ?: null,
-            'address' => $profile->location ? [
+            'address' => ($profile->location || $profile->colonia) ? array_filter([
                 '@type' => 'PostalAddress',
-                'addressLocality' => $profile->location->ciudad,
-                'addressRegion' => $profile->location->region,
-                'addressCountry' => $profile->location->pais,
-            ] : null,
+                'streetAddress' => $profile->colonia ?: null,
+                'addressLocality' => $profile->location?->ciudad,
+                'addressRegion' => $profile->location?->region,
+                'addressCountry' => $profile->location?->pais,
+            ]) : null,
         ]), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
         </script>
     </x-slot>
@@ -51,7 +52,9 @@
                     @endif
                     <div class="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-warmgray sm:justify-start">
                         @if ($profile->location)
-                            <span><span aria-hidden="true">📍</span> {{ $profile->location->etiqueta() }}</span>
+                            <span><span aria-hidden="true">📍</span> {{ $profile->location->etiqueta() }}@if ($profile->colonia) · {{ $profile->colonia }}@endif</span>
+                        @elseif ($profile->colonia)
+                            <span><span aria-hidden="true">📍</span> {{ $profile->colonia }}</span>
                         @endif
                         @if ($profile->modalidad)
                             <span>· {{ $profile->modalidad->label() }}</span>

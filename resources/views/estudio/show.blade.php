@@ -21,6 +21,7 @@
             'address' => ($profile->estado || ($profile->show_address && $profile->address)) ? array_filter([
                 '@type' => 'PostalAddress',
                 'streetAddress' => $profile->show_address ? $profile->address : null,
+                'addressLocality' => $profile->show_address ? $profile->colonia : null,
                 'postalCode' => $profile->show_address ? $profile->postal_code : null,
                 'addressRegion' => $profile->estado,
                 'addressCountry' => 'MX',
@@ -72,7 +73,7 @@
                 {{-- Ubicación: dirección exacta solo si el estudio la habilitó; si no, solo el estado. --}}
                 @php
                     $ubicacionPartes = $profile->show_address
-                        ? collect([$profile->address, $profile->postal_code, $profile->estado])->filter()
+                        ? collect([$profile->address, $profile->colonia, $profile->postal_code, $profile->estado])->filter()
                         : collect([$profile->estado])->filter();
                 @endphp
                 @if ($ubicacionPartes->isNotEmpty())

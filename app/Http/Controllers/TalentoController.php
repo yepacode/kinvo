@@ -31,6 +31,7 @@ class TalentoController extends Controller
                 $query->where(function ($sub) use ($term) {
                     $sub->whereRaw('lower(headline) like ? escape ?', [$term, '\\'])
                         ->orWhereRaw('lower(bio) like ? escape ?', [$term, '\\'])
+                        ->orWhereRaw('lower(colonia) like ? escape ?', [$term, '\\'])
                         ->orWhereHas('user', fn ($u) => $u->whereRaw('lower(name) like ? escape ?', [$term, '\\']));
                 });
             })

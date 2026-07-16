@@ -10,7 +10,7 @@ class CompanyProfile extends Model
 {
     protected $fillable = [
         'user_id', 'company_name', 'slug', 'sector', 'disciplines_text', 'logo_path',
-        'description', 'website', 'location_id', 'estado', 'address', 'postal_code', 'show_address',
+        'description', 'website', 'location_id', 'estado', 'address', 'postal_code', 'colonia', 'show_address',
         'contact_name', 'contact_phone', 'contact_email', 'media_url',
     ];
 

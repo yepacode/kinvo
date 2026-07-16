@@ -114,6 +114,15 @@
                 </div>
             </div>
 
+            <div>
+                <x-input-label for="colonia" :value="'Colonia'" />
+                <x-text-input id="colonia" name="colonia" type="text" class="mt-1 block w-full"
+                              :value="old('colonia', $profile->colonia)" maxlength="120"
+                              placeholder="Ej. Roma Norte, Del Valle, Polanco…" />
+                <p class="mt-1 text-xs text-warmgray">Opcional. Ayuda a los estudios cercanos a encontrarte.</p>
+                <x-input-error :messages="$errors->get('colonia')" class="mt-1" />
+            </div>
+
             {{-- Disciplinas --}}
             <div>
                 <x-input-label :value="'Disciplinas'" />

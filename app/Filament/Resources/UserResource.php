@@ -74,6 +74,7 @@ class UserResource extends Resource
                     Infolists\Components\TextEntry::make('professionalProfile.modalidad')->label('Modalidad')
                         ->formatStateUsing(fn ($state) => $state?->label())->placeholder('—'),
                     Infolists\Components\TextEntry::make('professionalProfile.location.ciudad')->label('Ubicación')->placeholder('—'),
+                    Infolists\Components\TextEntry::make('professionalProfile.colonia')->label('Colonia')->placeholder('—'),
                     Infolists\Components\TextEntry::make('disciplinas_lista')->label('Disciplinas')
                         ->state(fn (User $record) => $record->professionalProfile->disciplines->pluck('nombre')->implode(', ') ?: '—'),
                     Infolists\Components\TextEntry::make('professionalProfile.phone')->label('Teléfono (privado)')
@@ -106,6 +107,7 @@ class UserResource extends Resource
                     Infolists\Components\TextEntry::make('companyProfile.disciplines_text')->label('Disciplina')->placeholder('—'),
                     Infolists\Components\TextEntry::make('companyProfile.estado')->label('Entidad (ubicación)')->placeholder('—'),
                     Infolists\Components\TextEntry::make('companyProfile.postal_code')->label('CP')->placeholder('—'),
+                    Infolists\Components\TextEntry::make('companyProfile.colonia')->label('Colonia')->placeholder('—'),
                     Infolists\Components\TextEntry::make('companyProfile.address')->label('Dirección')->columnSpanFull()->placeholder('—'),
                     Infolists\Components\TextEntry::make('companyProfile.contact_name')->label('Contacto (privado)')->placeholder('—'),
                     Infolists\Components\TextEntry::make('companyProfile.contact_phone')->label('Teléfono (privado)')->copyable()->placeholder('—'),

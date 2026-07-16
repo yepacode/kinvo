@@ -84,6 +84,7 @@ class ProfessionalProfileController extends Controller
             'languages' => ['array'],
             'languages.*' => [Rule::in(array_keys(ProfessionalProfile::IDIOMAS))],
             'location_id' => ['nullable', Rule::exists('locations', 'id')->where('activo', true)],
+            'colonia' => ['nullable', 'string', 'max:120'],
             'phone' => ['nullable', 'string', 'max:40', 'regex:/^[\d\s()+.\-]{6,40}$/'],
             'certifications_text' => ['nullable', 'string', 'max:2000'],
             'certification_file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
@@ -132,6 +133,7 @@ class ProfessionalProfileController extends Controller
             'certifications_text' => $data['certifications_text'] ?? null,
             'media_url' => $data['media_url'] ?? null,
             'location_id' => $data['location_id'] ?? null,
+            'colonia' => $data['colonia'] ?? null,
             'phone' => $data['phone'] ?? null,
             'socials' => array_filter([
                 'instagram' => $data['instagram'] ?? null,
