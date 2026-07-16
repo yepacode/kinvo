@@ -1,0 +1,23 @@
+{
+    "Profile": "Mi cuenta",
+    "Profile Information": "Información de la cuenta",
+    "Update your account's profile information and email address.": "Actualiza el nombre y correo de tu cuenta.",
+    "Name": "Nombre",
+    "Email": "Correo electrónico",
+    "Your email address is unverified.": "Tu correo aún no está verificado.",
+    "Click here to re-send the verification email.": "Haz clic aquí para reenviar el correo de verificación.",
+    "A new verification link has been sent to your email address.": "Se envió un nuevo enlace de verificación a tu correo.",
+    "Save": "Guardar",
+    "Saved.": "Guardado.",
+    "Update Password": "Cambiar contraseña",
+    "Ensure your account is using a long, random password to stay secure.": "Usa una contraseña larga y única para mantener tu cuenta segura.",
+    "Current Password": "Contraseña actual",
+    "New Password": "Contraseña nueva",
+    "Confirm Password": "Confirmar contraseña",
+    "Delete Account": "Eliminar cuenta",
+    "Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.": "Al eliminar tu cuenta, todos tus datos y contenido se borrarán de forma permanente. Antes de continuar, descarga la información que quieras conservar.",
+    "Are you sure you want to delete your account?": "¿Seguro que quieres eliminar tu cuenta?",
+    "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.": "Al eliminar tu cuenta, todos tus datos se borrarán de forma permanente. Ingresa tu contraseña para confirmar.",
+    "Password": "Contraseña",
+    "Cancel": "Cancelar"
+}
