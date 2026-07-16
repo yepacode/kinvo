@@ -25,8 +25,7 @@ class PerfilProfesionalKinvooTest extends TestCase
             'languages' => ['es', 'en'],
             'certifications_text' => 'RYT-200, Instructora de Pilates',
             'media_url' => 'https://youtube.com/watch?v=abc',
-            'is_published' => 1,
-        ])->assertRedirect(route('professional.profile.edit'));
+        ])->assertRedirect(route('professional.enviado'));
 
         $profile = $user->professionalProfile()->first();
         $this->assertSame(['lun_am', 'lun_pm', 'fds_am'], $profile->availability);
@@ -40,7 +39,7 @@ class PerfilProfesionalKinvooTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user)->put('/mi-perfil', ['full_name' => 'María Fernanda López García'])
-            ->assertRedirect(route('professional.profile.edit'));
+            ->assertRedirect(route('professional.enviado'));
 
         $this->assertSame('María Fernanda López García', $user->professionalProfile()->first()->full_name);
     }

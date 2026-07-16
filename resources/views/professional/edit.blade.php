@@ -10,27 +10,12 @@
     </x-slot>
 
     <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-        {{-- Mensaje de bienvenida --}}
-        <div class="mb-6 rounded-2xl border border-sage/30 bg-sage/5 px-5 py-5">
-            <h3 class="font-serif text-lg font-medium text-ink">{{ landing('welcome_pro_title') }}</h3>
-            <div class="mt-2 space-y-2 whitespace-pre-line text-sm leading-relaxed text-warmgray">{{ landing('welcome_pro_body') }}</div>
-            <p class="mt-3 text-sm text-warmgray">Antes de publicar, revisa nuestros
-                <a href="{{ route('legal.terminos') }}" target="_blank" class="text-sage underline hover:text-ink">Términos y Condiciones</a> y el
-                <a href="{{ route('legal.privacidad') }}" target="_blank" class="text-sage underline hover:text-ink">Aviso de Privacidad</a>.
-            </p>
+        @include('partials.wizard-steps', ['paso' => 2])
+
+        <div class="mb-6 flex items-center justify-between">
+            <a href="{{ route('professional.bienvenida') }}" class="text-sm text-warmgray hover:text-sage">← Atrás</a>
+            <p class="text-sm text-warmgray">Completa tu perfil y guarda para enviarlo a revisión.</p>
         </div>
-
-        @if (session('status') === 'perfil-actualizado')
-            <div class="mb-6 rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm text-sage">
-                ✓ Tu perfil se guardó correctamente.
-            </div>
-        @endif
-
-        @if (! $profile->is_published)
-            <div class="mb-6 rounded-xl border border-line bg-beige px-4 py-3 text-sm text-warmgray">
-                Tu perfil está <strong>oculto</strong>. Complétalo y actívalo abajo para que los contratantes puedan encontrarte.
-            </div>
-        @endif
 
         <form method="POST" action="{{ route('professional.profile.update') }}" enctype="multipart/form-data"
               class="space-y-8 rounded-2xl border border-line bg-white p-6 sm:p-8">
@@ -250,21 +235,21 @@
                 </div>
             </div>
 
-            {{-- Publicar --}}
-            <label class="flex items-center gap-3 rounded-xl border border-line bg-cream px-4 py-3">
-                <input type="hidden" name="is_published" value="0">
-                <input type="checkbox" name="is_published" value="1"
-                       class="rounded border-line text-sage focus:ring-sage"
-                       @checked(old('is_published', $profile->is_published))>
-                <span class="text-sm text-ink">
-                    <strong>Publicar mi perfil</strong> — visible para contratantes en el buscador.
-                </span>
-            </label>
+            {{-- Estado de publicación (lo aprueba/publica Kinvoo, no el usuario). --}}
+            @if ($profile->is_published)
+                <div class="rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm text-sage">
+                    ✓ Tu perfil está <strong>publicado</strong> y visible para los estudios.
+                </div>
+            @else
+                <div class="rounded-xl border border-line bg-cream px-4 py-3 text-sm text-warmgray">
+                    Cuando completes tu perfil, el equipo de Kinvoo lo revisará y lo publicará. Te avisaremos cuando esté activo.
+                </div>
+            @endif
 
             <div class="flex justify-end">
                 <button type="submit"
                         class="rounded-full bg-sage px-7 py-2.5 text-sm font-semibold text-cream shadow-sm transition hover:bg-ink">
-                    Guardar cambios
+                    Guardar y continuar →
                 </button>
             </div>
         </form>

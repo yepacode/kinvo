@@ -36,7 +36,7 @@ class PerfilEstudioKinvooTest extends TestCase
             'contact_phone' => '+52 81 1234 5678',
             'contact_email' => 'luis@gymnorte.mx',
             'media_url' => 'https://youtube.com/watch?v=gym',
-        ])->assertRedirect(route('company.profile.edit'));
+        ])->assertRedirect(route('company.enviado'));
 
         $p = $user->companyProfile()->first();
         $this->assertSame('Crossfit, Boxeo', $p->disciplines_text);
@@ -52,12 +52,12 @@ class PerfilEstudioKinvooTest extends TestCase
         $user = User::factory()->contratante()->create();
 
         $this->actingAs($user)->put('/mi-empresa', ['company_name' => 'PowerGym'])
-            ->assertRedirect(route('company.profile.edit'));
+            ->assertRedirect(route('company.enviado'));
 
         // Segunda visita y segundo guardado NO deben dar 500.
         $this->actingAs($user)->get('/mi-empresa')->assertOk();
         $this->actingAs($user)->put('/mi-empresa', ['company_name' => 'PowerGym 2'])
-            ->assertRedirect(route('company.profile.edit'));
+            ->assertRedirect(route('company.enviado'));
 
         $this->assertSame(1, $user->companyProfile()->count());
         $this->assertSame('PowerGym 2', $user->companyProfile()->first()->company_name);

@@ -14,6 +14,24 @@ use Illuminate\View\View;
 
 class ProfessionalProfileController extends Controller
 {
+    /** Paso 1 del wizard: pantalla de bienvenida. */
+    public function bienvenida(Request $request): View
+    {
+        abort_unless($request->user()->esProfesional(), 403);
+
+        return view('professional.bienvenida');
+    }
+
+    /** Paso 3 del wizard: confirmación tras guardar el perfil. */
+    public function enviado(Request $request): View
+    {
+        abort_unless($request->user()->esProfesional(), 403);
+
+        $profile = $request->user()->professionalProfile()->firstOrCreate([]);
+
+        return view('professional.enviado', ['profile' => $profile]);
+    }
+
     /** Muestra el formulario de edición del propio perfil profesional. */
     public function edit(Request $request): View
     {
@@ -76,7 +94,6 @@ class ProfessionalProfileController extends Controller
             'disciplines' => ['array'],
             'disciplines.*' => [Rule::exists('disciplines', 'id')->where('activo', true)],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=4000,max_height=4000'],
-            'is_published' => ['nullable', 'boolean'],
             'remove_photo' => ['nullable', 'boolean'],
             'remove_certification_file' => ['nullable', 'boolean'],
         ], [
@@ -121,7 +138,7 @@ class ProfessionalProfileController extends Controller
                 'tiktok' => $data['tiktok'] ?? null,
                 'web' => $data['web'] ?? null,
             ]),
-            'is_published' => (bool) ($data['is_published'] ?? false),
+            // is_published NO lo controla el usuario: lo publica el admin al aprobar.
         ]);
 
         if (isset($data['photo_path'])) {
@@ -145,8 +162,7 @@ class ProfessionalProfileController extends Controller
 
         $profile->disciplines()->sync($data['disciplines'] ?? []);
 
-        return redirect()
-            ->route('professional.profile.edit')
-            ->with('status', 'perfil-actualizado');
+        // Paso 3: avanza a la confirmación (arregla la "página estática" al guardar).
+        return redirect()->route('professional.enviado');
     }
 }

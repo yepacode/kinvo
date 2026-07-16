@@ -202,6 +202,8 @@ class UserResource extends Resource
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Pendiente)
                     ->action(function (User $u) {
                         $u->forceFill(['estado' => EstadoUsuario::Activo])->save();
+                        // Aprobación única: aprobar la cuenta también publica el perfil profesional.
+                        $u->professionalProfile?->update(['is_published' => true]);
                         $u->notify(new \App\Notifications\CuentaAprobadaNotification());
                     }),
                 Tables\Actions\Action::make('suspender')

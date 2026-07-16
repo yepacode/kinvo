@@ -73,6 +73,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect($user->homeRoute());
+        // Arranca el wizard de onboarding (bienvenida → perfil → confirmación).
+        return redirect()->route($rol === RolUsuario::Contractor ? 'company.bienvenida' : 'professional.bienvenida');
     }
 }

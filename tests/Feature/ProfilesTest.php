@@ -61,7 +61,7 @@ class ProfilesTest extends TestCase
         $this->actingAs($user)->get('/mi-perfil')->assertStatus(403);
     }
 
-    public function test_profesional_actualiza_su_perfil_y_publica(): void
+    public function test_profesional_actualiza_su_perfil(): void
     {
         Storage::fake('public');
         $this->seed(TaxonomiaSeeder::class);
@@ -76,12 +76,12 @@ class ProfilesTest extends TestCase
             'modalidad' => 'presencial',
             'disciplines' => $disc,
             'photo' => UploadedFile::fake()->image('foto.jpg'),
-            'is_published' => 1,
-        ])->assertRedirect(route('professional.profile.edit'));
+        ]);
 
         $profile = $user->professionalProfile()->first();
         $this->assertSame('Coach de fuerza', $profile->headline);
-        $this->assertTrue($profile->is_published);
+        // El usuario NO auto-publica: is_published sigue false hasta que el admin apruebe.
+        $this->assertFalse($profile->is_published);
         $this->assertCount(2, $profile->disciplines);
         $this->assertNotNull($profile->photo_path);
         Storage::disk('public')->assertExists($profile->photo_path);
@@ -126,7 +126,7 @@ class ProfilesTest extends TestCase
             'contact_name' => 'Ana',
             'contact_email' => 'ana@zen.example.com',
             'website' => 'https://zen.example.com',
-        ])->assertRedirect(route('company.profile.edit'));
+        ])->assertRedirect(route('company.enviado'));
 
         $empresa = $user->companyProfile()->first();
         $this->assertSame('Estudio Zen', $empresa->company_name);

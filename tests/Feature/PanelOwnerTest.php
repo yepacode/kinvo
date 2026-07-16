@@ -39,12 +39,17 @@ class PanelOwnerTest extends TestCase
         $owner = User::factory()->admin()->create();
         $pendiente = User::factory()->pendiente()->create();
 
+        // Perfil sin publicar (el usuario no lo auto-publica).
+        $perfil = $pendiente->professionalProfile()->create(['is_published' => false, 'headline' => 'Coach']);
+
         $this->actingAs($owner);
 
         Livewire::test(ListUsers::class)
             ->callTableAction('aprobar', $pendiente);
 
+        // Aprobación única: activa la cuenta Y publica el perfil de una vez.
         $this->assertSame(EstadoUsuario::Activo, $pendiente->fresh()->estado);
+        $this->assertTrue($perfil->fresh()->is_published);
     }
 
     public function test_owner_suspende_a_un_usuario_activo(): void

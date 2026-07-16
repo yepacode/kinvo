@@ -58,16 +58,26 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Áreas del producto — requieren cuenta ACTIVA (aprobada).
-Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
+// Onboarding / edición de perfil — accesible aunque la cuenta esté pendiente,
+// para que el usuario pueda LLENAR su perfil antes de la (única) aprobación.
+Route::middleware(['auth', 'nocache'])->group(function () {
+    // Wizard del profesional: bienvenida → perfil → confirmación.
+    Route::get('/mi-perfil/bienvenida', [ProfessionalProfileController::class, 'bienvenida'])->name('professional.bienvenida');
     Route::get('/mi-perfil', [ProfessionalProfileController::class, 'edit'])->name('professional.profile.edit');
     Route::put('/mi-perfil', [ProfessionalProfileController::class, 'update'])->name('professional.profile.update');
+    Route::get('/mi-perfil/enviado', [ProfessionalProfileController::class, 'enviado'])->name('professional.enviado');
 
-    // Bandeja de contactos recibidos (profesional).
-    Route::get('/mis-contactos', [ContactController::class, 'recibidos'])->name('professional.contactos');
-
+    // Wizard del estudio: bienvenida → perfil → confirmación.
+    Route::get('/mi-empresa/bienvenida', [CompanyProfileController::class, 'bienvenida'])->name('company.bienvenida');
     Route::get('/mi-empresa', [CompanyProfileController::class, 'edit'])->name('company.profile.edit');
     Route::put('/mi-empresa', [CompanyProfileController::class, 'update'])->name('company.profile.update');
+    Route::get('/mi-empresa/enviado', [CompanyProfileController::class, 'enviado'])->name('company.enviado');
+});
+
+// Áreas del producto — requieren cuenta ACTIVA (aprobada).
+Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
+    // Bandeja de contactos recibidos (profesional).
+    Route::get('/mis-contactos', [ContactController::class, 'recibidos'])->name('professional.contactos');
 
     // Contactar a un profesional (solo contratantes, validado en el controller). Con rate limit anti-spam.
     Route::get('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'create'])

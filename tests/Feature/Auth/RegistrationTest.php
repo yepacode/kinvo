@@ -31,7 +31,7 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('account.pending'));
+        $response->assertRedirect(route('professional.bienvenida')); // arranca el wizard
 
         $user = User::where('email', 'coach@example.com')->first();
         $this->assertSame(RolUsuario::Professional, $user->nivel);

@@ -21,6 +21,22 @@ class CompanyProfileController extends Controller
         return view('estudio.show', ['profile' => $companyProfile]);
     }
 
+    /** Paso 1 del wizard: pantalla de bienvenida del estudio. */
+    public function bienvenida(Request $request): View
+    {
+        abort_unless($request->user()->esContratante(), 403);
+
+        return view('company.bienvenida');
+    }
+
+    /** Paso 3 del wizard: confirmación tras guardar el perfil del estudio. */
+    public function enviado(Request $request): View
+    {
+        abort_unless($request->user()->esContratante(), 403);
+
+        return view('company.enviado');
+    }
+
     /** Formulario de edición del perfil de empresa del contratante. */
     public function edit(Request $request): View
     {
@@ -97,8 +113,7 @@ class CompanyProfileController extends Controller
 
         $profile->save();
 
-        return redirect()
-            ->route('company.profile.edit')
-            ->with('status', 'empresa-actualizada');
+        // Paso 3: avanza a la confirmación (arregla la "página estática" al guardar).
+        return redirect()->route('company.enviado');
     }
 }
