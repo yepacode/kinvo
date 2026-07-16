@@ -50,6 +50,7 @@
         <div class="mt-4">
             <x-input-label for="password" :value="'Contraseña'" />
             <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
+            <p class="mt-1 text-xs text-warmgray">Mínimo 8 caracteres, con mayúsculas, minúsculas, números y un símbolo.</p>
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 

@@ -21,8 +21,8 @@ class ProfilesTest extends TestCase
             'name' => 'Coach Ana',
             'tipo' => 'professional',
             'email' => 'ana@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Str0ng!Pass',
+            'password_confirmation' => 'Str0ng!Pass',
             'acepta_legales' => '1',
         ]);
 
@@ -37,8 +37,8 @@ class ProfilesTest extends TestCase
             'name' => 'Gimnasio X',
             'tipo' => 'contractor',
             'email' => 'gym@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Str0ng!Pass',
+            'password_confirmation' => 'Str0ng!Pass',
             'acepta_legales' => '1',
         ]);
 

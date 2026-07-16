@@ -25,8 +25,8 @@ class RegistrationTest extends TestCase
             'name' => 'Coach Ana',
             'tipo' => 'professional',
             'email' => 'coach@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Str0ng!Pass',
+            'password_confirmation' => 'Str0ng!Pass',
             'acepta_legales' => '1',
         ]);
 
@@ -44,8 +44,8 @@ class RegistrationTest extends TestCase
             'name' => 'Gimnasio X',
             'tipo' => 'contractor',
             'email' => 'gym@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Str0ng!Pass',
+            'password_confirmation' => 'Str0ng!Pass',
             'acepta_legales' => '1',
         ]);
 
@@ -54,14 +54,29 @@ class RegistrationTest extends TestCase
         $this->assertSame(EstadoUsuario::Pendiente, $user->estado);
     }
 
+    public function test_registration_rechaza_contrasena_debil(): void
+    {
+        $response = $this->post('/register', [
+            'name' => 'Débil',
+            'tipo' => 'professional',
+            'email' => 'debil@example.com',
+            'password' => 'password', // débil: sin mayúsculas, números ni símbolos
+            'password_confirmation' => 'password',
+            'acepta_legales' => '1',
+        ]);
+
+        $response->assertSessionHasErrors('password');
+        $this->assertGuest();
+    }
+
     public function test_registration_requires_accepting_legal_terms(): void
     {
         $response = $this->post('/register', [
             'name' => 'Sin Aceptar',
             'tipo' => 'professional',
             'email' => 'legal@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Str0ng!Pass',
+            'password_confirmation' => 'Str0ng!Pass',
             // acepta_legales ausente
         ]);
 
@@ -76,8 +91,8 @@ class RegistrationTest extends TestCase
             'name' => 'Sin Tipo',
             'tipo' => 'admin', // no permitido desde registro público
             'email' => 'notipo@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'Str0ng!Pass',
+            'password_confirmation' => 'Str0ng!Pass',
         ]);
 
         $response->assertSessionHasErrors('tipo');
