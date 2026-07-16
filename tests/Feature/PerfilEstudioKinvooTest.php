@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PerfilEstudioKinvooTest extends TestCase
@@ -43,6 +45,53 @@ class PerfilEstudioKinvooTest extends TestCase
         $this->assertSame('Nuevo León', $p->estado);
         $this->assertSame('64000', $p->postal_code);
         $this->assertSame('luis@gymnorte.mx', $p->contact_email);
+    }
+
+    public function test_estudio_sube_video_como_multimedia(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->contratante()->create();
+
+        $this->actingAs($user)->put('/mi-empresa', [
+            'company_name' => 'Gym Vídeo',
+            'media_file' => UploadedFile::fake()->create('tour.mp4', 500, 'video/mp4'),
+        ]);
+
+        $p = $user->companyProfile()->first();
+        $this->assertNotNull($p->media_path);
+        $this->assertSame('video', $p->media_type);
+        Storage::disk('public')->assertExists($p->media_path);
+    }
+
+    public function test_estudio_suspendido_no_puede_editar_perfil(): void
+    {
+        $user = User::factory()->contratante()->create([
+            'estado' => \App\Enums\EstadoUsuario::Suspendido,
+        ]);
+
+        $this->actingAs($user)->get('/mi-empresa')->assertForbidden();
+        $this->actingAs($user)->put('/mi-empresa', ['company_name' => 'Hackeo'])->assertForbidden();
+    }
+
+    public function test_estudio_puede_quitar_multimedia_subida(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->contratante()->create();
+        $this->actingAs($user)->put('/mi-empresa', [
+            'company_name' => 'Gym Quitar',
+            'media_file' => UploadedFile::fake()->image('cover.jpg'),
+        ]);
+        $viejo = $user->companyProfile()->first()->media_path;
+
+        $this->actingAs($user)->put('/mi-empresa', [
+            'company_name' => 'Gym Quitar',
+            'remove_media_file' => '1',
+        ]);
+
+        $p = $user->companyProfile()->first();
+        $this->assertNull($p->media_path);
+        $this->assertNull($p->media_type);
+        Storage::disk('public')->assertMissing($viejo);
     }
 
     public function test_editar_empresa_no_rompe_tras_renombrar_el_estudio(): void

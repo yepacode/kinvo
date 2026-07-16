@@ -13,7 +13,7 @@ class ProfessionalProfile extends Model
     protected $fillable = [
         'user_id', 'slug', 'full_name', 'photo_path', 'headline', 'birthdate', 'bio',
         'years_experience', 'modalidad', 'availability', 'languages',
-        'certifications_text', 'certification_file_path', 'media_url',
+        'certifications_text', 'certification_file_path', 'media_url', 'media_path', 'media_type',
         'location_id', 'colonia', 'phone',
         'socials', 'is_published', 'is_verified', 'verified_at',
     ];

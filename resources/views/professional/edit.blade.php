@@ -209,14 +209,51 @@
                 </div>
             </div>
 
-            {{-- Contenido multimedia (único campo opcional) --}}
-            <div>
-                <x-input-label for="media_url" :value="'Contenido multimedia (opcional)'" />
-                <x-text-input id="media_url" name="media_url" type="url" class="mt-1 block w-full"
-                              :value="old('media_url', $profile->media_url)"
-                              placeholder="https://youtube.com/... o enlace a tu reel" />
-                <p class="mt-1 text-xs text-warmgray">Enlace a un video o reel que muestre tu estilo (YouTube, Vimeo, Drive...).</p>
-                <x-input-error :messages="$errors->get('media_url')" class="mt-1" />
+            {{-- Contenido multimedia: enlace externo O archivo subido (25MB máx). --}}
+            <div class="rounded-md border border-line bg-cream/40 p-5">
+                <div class="flex items-baseline justify-between gap-4">
+                    <h3 class="font-serif text-lg font-medium text-ink">Contenido multimedia (opcional)</h3>
+                    <span class="text-xs text-warmgray">Elige una opción o ambas</span>
+                </div>
+
+                <div class="mt-4">
+                    <x-input-label for="media_url" :value="'Enlace externo'" />
+                    <x-text-input id="media_url" name="media_url" type="url" class="mt-1 block w-full"
+                                  :value="old('media_url', $profile->media_url)"
+                                  placeholder="https://youtube.com/... o enlace a tu reel" />
+                    <p class="mt-1 text-xs text-warmgray">Video o reel que muestre tu estilo (YouTube, Vimeo, Drive...).</p>
+                    <x-input-error :messages="$errors->get('media_url')" class="mt-1" />
+                </div>
+
+                <div class="mt-5">
+                    <x-input-label for="media_file" :value="'O sube un archivo (video o imagen, máx. 25 MB)'" />
+                    <input id="media_file" name="media_file" type="file"
+                           accept="video/mp4,video/webm,video/quicktime,video/x-m4v,image/*"
+                           class="mt-1 block w-full text-sm text-ink file:mr-4 file:rounded-md file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-sage/90" />
+                    <p class="mt-1 text-xs text-warmgray">Formatos: MP4, WebM, MOV, JPG, PNG, WebP, GIF.</p>
+                    <x-input-error :messages="$errors->get('media_file')" class="mt-1" />
+
+                    @if ($profile->media_path)
+                        <div class="mt-3 flex items-center gap-3 rounded border border-line bg-white p-3 text-sm">
+                            @if ($profile->media_type === 'video')
+                                <video class="h-16 w-24 rounded object-cover" muted preload="metadata">
+                                    <source src="{{ Storage::url($profile->media_path) }}">
+                                </video>
+                            @else
+                                <img class="h-16 w-24 rounded object-cover" src="{{ Storage::url($profile->media_path) }}" alt="Multimedia actual">
+                            @endif
+                            <div class="flex-1">
+                                <p class="text-ink">Archivo actual: <span class="text-warmgray">{{ basename($profile->media_path) }}</span></p>
+                                <label for="remove_media_file" class="mt-1 flex items-center gap-2 text-xs text-warmgray">
+                                    <input type="hidden" name="remove_media_file" value="0">
+                                    <input type="checkbox" id="remove_media_file" name="remove_media_file" value="1"
+                                           class="rounded border-line text-sage focus:ring-sage">
+                                    Quitar este archivo
+                                </label>
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
 
             {{-- Contacto / redes --}}

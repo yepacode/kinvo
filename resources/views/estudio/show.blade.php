@@ -84,14 +84,28 @@
                 @endif
 
                 {{-- Sitio web + multimedia --}}
-                @if ($profile->website || $profile->media_url)
-                    <div class="flex flex-wrap gap-4 border-t border-line pt-6 text-sm">
-                        @if ($profile->website)
-                            <a href="{{ $profile->website }}" target="_blank" rel="noopener" class="text-sage underline hover:text-ink">Sitio web ↗</a>
+                @if ($profile->website || $profile->media_url || $profile->media_path)
+                    <div class="border-t border-line pt-6">
+                        @if ($profile->media_path)
+                            <div class="mb-4">
+                                @if ($profile->media_type === 'video')
+                                    <video class="w-full max-w-2xl rounded-md border border-line" controls playsinline preload="metadata">
+                                        <source src="{{ Storage::url($profile->media_path) }}">
+                                        Tu navegador no soporta este video.
+                                    </video>
+                                @else
+                                    <img class="w-full max-w-2xl rounded-md border border-line" src="{{ Storage::url($profile->media_path) }}" alt="Multimedia de {{ $profile->company_name }}">
+                                @endif
+                            </div>
                         @endif
-                        @if ($profile->media_url)
-                            <a href="{{ $profile->media_url }}" target="_blank" rel="noopener" class="text-sage underline hover:text-ink">Contenido multimedia ↗</a>
-                        @endif
+                        <div class="flex flex-wrap gap-4 text-sm">
+                            @if ($profile->website)
+                                <a href="{{ $profile->website }}" target="_blank" rel="noopener" class="text-sage underline hover:text-ink">Sitio web ↗</a>
+                            @endif
+                            @if ($profile->media_url)
+                                <a href="{{ $profile->media_url }}" target="_blank" rel="noopener" class="text-sage underline hover:text-ink">Contenido multimedia ↗</a>
+                            @endif
+                        </div>
                     </div>
                 @endif
 

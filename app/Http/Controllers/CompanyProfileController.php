@@ -42,6 +42,7 @@ class CompanyProfileController extends Controller
     {
         $user = $request->user();
         abort_unless($user->esContratante(), 403);
+        abort_if($user->estaSuspendido(), 403);
 
         // Buscar SOLO por user_id (la relación ya lo restringe); company_name solo
         // como valor por defecto al crear. Si se buscara por company_name, tras un
@@ -61,6 +62,7 @@ class CompanyProfileController extends Controller
     {
         $user = $request->user();
         abort_unless($user->esContratante(), 403);
+        abort_if($user->estaSuspendido(), 403);
 
         $profile = $user->companyProfile()->firstOrCreate([], [
             'company_name' => $user->name,
@@ -80,6 +82,8 @@ class CompanyProfileController extends Controller
             'contact_phone' => ['nullable', 'string', 'max:40', 'regex:/^[\d\s()+.\-]{6,40}$/'],
             'contact_email' => ['nullable', 'email', 'max:150'],
             'media_url' => ['nullable', 'url:http,https', 'max:300'],
+            'media_file' => ['nullable', 'file', 'mimes:mp4,webm,mov,m4v,jpg,jpeg,png,webp,gif', 'max:25600'],
+            'remove_media_file' => ['nullable', 'boolean'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=4000,max_height=4000'],
         ], [
             'contact_phone.regex' => 'El teléfono solo puede tener números, espacios y los signos + ( ) - .',
@@ -91,6 +95,15 @@ class CompanyProfileController extends Controller
                 Storage::disk('public')->delete($profile->logo_path);
             }
             $data['logo_path'] = $request->file('logo')->store('empresas', 'public');
+        }
+
+        if ($request->hasFile('media_file')) {
+            if ($profile->media_path) {
+                Storage::disk('public')->delete($profile->media_path);
+            }
+            $file = $request->file('media_file');
+            $data['media_path'] = $file->store('multimedia/estudio', 'public');
+            $data['media_type'] = str_starts_with($file->getMimeType() ?? '', 'video/') ? 'video' : 'image';
         }
 
         $profile->fill([
@@ -111,6 +124,16 @@ class CompanyProfileController extends Controller
 
         if (isset($data['logo_path'])) {
             $profile->logo_path = $data['logo_path'];
+        }
+        if (isset($data['media_path'])) {
+            $profile->media_path = $data['media_path'];
+            $profile->media_type = $data['media_type'];
+        }
+
+        if (! $request->hasFile('media_file') && $request->boolean('remove_media_file') && $profile->media_path) {
+            Storage::disk('public')->delete($profile->media_path);
+            $profile->media_path = null;
+            $profile->media_type = null;
         }
 
         $profile->save();

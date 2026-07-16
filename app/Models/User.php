@@ -95,6 +95,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->estado === EstadoUsuario::Activo;
     }
 
+    public function estaSuspendido(): bool
+    {
+        return $this->estado === EstadoUsuario::Suspendido;
+    }
+
     public function membershipPlan(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Plan::class, 'membership_plan_id');

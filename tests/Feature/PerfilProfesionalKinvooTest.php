@@ -122,6 +122,81 @@ class PerfilProfesionalKinvooTest extends TestCase
         Storage::disk('public')->assertExists($profile->photo_path);
     }
 
+    public function test_profesional_sube_imagen_como_multimedia(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->put('/mi-perfil', [
+            'media_file' => UploadedFile::fake()->image('reel.jpg'),
+        ]);
+
+        $profile = $user->professionalProfile()->first();
+        $this->assertNotNull($profile->media_path);
+        $this->assertSame('image', $profile->media_type);
+        Storage::disk('public')->assertExists($profile->media_path);
+    }
+
+    public function test_profesional_sube_video_como_multimedia(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->put('/mi-perfil', [
+            'media_file' => UploadedFile::fake()->create('reel.mp4', 500, 'video/mp4'),
+        ]);
+
+        $profile = $user->professionalProfile()->first();
+        $this->assertNotNull($profile->media_path);
+        $this->assertSame('video', $profile->media_type);
+        Storage::disk('public')->assertExists($profile->media_path);
+    }
+
+    public function test_profesional_puede_quitar_multimedia_subida(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $this->actingAs($user)->put('/mi-perfil', [
+            'media_file' => UploadedFile::fake()->image('reel.jpg'),
+        ]);
+        $viejo = $user->professionalProfile()->first()->media_path;
+
+        $this->actingAs($user)->put('/mi-perfil', [
+            'remove_media_file' => '1',
+        ]);
+
+        $profile = $user->professionalProfile()->first();
+        $this->assertNull($profile->media_path);
+        $this->assertNull($profile->media_type);
+        Storage::disk('public')->assertMissing($viejo);
+    }
+
+    public function test_profesional_suspendido_no_puede_editar_perfil(): void
+    {
+        $user = User::factory()->create(['estado' => EstadoUsuario::Suspendido]);
+
+        $this->actingAs($user)->get('/mi-perfil')->assertForbidden();
+        $this->actingAs($user)->put('/mi-perfil', ['headline' => 'Hackeo'])->assertForbidden();
+    }
+
+    public function test_profesional_pendiente_si_puede_editar_perfil(): void
+    {
+        $user = User::factory()->create(['estado' => EstadoUsuario::Pendiente]);
+
+        $this->actingAs($user)->get('/mi-perfil')->assertOk();
+        $this->actingAs($user)->put('/mi-perfil', ['headline' => 'Coach'])
+            ->assertRedirect(route('professional.enviado'));
+    }
+
+    public function test_multimedia_pesada_es_rechazada(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->put('/mi-perfil', [
+            'media_file' => UploadedFile::fake()->create('big.mp4', 30000, 'video/mp4'),
+        ])->assertSessionHasErrors('media_file');
+    }
+
     public function test_solo_admin_descarga_el_adjunto(): void
     {
         Storage::fake('local');

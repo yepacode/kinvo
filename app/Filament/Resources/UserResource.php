@@ -88,9 +88,18 @@ class UserResource extends Resource
                             ->map(fn ($f, $d) => "$d: $f")->implode(' · ') ?: '—'),
                     Infolists\Components\TextEntry::make('professionalProfile.certifications_text')->label('Certificaciones')
                         ->columnSpanFull()->placeholder('—'),
-                    Infolists\Components\TextEntry::make('professionalProfile.media_url')->label('Multimedia')
+                    Infolists\Components\TextEntry::make('professionalProfile.media_url')->label('Multimedia (enlace)')
                         ->url(fn (User $record) => $record->professionalProfile->media_url)
                         ->openUrlInNewTab()->placeholder('—'),
+                    Infolists\Components\TextEntry::make('multimedia_subida_profesional')->label('Multimedia (archivo subido)')
+                        ->state(fn (User $record) => $record->professionalProfile->media_path
+                            ? '📁 '.($record->professionalProfile->media_type === 'video' ? 'Video' : 'Imagen').' subida'
+                            : 'Sin archivo')
+                        ->url(fn (User $record) => $record->professionalProfile->media_path
+                            ? \Illuminate\Support\Facades\Storage::url($record->professionalProfile->media_path)
+                            : null)
+                        ->openUrlInNewTab()
+                        ->color(fn (User $record) => $record->professionalProfile->media_path ? 'primary' : 'gray'),
                     Infolists\Components\TextEntry::make('certificacion_adjunta')->label('Adjunto de certificación')
                         ->state(fn (User $record) => $record->professionalProfile->certification_file_path ? '📎 Descargar archivo' : 'Sin adjunto')
                         ->url(fn (User $record) => $record->professionalProfile->certification_file_path
@@ -112,8 +121,17 @@ class UserResource extends Resource
                     Infolists\Components\TextEntry::make('companyProfile.contact_name')->label('Contacto (privado)')->placeholder('—'),
                     Infolists\Components\TextEntry::make('companyProfile.contact_phone')->label('Teléfono (privado)')->copyable()->placeholder('—'),
                     Infolists\Components\TextEntry::make('companyProfile.contact_email')->label('Email (privado)')->copyable()->placeholder('—'),
-                    Infolists\Components\TextEntry::make('companyProfile.media_url')->label('Multimedia')
+                    Infolists\Components\TextEntry::make('companyProfile.media_url')->label('Multimedia (enlace)')
                         ->url(fn (User $record) => $record->companyProfile->media_url)->openUrlInNewTab()->placeholder('—'),
+                    Infolists\Components\TextEntry::make('multimedia_subida_estudio')->label('Multimedia (archivo subido)')
+                        ->state(fn (User $record) => $record->companyProfile->media_path
+                            ? '📁 '.($record->companyProfile->media_type === 'video' ? 'Video' : 'Imagen').' subida'
+                            : 'Sin archivo')
+                        ->url(fn (User $record) => $record->companyProfile->media_path
+                            ? \Illuminate\Support\Facades\Storage::url($record->companyProfile->media_path)
+                            : null)
+                        ->openUrlInNewTab()
+                        ->color(fn (User $record) => $record->companyProfile->media_path ? 'primary' : 'gray'),
                     Infolists\Components\TextEntry::make('membershipPlan.nombre')->label('Plan de membresía')->placeholder('Sin plan'),
                     Infolists\Components\TextEntry::make('membership_expires_at')->label('Membresía vence')
                         ->date('d/m/Y')

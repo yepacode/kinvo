@@ -37,6 +37,7 @@ class ProfessionalProfileController extends Controller
     {
         $user = $request->user();
         abort_unless($user->esProfesional(), 403);
+        abort_if($user->estaSuspendido(), 403);
 
         $profile = $user->professionalProfile()->firstOrCreate([]);
         $profile->load(['disciplines']);
@@ -67,6 +68,7 @@ class ProfessionalProfileController extends Controller
     {
         $user = $request->user();
         abort_unless($user->esProfesional(), 403);
+        abort_if($user->estaSuspendido(), 403);
 
         $profile = $user->professionalProfile()->firstOrCreate([]);
 
@@ -89,6 +91,8 @@ class ProfessionalProfileController extends Controller
             'certifications_text' => ['nullable', 'string', 'max:2000'],
             'certification_file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
             'media_url' => ['nullable', 'url:http,https', 'max:300'],
+            'media_file' => ['nullable', 'file', 'mimes:mp4,webm,mov,m4v,jpg,jpeg,png,webp,gif', 'max:25600'],
+            'remove_media_file' => ['nullable', 'boolean'],
             'instagram' => ['nullable', 'string', 'max:120', 'regex:/^[@\w.\-\/:?=&%~#]+$/u'],
             'tiktok' => ['nullable', 'string', 'max:120', 'regex:/^[@\w.\-\/:?=&%~#]+$/u'],
             'web' => ['nullable', 'url:http,https', 'max:200'],
@@ -121,6 +125,15 @@ class ProfessionalProfileController extends Controller
                 ->store('certificaciones', 'local');
         }
 
+        if ($request->hasFile('media_file')) {
+            if ($profile->media_path) {
+                Storage::disk('public')->delete($profile->media_path);
+            }
+            $file = $request->file('media_file');
+            $data['media_path'] = $file->store('multimedia/profesional', 'public');
+            $data['media_type'] = str_starts_with($file->getMimeType() ?? '', 'video/') ? 'video' : 'image';
+        }
+
         $profile->fill([
             'full_name' => $data['full_name'] ?? null,
             'headline' => $data['headline'] ?? null,
@@ -149,6 +162,10 @@ class ProfessionalProfileController extends Controller
         if (isset($data['certification_file_path'])) {
             $profile->certification_file_path = $data['certification_file_path'];
         }
+        if (isset($data['media_path'])) {
+            $profile->media_path = $data['media_path'];
+            $profile->media_type = $data['media_type'];
+        }
 
         // Eliminar foto/adjunto si se marcó la casilla (solo si no se subió uno nuevo).
         if (! $request->hasFile('photo') && $request->boolean('remove_photo') && $profile->photo_path) {
@@ -158,6 +175,11 @@ class ProfessionalProfileController extends Controller
         if (! $request->hasFile('certification_file') && $request->boolean('remove_certification_file') && $profile->certification_file_path) {
             Storage::disk('local')->delete($profile->certification_file_path);
             $profile->certification_file_path = null;
+        }
+        if (! $request->hasFile('media_file') && $request->boolean('remove_media_file') && $profile->media_path) {
+            Storage::disk('public')->delete($profile->media_path);
+            $profile->media_path = null;
+            $profile->media_type = null;
         }
 
         $profile->save();

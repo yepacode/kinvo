@@ -141,14 +141,28 @@
                     </div>
                 @endif
 
-                {{-- Contenido multimedia --}}
-                @if ($profile->media_url)
+                {{-- Contenido multimedia: archivo subido y/o enlace externo. --}}
+                @if ($profile->media_path || $profile->media_url)
                     <div>
                         <h2 class="font-serif text-xl font-medium text-ink">Contenido multimedia</h2>
-                        <a href="{{ $profile->media_url }}" target="_blank" rel="noopener"
-                           class="mt-2 inline-flex items-center gap-2 text-sage underline hover:text-ink">
-                            Ver contenido ↗
-                        </a>
+                        @if ($profile->media_path)
+                            <div class="mt-3">
+                                @if ($profile->media_type === 'video')
+                                    <video class="w-full max-w-2xl rounded-md border border-line" controls playsinline preload="metadata">
+                                        <source src="{{ Storage::url($profile->media_path) }}">
+                                        Tu navegador no soporta este video.
+                                    </video>
+                                @else
+                                    <img class="w-full max-w-2xl rounded-md border border-line" src="{{ Storage::url($profile->media_path) }}" alt="Multimedia de {{ $profile->headline ?: $profile->user->name }}">
+                                @endif
+                            </div>
+                        @endif
+                        @if ($profile->media_url)
+                            <a href="{{ $profile->media_url }}" target="_blank" rel="noopener"
+                               class="mt-3 inline-flex items-center gap-2 text-sage underline hover:text-ink">
+                                Ver contenido ↗
+                            </a>
+                        @endif
                     </div>
                 @endif
 

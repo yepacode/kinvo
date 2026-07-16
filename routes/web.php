@@ -64,13 +64,17 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // Wizard del profesional: bienvenida → perfil → confirmación.
     Route::get('/mi-perfil/bienvenida', [ProfessionalProfileController::class, 'bienvenida'])->name('professional.bienvenida');
     Route::get('/mi-perfil', [ProfessionalProfileController::class, 'edit'])->name('professional.profile.edit');
-    Route::put('/mi-perfil', [ProfessionalProfileController::class, 'update'])->name('professional.profile.update');
+    Route::put('/mi-perfil', [ProfessionalProfileController::class, 'update'])
+        ->middleware('throttle:6,1')
+        ->name('professional.profile.update');
     Route::get('/mi-perfil/enviado', [ProfessionalProfileController::class, 'enviado'])->name('professional.enviado');
 
     // Wizard del estudio: bienvenida → perfil → confirmación.
     Route::get('/mi-empresa/bienvenida', [CompanyProfileController::class, 'bienvenida'])->name('company.bienvenida');
     Route::get('/mi-empresa', [CompanyProfileController::class, 'edit'])->name('company.profile.edit');
-    Route::put('/mi-empresa', [CompanyProfileController::class, 'update'])->name('company.profile.update');
+    Route::put('/mi-empresa', [CompanyProfileController::class, 'update'])
+        ->middleware('throttle:6,1')
+        ->name('company.profile.update');
     Route::get('/mi-empresa/enviado', [CompanyProfileController::class, 'enviado'])->name('company.enviado');
 });
 
