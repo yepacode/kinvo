@@ -22,19 +22,41 @@
             @csrf
             @method('PUT')
 
-            {{-- Foto --}}
-            <div class="flex items-center gap-5">
+            {{-- Foto: preview inmediato al seleccionar (Alpine + FileReader). --}}
+            <div class="flex items-center gap-5"
+                 x-data="{
+                     preview: null,
+                     onSelect(e) {
+                         const f = e.target.files?.[0];
+                         if (!f) { this.preview = null; return; }
+                         const r = new FileReader();
+                         r.onload = ev => { this.preview = ev.target.result };
+                         r.readAsDataURL(f);
+                     }
+                 }">
                 <div class="h-20 w-20 shrink-0 overflow-hidden rounded-full border border-line bg-beige">
-                    @if ($profile->photo_path)
-                        <img src="{{ Storage::url($profile->photo_path) }}" alt="Foto de perfil actual" class="h-full w-full object-cover">
-                    @else
-                        <img src="{{ asset('img/kinvoo-logo.png') }}" alt="Kinvoo" class="h-full w-full object-cover p-2">
-                    @endif
+                    {{-- Preview de la foto recién elegida (aún sin guardar) --}}
+                    <template x-if="preview">
+                        <img :src="preview" alt="Vista previa" class="h-full w-full object-cover">
+                    </template>
+                    <template x-if="!preview">
+                        <div class="h-full w-full">
+                            @if ($profile->photo_path)
+                                <img src="{{ Storage::url($profile->photo_path) }}" alt="Foto de perfil actual" class="h-full w-full object-cover">
+                            @else
+                                <img src="{{ asset('img/kinvoo-logo.png') }}" alt="Kinvoo" class="h-full w-full object-cover p-2">
+                            @endif
+                        </div>
+                    </template>
                 </div>
                 <div>
                     <x-input-label for="photo" :value="'Foto de perfil'" />
                     <input id="photo" name="photo" type="file" accept="image/*"
+                           @change="onSelect($event)"
                            class="mt-1 block text-sm text-warmgray file:mr-3 file:rounded-full file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-cream hover:file:bg-ink">
+                    <p class="mt-1 text-xs text-warmgray" x-show="preview" x-cloak>
+                        Así se verá tu foto de perfil. Guarda los cambios para publicarla.
+                    </p>
                     <x-input-error :messages="$errors->get('photo')" class="mt-1" />
                     @if ($profile->photo_path)
                         <label for="remove_photo" class="mt-2 flex items-center gap-2 text-xs text-warmgray">
