@@ -100,10 +100,10 @@
                         @endif
                         <div class="flex flex-wrap gap-4 text-sm">
                             @if ($profile->website)
-                                <a href="{{ $profile->website }}" target="_blank" rel="noopener" class="text-sage underline hover:text-ink">Sitio web ↗</a>
+                                <a href="{{ $profile->website }}" target="_blank" rel="noopener noreferrer" class="text-sage underline hover:text-ink">Sitio web ↗</a>
                             @endif
                             @if ($profile->media_url)
-                                <a href="{{ $profile->media_url }}" target="_blank" rel="noopener" class="text-sage underline hover:text-ink">Contenido multimedia ↗</a>
+                                <a href="{{ $profile->media_url }}" target="_blank" rel="noopener noreferrer" class="text-sage underline hover:text-ink">Contenido multimedia ↗</a>
                             @endif
                         </div>
                     </div>

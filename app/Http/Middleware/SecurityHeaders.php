@@ -35,6 +35,8 @@ class SecurityHeaders
                 "base-uri 'self'",
                 "frame-ancestors 'self'",
                 "img-src 'self' data:",
+                "media-src 'self'",
+                "object-src 'none'",
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com",
                 "font-src 'self' data: https://fonts.gstatic.com https://api.fontshare.com https://cdn.fontshare.com",
                 // 'unsafe-eval' es necesario para Alpine.js (evalúa x-show/@click con Function()).

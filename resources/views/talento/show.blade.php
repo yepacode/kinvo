@@ -158,7 +158,7 @@
                             </div>
                         @endif
                         @if ($profile->media_url)
-                            <a href="{{ $profile->media_url }}" target="_blank" rel="noopener"
+                            <a href="{{ $profile->media_url }}" target="_blank" rel="noopener noreferrer"
                                class="mt-3 inline-flex items-center gap-2 text-sage underline hover:text-ink">
                                 Ver contenido ↗
                             </a>

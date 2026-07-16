@@ -1,6 +1,6 @@
 <x-mail::message>
 <p style="text-align:center;margin:0 0 24px 0;">
-    <img src="{{ asset('img/kinvoo-logo.png') }}" alt="Kinvoo" width="72" height="72" style="border-radius:16px;">
+    <img src="{{ $message->embed(public_path('img/kinvoo-logo.png')) }}" alt="Kinvoo — bolsa de talento fitness" width="72" height="72">
 </p>
 
 # ¡Ya eres parte de Kinvoo!
