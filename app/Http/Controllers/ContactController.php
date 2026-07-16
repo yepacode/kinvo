@@ -8,6 +8,7 @@ use App\Models\ProfessionalProfile;
 use App\Notifications\NuevoContactoNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
@@ -57,14 +58,38 @@ class ContactController extends Controller
             'message' => ['required', 'string', 'min:10', 'max:2000'],
         ]);
 
-        $contact = $professionalProfile->contacts()->create([
-            'contractor_user_id' => $request->user()->id,
-            'contact_name' => $data['contact_name'],
-            'contact_email' => $data['contact_email'],
-            'contact_phone' => $data['contact_phone'] ?? null,
-            'message' => $data['message'],
-            'estado' => EstadoContacto::NoLeido,
-        ]);
+        // Dedupe: si el mismo contratante ya contactó a este profesional en los últimos
+        // 30 segundos, no creamos un nuevo registro (evita triples-clicks del botón, F5
+        // que reenvía el POST y retries del navegador). Cubierto por transacción con
+        // lockForUpdate para bloquear POSTs simultáneos en dos tabs / dos dispositivos.
+        $contact = DB::transaction(function () use ($request, $professionalProfile, $data) {
+            $ventana = now()->subSeconds(30);
+            $existente = $professionalProfile->contacts()
+                ->where('contractor_user_id', $request->user()->id)
+                ->where('created_at', '>=', $ventana)
+                ->lockForUpdate()
+                ->first();
+
+            if ($existente) {
+                return $existente;
+            }
+
+            return $professionalProfile->contacts()->create([
+                'contractor_user_id' => $request->user()->id,
+                'contact_name' => $data['contact_name'],
+                'contact_email' => $data['contact_email'],
+                'contact_phone' => $data['contact_phone'] ?? null,
+                'message' => $data['message'],
+                'estado' => EstadoContacto::NoLeido,
+            ]);
+        });
+
+        // Si fue dedupe (contacto ya existía), no volvemos a mandar correo/notificación.
+        if (! $contact->wasRecentlyCreated) {
+            return redirect()
+                ->route('talento.show', $professionalProfile->slug)
+                ->with('status', 'contacto-enviado');
+        }
 
         $professionalProfile->loadMissing('user');
 

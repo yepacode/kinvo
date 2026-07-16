@@ -28,7 +28,7 @@
                     @if ($profile->photo_path)
                         <img src="{{ Storage::url($profile->photo_path) }}" alt="Foto de perfil actual" class="h-full w-full object-cover">
                     @else
-                        <div class="flex h-full w-full items-center justify-center text-2xl text-warmgray" aria-hidden="true">🏋️</div>
+                        <img src="{{ asset('img/kinvoo-logo.png') }}" alt="Kinvoo" class="h-full w-full object-cover p-2">
                     @endif
                 </div>
                 <div>

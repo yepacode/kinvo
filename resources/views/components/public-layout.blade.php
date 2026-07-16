@@ -26,9 +26,19 @@
             <div class="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-4 sm:px-6">
                 <a href="/" class="font-serif text-xl font-medium tracking-tight text-ink sm:text-2xl">Kinvoo</a>
                 <nav class="flex items-center gap-3 text-sm sm:gap-4">
-                    <a href="{{ route('talento.index') }}" class="text-warmgray hover:text-sage">
-                        <span class="sm:hidden">Talento</span><span class="hidden sm:inline">Buscar talento</span>
-                    </a>
+                    {{-- "Buscar talento" solo tiene sentido para anónimos (para atraer), contratantes y admin.
+                         Un profesional autenticado NO debe verlo (su rol es aparecer, no buscar). --}}
+                    @auth
+                        @if (auth()->user()->esContratante() || auth()->user()->esAdmin())
+                            <a href="{{ route('talento.index') }}" class="text-warmgray hover:text-sage">
+                                <span class="sm:hidden">Talento</span><span class="hidden sm:inline">Buscar talento</span>
+                            </a>
+                        @endif
+                    @else
+                        <a href="{{ route('talento.index') }}" class="text-warmgray hover:text-sage">
+                            <span class="sm:hidden">Talento</span><span class="hidden sm:inline">Buscar talento</span>
+                        </a>
+                    @endauth
                     <a href="{{ route('membresias.index') }}" class="text-warmgray hover:text-sage">Membresías</a>
                     @auth
                         <a href="{{ auth()->user()->homeRoute() }}" class="text-warmgray hover:text-sage">Mi cuenta</a>

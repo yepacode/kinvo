@@ -42,7 +42,7 @@
                     @if ($profile->photo_path)
                         <img src="{{ Storage::url($profile->photo_path) }}" alt="{{ $nombre }}" class="h-full w-full object-cover">
                     @else
-                        <div class="flex h-full w-full items-center justify-center text-4xl text-warmgray" aria-hidden="true">🏋️</div>
+                        <img src="{{ asset('img/kinvoo-logo.png') }}" alt="Kinvoo" class="h-full w-full object-cover p-3">
                     @endif
                 </div>
                 <div class="min-w-0">
@@ -60,7 +60,7 @@
                             <span>· {{ $profile->modalidad->label() }}</span>
                         @endif
                         @if (! is_null($profile->years_experience))
-                            <span>· {{ $profile->years_experience }} años de experiencia</span>
+                            <span>· {{ $profile->years_experience }} {{ (int) $profile->years_experience === 1 ? 'año' : 'años' }} de experiencia</span>
                         @endif
                     </div>
                 </div>

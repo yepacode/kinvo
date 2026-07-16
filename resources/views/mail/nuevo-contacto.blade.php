@@ -1,23 +1,21 @@
 <x-mail::message>
 # Tienes un nuevo contacto
 
-Hola {{ $profile->user->name }}, un contratante te contactó a través de tu perfil en **Kinvoo**.
+Hola {{ $profile->user->name }}, un estudio te contactó a través de tu perfil en **Kinvoo**.
 
 **De:** {{ $contact->contact_name }}
-**Correo:** {{ $contact->contact_email }}
-@if ($contact->contact_phone)
-**Teléfono:** {{ $contact->contact_phone }}
-@endif
 
 **Mensaje:**
 
 > {{ $contact->message }}
 
-<x-mail::button :url="route('talento.show', $profile->slug)">
-Ver mi perfil
+<x-mail::button :url="route('professional.contactos')">
+Ver en mi bandeja
 </x-mail::button>
 
-Puedes responder directamente a **{{ $contact->contact_email }}**.
+En Kinvoo cuidamos los datos de ambas partes: si quieres avanzar con esta oportunidad,
+respóndenos y nosotros hacemos el puente con el estudio. No compartimos ni tu correo
+ni el suyo hasta que ambas partes lo confirmen.
 
 Gracias,<br>
 El equipo de Kinvoo

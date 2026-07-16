@@ -9,18 +9,11 @@
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@500,700,900&display=swap" rel="stylesheet">
 
-{{-- Fondo de marca: manchas orgánicas sutiles, fijas (efecto "medio perceptivo"
-     al hacer scroll). Se ve en las páginas públicas, no en el panel Filament. --}}
+{{-- Fondo de marca: crema liso (por pedido del cliente 16-jul-2026, el patrón anterior
+     se leía como "print de vaca"). Se aplica en páginas públicas, no en el panel. --}}
 <style>
     [x-cloak] { display: none !important; }
-    body {
-        background-color: #F7F4EE;
-        background-image: url('{{ asset('img/kinvoo-pattern.svg') }}');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }
+    body { background-color: #F7F4EE; }
 </style>
 
 @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))

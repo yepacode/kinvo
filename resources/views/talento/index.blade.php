@@ -48,7 +48,7 @@
         </form>
 
         {{-- Resultados --}}
-        <p class="mt-6 text-sm text-warmgray">{{ $profiles->total() }} {{ Str::plural('profesional', $profiles->total()) }}</p>
+        <p class="mt-6 text-sm text-warmgray">{{ $profiles->total() }} {{ $profiles->total() === 1 ? 'profesional' : 'profesionales' }}</p>
 
         @if ($profiles->isEmpty())
             <div class="mt-4 rounded-2xl border border-dashed border-line bg-white/60 px-6 py-16 text-center">

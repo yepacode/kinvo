@@ -4,9 +4,10 @@
 
         <div class="mt-4 rounded-2xl border border-line bg-white p-6 sm:p-8">
             <h1 class="font-serif text-2xl font-medium text-ink">Contactar a {{ $profile->user->name }}</h1>
-            <p class="mt-1 text-sm text-warmgray">Tu mensaje llegará a su correo. También podrá ver tus datos de contacto.</p>
+            <p class="mt-1 text-sm text-warmgray">Tu mensaje llega a Kinvoo y nosotros hacemos el puente con {{ $profile->user->name }}. Los datos de contacto de ambas partes se mantienen privados.</p>
 
-            <form method="POST" action="{{ route('contacto.store', $profile->slug) }}" class="mt-6 space-y-5">
+            <form method="POST" action="{{ route('contacto.store', $profile->slug) }}" class="mt-6 space-y-5"
+                  x-data="{ enviando: false }" @submit="enviando = true">
                 @csrf
 
                 <div>
@@ -40,9 +41,10 @@
                 </div>
 
                 <div class="flex justify-end">
-                    <button type="submit"
-                            class="rounded-full bg-sage px-7 py-2.5 text-sm font-semibold text-cream shadow-sm transition hover:bg-ink">
-                        Enviar mensaje
+                    <button type="submit" x-bind:disabled="enviando"
+                            class="rounded-full bg-sage px-7 py-2.5 text-sm font-semibold text-cream shadow-sm transition hover:bg-ink disabled:cursor-wait disabled:opacity-60">
+                        <span x-show="!enviando">Enviar mensaje</span>
+                        <span x-show="enviando" x-cloak>Enviando…</span>
                     </button>
                 </div>
             </form>

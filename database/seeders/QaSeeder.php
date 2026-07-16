@@ -174,7 +174,10 @@ class QaSeeder extends Seeder
             'is_published' => $data['is_published'] ?? false,
             'is_verified' => $data['is_verified'] ?? false,
             'verified_at' => ($data['is_verified'] ?? false) ? now() : null,
-            'photo_path' => ($data['con_foto'] ?? false || $completo) ? 'perfiles/placeholder.jpg' : null,
+            // Antes seteaba un path a un archivo placeholder que no siempre existía en
+            // disk → los perfiles seed se veían "sin foto". Ahora dejamos null y las vistas
+            // caen al logo Kinvoo (comportamiento consistente en cualquier entorno).
+            'photo_path' => null,
         ]);
         if (! empty($data['discs'])) {
             $p->disciplines()->sync(Discipline::whereIn('slug', $data['discs'])->pluck('id'));

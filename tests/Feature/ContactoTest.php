@@ -158,6 +158,76 @@ class ContactoTest extends TestCase
         $this->assertStringContainsString('nuevo contacto', mb_strtolower($html));
     }
 
+    public function test_triple_submit_solo_crea_un_contacto(): void
+    {
+        // Regresión del bug reportado por el cliente: al enviar el form 3 veces
+        // (doble-click, F5, retry de red) aparecían 3 contactos idénticos en la
+        // bandeja. El controller ahora deduplica dentro de una ventana corta.
+        Mail::fake();
+        $profile = $this->perfilPublicado();
+        $contratante = User::factory()->contratante()->create();
+
+        $payload = [
+            'contact_name' => 'Estudio Test',
+            'contact_email' => 'test@estudio.mx',
+            'message' => 'Hola tengo una vacante los viernes.',
+        ];
+
+        for ($i = 0; $i < 3; $i++) {
+            $this->actingAs($contratante)
+                ->post(route('contacto.store', $profile->slug), $payload)
+                ->assertRedirect(route('talento.show', $profile->slug));
+        }
+
+        $this->assertSame(1, $profile->contacts()->count());
+        Mail::assertQueued(NuevoContacto::class, 1);
+    }
+
+    public function test_bandeja_del_profesional_no_expone_email_ni_telefono(): void
+    {
+        // El cliente pidió que el contacto pase EXCLUSIVAMENTE por Kinvoo:
+        // el profesional no debe ver el correo ni el teléfono del contratante.
+        $profile = $this->perfilPublicado();
+        $contratante = User::factory()->contratante()->create();
+        $profile->contacts()->create([
+            'contractor_user_id' => $contratante->id,
+            'contact_name' => 'Estudio Zen',
+            'contact_email' => 'dlopezstreeter@gmail.com',
+            'contact_phone' => '5650690049',
+            'message' => 'Hola tengo una vacante los viernes.',
+            'estado' => EstadoContacto::NoLeido,
+        ]);
+
+        $this->actingAs($profile->user)
+            ->get('/mis-contactos')
+            ->assertOk()
+            ->assertSee('Estudio Zen')
+            ->assertSee('vacante los viernes')
+            ->assertDontSee('dlopezstreeter@gmail.com')
+            ->assertDontSee('5650690049');
+    }
+
+    public function test_correo_al_profesional_no_expone_email_ni_telefono(): void
+    {
+        // Regresión: el mailable NuevoContacto revelaba "Correo: ..." y
+        // "Puedes responder directamente a X". Ahora hace de puente.
+        $profile = $this->perfilPublicado();
+        $contratante = User::factory()->contratante()->create();
+        $contact = $profile->contacts()->create([
+            'contractor_user_id' => $contratante->id,
+            'contact_name' => 'Estudio Zen',
+            'contact_email' => 'dlopezstreeter@gmail.com',
+            'contact_phone' => '5650690049',
+            'message' => 'Hola, tenemos vacante.',
+            'estado' => EstadoContacto::NoLeido,
+        ]);
+
+        $html = (new NuevoContacto($contact, $profile->load('user')))->render();
+
+        $this->assertStringNotContainsString('dlopezstreeter@gmail.com', $html);
+        $this->assertStringNotContainsString('5650690049', $html);
+    }
+
     public function test_owner_ve_los_contactos_en_el_panel(): void
     {
         $profile = $this->perfilPublicado();

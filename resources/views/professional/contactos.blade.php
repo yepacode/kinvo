@@ -5,14 +5,15 @@
 
     <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
         <p class="mb-6 text-sm text-warmgray">
-            Aquí ves a los estudios y marcas que te contactaron a través de Kinvoo. Sus datos son privados y solo tú los ves.
+            Aquí ves a los estudios y marcas que te contactaron. El puente lo hace Kinvoo:
+            nosotros nos comunicamos con ellos por ti, no publicamos tus datos ni los suyos.
         </p>
 
         @if ($contactos->isEmpty())
             <div class="rounded-2xl border border-line bg-white px-6 py-12 text-center">
                 <div class="text-3xl" aria-hidden="true">✉️</div>
                 <p class="mt-3 font-medium text-ink">Aún no tienes contactos</p>
-                <p class="mt-1 text-sm text-warmgray">Cuando un estudio te contacte, aparecerá aquí con su mensaje y sus datos.</p>
+                <p class="mt-1 text-sm text-warmgray">Cuando un estudio te contacte, aparecerá aquí con su mensaje.</p>
             </div>
         @else
             <div class="space-y-4">
@@ -30,12 +31,10 @@
 
                         <p class="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink/90">{{ $c->message }}</p>
 
-                        <div class="mt-4 flex flex-wrap gap-x-5 gap-y-1 border-t border-line pt-4 text-sm">
-                            <a href="mailto:{{ $c->contact_email }}" class="text-sage underline hover:text-ink">{{ $c->contact_email }}</a>
-                            @if ($c->contact_phone)
-                                <span class="text-warmgray"><span aria-hidden="true">📞</span> {{ $c->contact_phone }}</span>
-                            @endif
-                        </div>
+                        <p class="mt-4 border-t border-line pt-4 text-xs text-warmgray">
+                            Los datos del estudio son privados. Si quieres avanzar con esta oportunidad,
+                            respóndenos y nosotros hacemos el puente.
+                        </p>
                     </div>
                 @endforeach
             </div>
