@@ -5,12 +5,16 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\EstadoUsuario;
 use App\Enums\RolUsuario;
 use App\Http\Controllers\Controller;
+use App\Mail\BienvenidaEstudio;
+use App\Mail\BienvenidaTalento;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -70,6 +74,20 @@ class RegisteredUserController extends Controller
         }
 
         event(new Registered($user));
+
+        // Correo de bienvenida (queued por ShouldQueue). Un fallo aquí NO debe romper
+        // el registro: se registra en el log y el usuario sigue al wizard.
+        try {
+            $mailable = $rol === RolUsuario::Contractor
+                ? new BienvenidaEstudio($user)
+                : new BienvenidaTalento($user);
+            Mail::to($user->email)->send($mailable);
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo enviar el correo de bienvenida', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         Auth::login($user);
 

@@ -4,8 +4,11 @@ namespace Tests\Feature\Auth;
 
 use App\Enums\EstadoUsuario;
 use App\Enums\RolUsuario;
+use App\Mail\BienvenidaEstudio;
+use App\Mail\BienvenidaTalento;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -97,6 +100,63 @@ class RegistrationTest extends TestCase
 
         $response->assertSessionHasErrors('tipo');
         $this->assertGuest();
+    }
+
+    public function test_registro_de_talento_envia_correo_de_bienvenida(): void
+    {
+        Mail::fake();
+
+        $this->post('/register', [
+            'name' => 'Coach Ana',
+            'tipo' => 'professional',
+            'email' => 'coach.mail@example.com',
+            'password' => 'Str0ng!Pass',
+            'password_confirmation' => 'Str0ng!Pass',
+            'acepta_legales' => '1',
+        ]);
+
+        Mail::assertQueued(BienvenidaTalento::class, function ($mail) {
+            return $mail->hasTo('coach.mail@example.com');
+        });
+        Mail::assertNotQueued(BienvenidaEstudio::class);
+    }
+
+    public function test_registro_de_estudio_envia_correo_de_bienvenida(): void
+    {
+        Mail::fake();
+
+        $this->post('/register', [
+            'name' => 'Gym Norte',
+            'tipo' => 'contractor',
+            'email' => 'gym.mail@example.com',
+            'password' => 'Str0ng!Pass',
+            'password_confirmation' => 'Str0ng!Pass',
+            'acepta_legales' => '1',
+        ]);
+
+        Mail::assertQueued(BienvenidaEstudio::class, function ($mail) {
+            return $mail->hasTo('gym.mail@example.com');
+        });
+        Mail::assertNotQueued(BienvenidaTalento::class);
+    }
+
+    public function test_fallo_del_correo_no_rompe_el_registro(): void
+    {
+        // Simula un fallo total del sistema de mail (ej. queue caída, SMTP muerto).
+        // El try/catch en RegisteredUserController debe absorberlo y dejar entrar al usuario.
+        Mail::shouldReceive('to')->andThrow(new \RuntimeException('mail down'));
+
+        $this->post('/register', [
+            'name' => 'Coach Resiliente',
+            'tipo' => 'professional',
+            'email' => 'resiliente@example.com',
+            'password' => 'Str0ng!Pass',
+            'password_confirmation' => 'Str0ng!Pass',
+            'acepta_legales' => '1',
+        ])->assertRedirect(route('professional.bienvenida'));
+
+        $this->assertAuthenticated();
+        $this->assertNotNull(User::where('email', 'resiliente@example.com')->first());
     }
 
     public function test_pending_user_is_blocked_from_dashboard(): void
