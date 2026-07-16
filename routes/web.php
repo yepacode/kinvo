@@ -82,6 +82,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
     // Bandeja de contactos recibidos (profesional).
     Route::get('/mis-contactos', [ContactController::class, 'recibidos'])->name('professional.contactos');
+    Route::post('/mis-contactos/{contact}/me-interesa', [ContactController::class, 'marcarInteresado'])
+        ->middleware('throttle:20,1')
+        ->name('professional.contactos.interesado');
 
     // Contactar a un profesional (solo contratantes, validado en el controller). Con rate limit anti-spam.
     Route::get('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'create'])

@@ -228,6 +228,104 @@ class ContactoTest extends TestCase
         $this->assertStringNotContainsString('5650690049', $html);
     }
 
+    public function test_profesional_marca_me_interesa_y_avisa_a_kinvoo(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+
+        $profile = $this->perfilPublicado();
+        $contratante = User::factory()->contratante()->create();
+        $contact = $profile->contacts()->create([
+            'contractor_user_id' => $contratante->id,
+            'contact_name' => 'Estudio Zen',
+            'contact_email' => 'zen@example.com',
+            'message' => 'Hola tenemos una vacante.',
+            'estado' => EstadoContacto::NoLeido,
+        ]);
+        $owner = User::factory()->admin()->create();
+
+        $this->actingAs($profile->user)
+            ->post(route('professional.contactos.interesado', $contact))
+            ->assertRedirect()
+            ->assertSessionHas('status', 'interesado-registrado');
+
+        $this->assertNotNull($contact->fresh()->professional_interesado_at);
+        \Illuminate\Support\Facades\Notification::assertSentTo(
+            $owner,
+            \App\Notifications\ProfesionalInteresadoNotification::class
+        );
+    }
+
+    public function test_marcar_me_interesa_es_idempotente(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+
+        $profile = $this->perfilPublicado();
+        $contratante = User::factory()->contratante()->create();
+        $contact = $profile->contacts()->create([
+            'contractor_user_id' => $contratante->id,
+            'contact_name' => 'Estudio Zen',
+            'contact_email' => 'zen@example.com',
+            'message' => 'Tenemos una vacante.',
+            'estado' => EstadoContacto::NoLeido,
+            'professional_interesado_at' => now()->subHour(),
+        ]);
+        User::factory()->admin()->create();
+
+        $this->actingAs($profile->user)
+            ->post(route('professional.contactos.interesado', $contact))
+            ->assertRedirect()
+            ->assertSessionHas('status', 'ya-interesado');
+
+        \Illuminate\Support\Facades\Notification::assertNothingSent();
+    }
+
+    public function test_profesional_no_puede_marcar_contactos_de_otros(): void
+    {
+        $profileA = $this->perfilPublicado();
+        $otroPro = User::factory()->create();
+        $contact = $profileA->contacts()->create([
+            'contractor_user_id' => User::factory()->contratante()->create()->id,
+            'contact_name' => 'Estudio X',
+            'contact_email' => 'x@example.com',
+            'message' => 'Un mensaje aquí.',
+            'estado' => EstadoContacto::NoLeido,
+        ]);
+
+        $this->actingAs($otroPro)
+            ->post(route('professional.contactos.interesado', $contact))
+            ->assertForbidden();
+
+        $this->assertNull($contact->fresh()->professional_interesado_at);
+    }
+
+    public function test_bandeja_muestra_el_boton_y_luego_el_chip_interesado(): void
+    {
+        $profile = $this->perfilPublicado();
+        $contratante = User::factory()->contratante()->create();
+        $profile->contacts()->create([
+            'contractor_user_id' => $contratante->id,
+            'contact_name' => 'Estudio Zen',
+            'contact_email' => 'zen@example.com',
+            'message' => 'Tenemos una vacante para ti.',
+            'estado' => EstadoContacto::NoLeido,
+        ]);
+
+        // Antes de marcar: se ve el botón.
+        $this->actingAs($profile->user)
+            ->get('/mis-contactos')
+            ->assertOk()
+            ->assertSee('Me interesa, conéctame con el estudio');
+
+        // Después de marcar: se ve el chip "Kinvoo está gestionando el puente".
+        $profile->contacts()->first()->update(['professional_interesado_at' => now()]);
+
+        $this->actingAs($profile->user)
+            ->get('/mis-contactos')
+            ->assertOk()
+            ->assertDontSee('Me interesa, conéctame con el estudio')
+            ->assertSee('Kinvoo está gestionando el puente');
+    }
+
     public function test_owner_ve_los_contactos_en_el_panel(): void
     {
         $profile = $this->perfilPublicado();

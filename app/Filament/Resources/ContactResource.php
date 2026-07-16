@@ -33,7 +33,19 @@ class ContactResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
+        // Prioridad: si hay contactos donde el profesional dijo "me interesa",
+        // esos son acción pendiente para Kinvoo. Si no, mostramos los no leídos.
+        $pendientes = static::getModel()::whereNotNull('professional_interesado_at')->count();
+        if ($pendientes > 0) {
+            return (string) $pendientes;
+        }
+
         return static::getModel()::where('estado', EstadoContacto::NoLeido->value)->count() ?: null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::whereNotNull('professional_interesado_at')->exists() ? 'success' : 'warning';
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -44,6 +56,12 @@ class ContactResource extends Resource
             Infolists\Components\TextEntry::make('contact_email')->label('Correo')->copyable(),
             Infolists\Components\TextEntry::make('contact_phone')->label('Teléfono')->placeholder('—'),
             Infolists\Components\TextEntry::make('professionalProfile.user.name')->label('Profesional contactado'),
+            Infolists\Components\TextEntry::make('professional_interesado_at')
+                ->label('Profesional pidió conexión')
+                ->dateTime('d/m/Y H:i')
+                ->badge()
+                ->color('success')
+                ->placeholder('Aún no pidió conexión'),
             Infolists\Components\TextEntry::make('message')->label('Mensaje')->columnSpanFull(),
         ])->columns(2);
     }
@@ -72,6 +90,12 @@ class ContactResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (EstadoContacto $state) => $state->label())
                     ->color(fn (EstadoContacto $state) => $state === EstadoContacto::NoLeido ? 'warning' : 'gray'),
+                Tables\Columns\TextColumn::make('professional_interesado_at')
+                    ->label('Conexión pedida')
+                    ->badge()
+                    ->color('success')
+                    ->formatStateUsing(fn ($state) => $state ? 'Pendiente de conectar' : '—')
+                    ->tooltip(fn (Contact $r) => $r->professional_interesado_at?->format('d/m/Y H:i')),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -81,6 +105,10 @@ class ContactResource extends Resource
                         EstadoContacto::NoLeido->value => 'No leído',
                         EstadoContacto::Leido->value => 'Leído',
                     ]),
+                Tables\Filters\Filter::make('conexion_pendiente')
+                    ->label('Con conexión pendiente')
+                    ->query(fn (Builder $q) => $q->whereNotNull('professional_interesado_at'))
+                    ->toggle(),
                 Tables\Filters\Filter::make('rango')
                     ->label('Fecha')
                     ->form([

@@ -11,12 +11,19 @@ class Contact extends Model
     protected $fillable = [
         'contractor_user_id', 'professional_profile_id',
         'contact_name', 'contact_email', 'contact_phone',
-        'message', 'estado',
+        'message', 'estado', 'professional_interesado_at',
     ];
 
     protected $casts = [
         'estado' => EstadoContacto::class,
+        'professional_interesado_at' => 'datetime',
     ];
+
+    /** ¿El profesional ya marcó que quiere que Kinvoo lo conecte? */
+    public function esInteresado(): bool
+    {
+        return $this->professional_interesado_at !== null;
+    }
 
     public function contractor(): BelongsTo
     {

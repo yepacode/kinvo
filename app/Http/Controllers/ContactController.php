@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Enums\EstadoContacto;
 use App\Mail\NuevoContacto;
+use App\Models\Contact;
 use App\Models\ProfessionalProfile;
+use App\Models\User;
 use App\Notifications\NuevoContactoNotification;
+use App\Notifications\ProfesionalInteresadoNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +32,47 @@ class ContactController extends Controller
             ->update(['estado' => EstadoContacto::Leido->value]);
 
         return view('professional.contactos', ['contactos' => $contactos]);
+    }
+
+    /**
+     * El profesional marca "Me interesa, conéctame con el estudio". Al hacerlo,
+     * Kinvoo (los admins) reciben una notificación para gestionar el puente
+     * manualmente. Idempotente: si ya estaba marcado, no vuelve a notificar.
+     */
+    public function marcarInteresado(Request $request, Contact $contact): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user->esProfesional(), 403);
+
+        $contact->loadMissing('professionalProfile');
+        abort_unless($contact->professionalProfile?->user_id === $user->id, 403);
+
+        if ($contact->professional_interesado_at) {
+            // Ya lo marcó antes: idempotente, no duplicamos aviso.
+            return back()->with('status', 'ya-interesado');
+        }
+
+        $contact->forceFill([
+            'professional_interesado_at' => now(),
+            'estado' => EstadoContacto::Leido,
+        ])->save();
+
+        // Notifica a todos los admins activos (email + campanita). El correo
+        // va queued dentro de la Notification; envuelto en try/catch para que
+        // un fallo de correo no rompa el flujo del profesional.
+        try {
+            $admins = User::query()
+                ->where('nivel', \App\Enums\RolUsuario::Admin)
+                ->where('estado', \App\Enums\EstadoUsuario::Activo)
+                ->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new ProfesionalInteresadoNotification($contact));
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return back()->with('status', 'interesado-registrado');
     }
 
     /** Muestra el formulario para contactar a un profesional. */
