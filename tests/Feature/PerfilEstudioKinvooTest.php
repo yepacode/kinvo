@@ -95,6 +95,7 @@ class PerfilEstudioKinvooTest extends TestCase
             'contact_email' => 'privado@gym.mx',
         ]);
 
+        $this->actingAsSocio(); // el perfil del estudio requiere estar logueado
         $this->get(route('estudio.show', $profile->slug))
             ->assertOk()
             ->assertSee('Gym Público')
@@ -118,6 +119,7 @@ class PerfilEstudioKinvooTest extends TestCase
             'show_address' => false,
         ]);
 
+        $this->actingAsSocio();
         // Por defecto NO se muestra la dirección exacta, solo el estado.
         $this->get(route('estudio.show', $profile->slug))
             ->assertOk()
@@ -130,17 +132,28 @@ class PerfilEstudioKinvooTest extends TestCase
             ->assertSee('Calle Secreta 99');
     }
 
+    public function test_pagina_del_estudio_requiere_login(): void
+    {
+        // El perfil del estudio ya no es público: un anónimo va al login.
+        $user = User::factory()->contratante()->create();
+        $profile = $user->companyProfile()->create(['company_name' => 'Gym Privado']);
+
+        $this->get(route('estudio.show', $profile->slug))->assertRedirect(route('login'));
+    }
+
     public function test_estudio_de_usuario_no_activo_da_404(): void
     {
         $user = User::factory()->contratante()->create();
         $user->forceFill(['estado' => \App\Enums\EstadoUsuario::Pendiente])->save();
         $profile = $user->companyProfile()->create(['company_name' => 'Oculto']);
 
+        $this->actingAsSocio();
         $this->get(route('estudio.show', $profile->slug))->assertNotFound();
     }
 
     public function test_buscador_ya_no_muestra_filtro_de_certificacion(): void
     {
+        $this->actingAsSocio();
         $this->get(route('talento.index'))
             ->assertOk()
             ->assertDontSee('name="certification_id"', false);

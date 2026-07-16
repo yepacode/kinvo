@@ -201,6 +201,7 @@ class PerfilProfesionalKinvooTest extends TestCase
             'is_published' => true,
         ]);
 
+        $this->actingAsSocio();
         $this->get(route('talento.show', $profile->slug))
             ->assertOk()
             ->assertSee('Ana Coach')

@@ -87,7 +87,7 @@ class ProfilesTest extends TestCase
         Storage::disk('public')->assertExists($profile->photo_path);
     }
 
-    public function test_perfil_publicado_es_visible_publicamente(): void
+    public function test_perfil_publicado_es_visible_para_socio(): void
     {
         $user = User::factory()->create(['name' => 'Ana Torres']);
         $profile = $user->professionalProfile()->create([
@@ -95,6 +95,7 @@ class ProfilesTest extends TestCase
             'is_published' => true,
         ]);
 
+        $this->actingAsSocio(); // directorio privado: estudio con membresía
         $this->get(route('talento.show', $profile->slug))
             ->assertStatus(200)
             ->assertSee('Ana Torres')
@@ -109,6 +110,7 @@ class ProfilesTest extends TestCase
             'is_published' => false,
         ]);
 
+        $this->actingAsSocio();
         $this->get(route('talento.show', $profile->slug))->assertStatus(404);
     }
 

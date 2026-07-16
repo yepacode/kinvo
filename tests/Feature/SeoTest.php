@@ -10,17 +10,17 @@ class SeoTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_sitemap_incluye_perfiles_publicados_y_excluye_ocultos(): void
+    public function test_sitemap_no_incluye_perfiles_privados(): void
     {
+        // Los perfiles de talento son privados: NO deben aparecer en el sitemap.
         $pub = User::factory()->create()->professionalProfile()->create(['is_published' => true]);
-        $oculto = User::factory()->create()->professionalProfile()->create(['is_published' => false]);
 
         $response = $this->get('/sitemap.xml');
 
         $response->assertStatus(200)
-            ->assertHeader('Content-Type', 'application/xml');
-        $response->assertSee($pub->slug, false);
-        $response->assertDontSee($oculto->slug, false);
+            ->assertHeader('Content-Type', 'application/xml')
+            ->assertSee('/membresias', false)
+            ->assertDontSee($pub->slug, false);
     }
 
     public function test_robots_bloquea_areas_privadas_y_apunta_al_sitemap(): void
@@ -29,6 +29,8 @@ class SeoTest extends TestCase
             ->assertStatus(200)
             ->assertSee('Disallow: /admin')
             ->assertSee('Disallow: /dashboard')
+            ->assertSee('Disallow: /talento')
+            ->assertSee('Disallow: /estudio')
             ->assertSee('Sitemap:');
     }
 
@@ -47,6 +49,7 @@ class SeoTest extends TestCase
         $profile = User::factory()->create(['name' => 'Coach JSON'])
             ->professionalProfile()->create(['headline' => 'Coach', 'is_published' => true]);
 
+        $this->actingAsSocio();
         $this->get(route('talento.show', $profile->slug))
             ->assertSee('"@context":"https:\/\/schema.org"', false)
             ->assertDontSee('__contextArgs', false);

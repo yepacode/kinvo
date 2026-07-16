@@ -42,16 +42,35 @@ class MembresiaGateTest extends TestCase
         $this->actingAs($user)->get(route('talento.index'))->assertOk();
     }
 
-    public function test_anonimo_no_es_bloqueado(): void
+    public function test_anonimo_es_redirigido_al_login(): void
     {
-        $this->get(route('talento.index'))->assertOk();
+        // El directorio es privado: el público general no entra.
+        $this->get(route('talento.index'))->assertRedirect(route('login'));
     }
 
-    public function test_profesional_no_es_bloqueado(): void
+    public function test_profesional_no_ve_el_directorio(): void
     {
+        // El talento NO navega el directorio; se le redirige a su área.
         $pro = User::factory()->create(); // profesional activo
 
-        $this->actingAs($pro)->get(route('talento.index'))->assertOk();
+        $this->actingAs($pro)->get(route('talento.index'))
+            ->assertRedirect($pro->homeRoute());
+    }
+
+    public function test_profesional_si_puede_ver_su_propio_perfil(): void
+    {
+        // Vista previa: el profesional puede ver SU perfil público, no el de otros.
+        $pro = User::factory()->create();
+        $profile = $pro->professionalProfile()->create(['is_published' => true, 'headline' => 'Coach']);
+
+        $this->actingAs($pro)->get(route('talento.show', $profile->slug))->assertOk();
+    }
+
+    public function test_admin_puede_ver_el_directorio(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)->get(route('talento.index'))->assertOk();
     }
 
     public function test_contratante_sin_membresia_no_puede_contactar(): void

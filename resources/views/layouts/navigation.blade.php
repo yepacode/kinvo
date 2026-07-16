@@ -23,10 +23,13 @@
                         <x-nav-link :href="route('company.profile.edit')" :active="request()->routeIs('company.profile.*')">
                             Mi empresa
                         </x-nav-link>
+                        <x-nav-link :href="route('talento.index')" :active="request()->routeIs('talento.index')">
+                            Buscar talento
+                        </x-nav-link>
+                        <x-nav-link :href="route('saves.index')" :active="request()->routeIs('saves.*')">
+                            Guardados
+                        </x-nav-link>
                     @endif
-                    <x-nav-link :href="route('saves.index')" :active="request()->routeIs('saves.*')">
-                        Guardados
-                    </x-nav-link>
                 </div>
             </div>
 
@@ -98,14 +101,20 @@
                 <x-responsive-nav-link :href="route('professional.profile.edit')" :active="request()->routeIs('professional.profile.*')">
                     Mi perfil
                 </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('professional.contactos')" :active="request()->routeIs('professional.contactos')">
+                    Contactos
+                </x-responsive-nav-link>
             @elseif (auth()->user()->esContratante())
                 <x-responsive-nav-link :href="route('company.profile.edit')" :active="request()->routeIs('company.profile.*')">
                     Mi empresa
                 </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('talento.index')" :active="request()->routeIs('talento.index')">
+                    Buscar talento
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('saves.index')" :active="request()->routeIs('saves.*')">
+                    Guardados
+                </x-responsive-nav-link>
             @endif
-            <x-responsive-nav-link :href="route('saves.index')" :active="request()->routeIs('saves.*')">
-                Guardados
-            </x-responsive-nav-link>
         </div>
 
         <div class="pt-4 pb-1 border-t border-line">

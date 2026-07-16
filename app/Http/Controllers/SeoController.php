@@ -2,27 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CompanyProfile;
-use App\Models\ProfessionalProfile;
 use Illuminate\Http\Response;
 
 class SeoController extends Controller
 {
-    /** Mapa del sitio con las URLs públicas indexables. */
+    /**
+     * Mapa del sitio: solo las URLs públicas indexables. Los perfiles de talento
+     * y los estudios son PRIVADOS (requieren login/membresía) → no van al sitemap.
+     */
     public function sitemap(): Response
     {
-        $perfiles = ProfessionalProfile::visiblePublicamente()
-            ->select('slug', 'updated_at')
-            ->orderByDesc('updated_at')
-            ->get();
-
-        $estudios = CompanyProfile::visiblePublicamente()
-            ->select('slug', 'updated_at')
-            ->orderByDesc('updated_at')
-            ->get();
-
         return response()
-            ->view('seo.sitemap', ['perfiles' => $perfiles, 'estudios' => $estudios])
+            ->view('seo.sitemap')
             ->header('Content-Type', 'application/xml');
     }
 
@@ -34,6 +25,8 @@ class SeoController extends Controller
             'Allow: /',
             'Disallow: /admin',
             'Disallow: /dashboard',
+            'Disallow: /talento',
+            'Disallow: /estudio',
             'Disallow: /mi-perfil',
             'Disallow: /mi-empresa',
             'Disallow: /cuenta',

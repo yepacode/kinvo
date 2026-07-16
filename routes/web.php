@@ -31,14 +31,16 @@ Route::get('/terminos-y-condiciones', [LegalController::class, 'terminos'])->nam
 Route::get('/panel/certificacion/{professionalProfile}', [ProfessionalProfileController::class, 'certificacion'])
     ->middleware('auth')->name('admin.certificacion');
 
-// Buscador y vista pública del talento (solo perfiles publicados).
-// El middleware 'membresia' solo bloquea a contratantes sin membresía vigente;
-// visitantes anónimos y profesionales pasan sin restricción.
-Route::get('/talento', [TalentoController::class, 'index'])->middleware('membresia')->name('talento.index');
-Route::get('/talento/{professionalProfile:slug}', [TalentoController::class, 'show'])->middleware('membresia')->name('talento.show');
+// Directorio y perfiles de talento — PRIVADOS: solo estudios con membresía vigente
+// y el admin (el profesional puede ver su propio perfil). No visibles al público.
+Route::middleware(['auth', 'cuenta.activa', 'acceso.directorio', 'nocache'])->group(function () {
+    Route::get('/talento', [TalentoController::class, 'index'])->name('talento.index');
+    Route::get('/talento/{professionalProfile:slug}', [TalentoController::class, 'show'])->name('talento.show');
+});
 
-// Página pública del estudio (solo si el dueño está activo).
-Route::get('/estudio/{companyProfile:slug}', [CompanyProfileController::class, 'show'])->name('estudio.show');
+// Perfil del estudio — privado: solo usuarios autenticados (no público general).
+Route::get('/estudio/{companyProfile:slug}', [CompanyProfileController::class, 'show'])
+    ->middleware(['auth', 'cuenta.activa', 'nocache'])->name('estudio.show');
 
 // Aviso de cuenta pendiente/suspendida (no pasa por el gate de estado).
 Route::get('/cuenta/pendiente', function () {
@@ -79,8 +81,10 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
     Route::get('/notificaciones/{id}/abrir', [NotificationController::class, 'open'])->name('notifications.open');
 
     // Guardados / favoritos
-    Route::get('/guardados', [SaveController::class, 'index'])->name('saves.index');
-    Route::post('/talento/{professionalProfile:slug}/guardar', [SaveController::class, 'toggleProfile'])->name('saves.toggleProfile');
+    // Guardados: función del directorio → solo estudios con membresía + admin.
+    Route::get('/guardados', [SaveController::class, 'index'])->middleware('acceso.directorio')->name('saves.index');
+    Route::post('/talento/{professionalProfile:slug}/guardar', [SaveController::class, 'toggleProfile'])
+        ->middleware('acceso.directorio')->name('saves.toggleProfile');
 });
 
 require __DIR__.'/auth.php';

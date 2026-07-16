@@ -50,4 +50,15 @@ class GuardadosTest extends TestCase
         $this->post(route('saves.toggleProfile', $profile->slug))
             ->assertRedirect(route('login'));
     }
+
+    public function test_profesional_no_accede_a_guardados(): void
+    {
+        // Guardados es función de estudios: el talento no puede usarla ni ver tarjetas.
+        $pro = User::factory()->create(); // profesional
+        $otro = $this->perfilPublicado();
+
+        $this->actingAs($pro)->get(route('saves.index'))->assertRedirect($pro->homeRoute());
+        $this->actingAs($pro)->post(route('saves.toggleProfile', $otro->slug))
+            ->assertRedirect($pro->homeRoute());
+    }
 }

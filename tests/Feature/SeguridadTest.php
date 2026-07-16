@@ -17,11 +17,14 @@ class SeguridadTest extends TestCase
         $user = User::factory()->create();
         $profile = $user->professionalProfile()->create(['is_published' => true, 'headline' => 'Coach Suspendida']);
 
+        // El directorio es privado: se navega como estudio con membresía.
+        $this->actingAsSocio();
+
         // Visible mientras está activo
         $this->get(route('talento.show', $profile->slug))->assertStatus(200);
         $this->get(route('talento.index'))->assertSee('Coach Suspendida');
 
-        // Al suspender al dueño, su perfil desaparece del público
+        // Al suspender al dueño, su perfil desaparece
         $user->forceFill(['estado' => EstadoUsuario::Suspendido])->save();
 
         $this->get(route('talento.show', $profile->slug))->assertStatus(404);
@@ -36,6 +39,7 @@ class SeguridadTest extends TestCase
         $user = User::factory()->create(['name' => '</script><script>alert(1)</script>']);
         $profile = $user->professionalProfile()->create(['is_published' => true]);
 
+        $this->actingAsSocio();
         $html = $this->get(route('talento.show', $profile->slug))->assertStatus(200)->getContent();
 
         // El </script> del nombre no debe aparecer literal dentro del JSON-LD.

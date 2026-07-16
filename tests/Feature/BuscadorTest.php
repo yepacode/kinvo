@@ -18,6 +18,8 @@ class BuscadorTest extends TestCase
     {
         parent::setUp();
         $this->seed(TaxonomiaSeeder::class);
+        // El directorio es privado: se navega como estudio con membresía vigente.
+        $this->actingAsSocio();
     }
 
     private function perfil(string $nombre, array $attrs = [], array $disciplinas = []): ProfessionalProfile

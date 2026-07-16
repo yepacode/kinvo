@@ -23,14 +23,12 @@ class AuditoriaRonda2Test extends TestCase
         Cache::flush();
     }
 
-    public function test_sitemap_excluye_perfiles_de_dueno_no_activo(): void
+    public function test_sitemap_nunca_expone_perfiles_de_talento(): void
     {
+        // Los perfiles son privados: no aparecen en el sitemap ni siquiera publicados.
         $u = User::factory()->create();
         $p = $u->professionalProfile()->create(['is_published' => true]);
 
-        $this->get('/sitemap.xml')->assertSee($p->slug, false);
-
-        $u->forceFill(['estado' => EstadoUsuario::Suspendido])->save();
         $this->get('/sitemap.xml')->assertDontSee($p->slug, false);
     }
 

@@ -31,6 +31,7 @@ class VerificacionTest extends TestCase
         $profile = User::factory()->create()
             ->professionalProfile()->create(['is_published' => true, 'is_verified' => true, 'verified_at' => now()]);
 
+        $this->actingAsSocio();
         $this->get(route('talento.show', $profile->slug))
             ->assertSee('Perfil verificado');
     }
@@ -40,6 +41,7 @@ class VerificacionTest extends TestCase
         $profile = User::factory()->create()
             ->professionalProfile()->create(['is_published' => true, 'is_verified' => false]);
 
+        $this->actingAsSocio();
         $this->get(route('talento.show', $profile->slug))
             ->assertDontSee('Perfil verificado');
     }

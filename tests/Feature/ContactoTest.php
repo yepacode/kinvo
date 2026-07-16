@@ -34,23 +34,24 @@ class ContactoTest extends TestCase
             ->assertSee('Contactar a');
     }
 
-    public function test_invitado_no_ve_boton_contactar(): void
+    public function test_invitado_es_redirigido_al_login(): void
     {
+        // El directorio es privado: un anónimo va al login, no ve el perfil.
         $profile = $this->perfilPublicado();
 
         $this->get(route('talento.show', $profile->slug))
-            ->assertDontSee('Contactar a')
-            ->assertSee('Inicia sesión');
+            ->assertRedirect(route('login'));
     }
 
-    public function test_profesional_no_ve_boton_contactar(): void
+    public function test_profesional_no_puede_ver_perfiles_de_otros(): void
     {
+        // El talento no navega el directorio: se le redirige fuera.
         $profile = $this->perfilPublicado();
         $otroProfesional = User::factory()->create();
 
         $this->actingAs($otroProfesional)
             ->get(route('talento.show', $profile->slug))
-            ->assertDontSee('Contactar a');
+            ->assertRedirect($otroProfesional->homeRoute());
     }
 
     public function test_contratante_envia_contacto_y_se_notifica(): void
