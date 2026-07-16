@@ -107,6 +107,10 @@ class SiteSetting extends Model
             'footer_tag' => 'Where talent meets fitness.',
             'footer_copy' => '© 2026 | Kinvoo Wellness - Todos los derechos reservados',
 
+            // Fondo del sitio (páginas públicas). Editable desde el panel.
+            'background_color' => '#F7F4EE',
+            'background_image' => null,
+
             // Mensaje de bienvenida — Profesional
             'welcome_pro_title' => 'Bienvenid@ a Kinvoo',
             'welcome_pro_body' => <<<'TXT'

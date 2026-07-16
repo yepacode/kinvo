@@ -9,11 +9,28 @@
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@500,700,900&display=swap" rel="stylesheet">
 
-{{-- Fondo de marca: crema liso (por pedido del cliente 16-jul-2026, el patrón anterior
-     se leía como "print de vaca"). Se aplica en páginas públicas, no en el panel. --}}
+{{-- Fondo del sitio (editable desde el panel: Configuración del sitio → Fondo).
+     Se muestra un color base + opcionalmente una imagen encima. Solo páginas públicas. --}}
+@php
+    // Sanitizamos el color: solo aceptamos hex #RGB / #RRGGBB / #RRGGBBAA para
+    // impedir que un admin (por error o malicia) inyecte CSS extra en el body.
+    $bgColorRaw = landing('background_color', '#F7F4EE');
+    $bgColor = preg_match('/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/', (string) $bgColorRaw) ? $bgColorRaw : '#F7F4EE';
+    $bgImageSetting = landing('background_image');
+    $bgImage = $bgImageSetting ? \Illuminate\Support\Facades\Storage::disk('public')->url($bgImageSetting) : null;
+@endphp
 <style>
     [x-cloak] { display: none !important; }
-    body { background-color: #F7F4EE; }
+    body {
+        background-color: {{ $bgColor }};
+        @if ($bgImage)
+        background-image: url('{{ $bgImage }}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        @endif
+    }
 </style>
 
 @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))

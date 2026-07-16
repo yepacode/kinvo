@@ -3,10 +3,13 @@
 namespace App\Filament\Pages;
 
 use App\Models\SiteSetting;
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Illuminate\Support\HtmlString;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
@@ -125,6 +128,27 @@ class ConfiguracionSitio extends Page implements HasForms
                         TextInput::make('footer_copy')->label('Copyright'),
                         FileUpload::make('divider_image')->label('Foto divisora')
                             ->image()->disk('public')->directory('landing')->imageEditor(),
+                    ]),
+
+                    Tabs\Tab::make('Fondo')->icon('heroicon-o-paint-brush')->schema([
+                        Placeholder::make('background_help')
+                            ->label('')
+                            ->content(new HtmlString(
+                                '<p style="font-size:0.875rem;color:#6E6E5F;">'
+                                .'Controla el fondo de todas las páginas públicas del sitio.<br>'
+                                .'Si subes una imagen, se muestra sobre el color. Si no, solo el color.'
+                                .'</p>'
+                            )),
+                        ColorPicker::make('background_color')
+                            ->label('Color de fondo')
+                            ->helperText('Color base del sitio. Ej. #F7F4EE (crema). Se aplica a la landing y a todas las páginas públicas.'),
+                        FileUpload::make('background_image')
+                            ->label('Imagen de fondo (opcional)')
+                            ->image()
+                            ->disk('public')
+                            ->directory('landing')
+                            ->imageEditor()
+                            ->helperText('Se coloca encima del color, cubriendo el ancho de la pantalla y fija al scroll. Déjala vacía para fondo liso.'),
                     ]),
 
                     Tabs\Tab::make('Membresías')->icon('heroicon-o-credit-card')->schema([

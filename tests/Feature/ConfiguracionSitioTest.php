@@ -79,4 +79,27 @@ class ConfiguracionSitioTest extends TestCase
 
         $this->assertSame('Un texto totalmente nuevo.', SiteSetting::get('hero_body'));
     }
+
+    public function test_owner_puede_cambiar_color_de_fondo(): void
+    {
+        // El fondo editable se aplica en head-assets, usado por x-public-layout.
+        // La landing (welcome.blade.php) tiene su propio head autocontenido y no lo usa.
+        SiteSetting::set('background_color', '#123456');
+
+        $html = $this->get('/membresias')->getContent();
+
+        $this->assertStringContainsString('background-color: #123456;', $html);
+    }
+
+    public function test_color_de_fondo_invalido_cae_al_default(): void
+    {
+        // Un admin no debería poder inyectar CSS extra desde el ColorPicker.
+        // Si el valor persistido no es hex válido, la vista usa el default #F7F4EE.
+        SiteSetting::set('background_color', 'red; } body { display:none; } {');
+
+        $html = $this->get('/membresias')->getContent();
+
+        $this->assertStringContainsString('background-color: #F7F4EE;', $html);
+        $this->assertStringNotContainsString('display:none', $html);
+    }
 }
