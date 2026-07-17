@@ -186,7 +186,7 @@
                     <x-input-label for="media_file" :value="'O sube un archivo (video o imagen, máx. 25 MB)'" />
                     <input id="media_file" name="media_file" type="file"
                            accept="video/mp4,video/webm,video/quicktime,video/x-m4v,image/*"
-                           class="mt-1 block w-full text-sm text-ink file:mr-4 file:rounded-md file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-sage/90" />
+                           class="mt-1 block w-full max-w-full text-sm text-ink file:mr-4 file:rounded-md file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-sage/90" />
                     <p class="mt-1 text-xs text-warmgray">Formatos: MP4, WebM, MOV, JPG, PNG, WebP, GIF.</p>
                     <x-input-error :messages="$errors->get('media_file')" class="mt-1" />
 
