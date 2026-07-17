@@ -53,7 +53,7 @@
                 {{-- Disciplinas --}}
                 @if ($disciplinas->isNotEmpty())
                     <div>
-                        <h2 class="font-serif text-xl font-medium text-ink">Disciplinas</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">{{ __('Disciplinas') }}</h2>
                         <div class="mt-3 flex flex-wrap gap-2">
                             @foreach ($disciplinas as $d)
                                 <span class="rounded-full bg-sage/10 px-3 py-1 text-sm text-sage">{{ $d }}</span>
@@ -65,7 +65,7 @@
                 {{-- Sobre el estudio --}}
                 @if ($profile->description)
                     <div>
-                        <h2 class="font-serif text-xl font-medium text-ink">Sobre {{ $nombre }}</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">{{ __('Sobre :name', ['name' => $nombre]) }}</h2>
                         <p class="mt-2 whitespace-pre-line text-warmgray">{{ $profile->description }}</p>
                     </div>
                 @endif
@@ -78,7 +78,7 @@
                 @endphp
                 @if ($ubicacionPartes->isNotEmpty())
                     <div>
-                        <h2 class="font-serif text-xl font-medium text-ink">Ubicación</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">{{ __('Ubicación') }}</h2>
                         <p class="mt-2 text-warmgray">{{ $ubicacionPartes->implode(', ') }}</p>
                     </div>
                 @endif
@@ -91,7 +91,7 @@
                                 @if ($profile->media_type === 'video')
                                     <video class="w-full max-w-2xl rounded-md border border-line" controls playsinline preload="metadata">
                                         <source src="{{ Storage::url($profile->media_path) }}">
-                                        Tu navegador no soporta este video.
+                                        {{ __('Tu navegador no soporta este video.') }}
                                     </video>
                                 @else
                                     <img class="w-full max-w-2xl rounded-md border border-line" src="{{ Storage::url($profile->media_path) }}" alt="Multimedia de {{ $profile->company_name }}">
@@ -100,10 +100,10 @@
                         @endif
                         <div class="flex flex-wrap gap-4 text-sm">
                             @if ($profile->website)
-                                <a href="{{ $profile->website }}" target="_blank" rel="noopener noreferrer" class="text-sage underline hover:text-ink">Sitio web ↗</a>
+                                <a href="{{ $profile->website }}" target="_blank" rel="noopener noreferrer" class="text-sage underline hover:text-ink">{{ __('Sitio web ↗') }}</a>
                             @endif
                             @if ($profile->media_url)
-                                <a href="{{ $profile->media_url }}" target="_blank" rel="noopener noreferrer" class="text-sage underline hover:text-ink">Contenido multimedia ↗</a>
+                                <a href="{{ $profile->media_url }}" target="_blank" rel="noopener noreferrer" class="text-sage underline hover:text-ink">{{ __('Contenido multimedia ↗') }}</a>
                             @endif
                         </div>
                     </div>

@@ -181,5 +181,45 @@
 
     "Bienvenido a Kinvoo": "Welcome to Kinvoo",
     "Progreso del registro": "Registration progress",
+
+    "Tu cuenta fue eliminada.": "Your account was deleted.",
+    "Se borraron tu perfil, tus contactos y tus archivos. Nos alegra que hayas sido parte de Kinvoo. Si quieres volver, puedes crear una cuenta nueva.": "Your profile, contacts and files were deleted. We're glad you were part of Kinvoo. If you want to come back, you can create a new account.",
+
+    "Marcar todo leído": "Mark all as read",
+    "Notificación": "Notification",
+    "No leída": "Unread",
+    "Aún no tienes notificaciones.": "You don't have any notifications yet.",
+
+    "Mis guardados": "My saved",
+
+    "← Volver al perfil": "← Back to profile",
+    "Tu mensaje llega a Kinvoo y nosotros hacemos el puente con :name. Los datos de contacto de ambas partes se mantienen privados.": "Your message goes to Kinvoo and we bridge the connection with :name. Both parties' contact information is kept private.",
+    "Tu nombre / empresa": "Your name / studio",
+    "Teléfono (opcional)": "Phone (optional)",
+    "Mensaje": "Message",
+    "Cuéntale qué buscas, el tipo de colaboración y cómo contactarte.": "Tell them what you're looking for, the type of collaboration and how to reach you.",
+    "Enviar mensaje": "Send message",
+    "Enviando…": "Sending…",
+
+    "¡Listo!": "Done!",
+    "Tu perfil está publicado": "Your profile is published",
+    "Los estudios ya pueden encontrarte en la bolsa de talento.": "Studios can now find you in the talent pool.",
+    "Ver mi perfil ↗": "View my profile ↗",
+    "Ir a mi panel": "Go to my dashboard",
+    "Perfil enviado a revisión": "Profile submitted for review",
+    "Tu perfil será revisado para su publicación. Te avisaremos cuando esté activo.": "Your profile will be reviewed before publication. We'll notify you when it's active.",
+    "Seguir editando": "Keep editing",
+    "Entendido": "Got it",
+    "Datos guardados": "Saved",
+    "Tu estudio está activo. Ya puedes buscar y contactar talento.": "Your studio is active. You can now search and contact talent.",
+
+    "Cuenta en revisión": "Account under review",
+    "Tu cuenta está suspendida. Escríbenos a": "Your account is suspended. Write to us at",
+    "para más información.": "for more information.",
+    "¡Gracias por registrarte en Kinvoo! Un administrador revisará tu perfil antes de activarlo. Te avisaremos por correo cuando esté aprobado.": "Thanks for signing up on Kinvoo! An administrator will review your profile before activating it. We'll notify you by email when it's approved.",
+
+    "Sitio web ↗": "Website ↗",
+    "Contenido multimedia ↗": "Media content ↗",
+
     "Filtra por disciplina, ubicación o modalidad.": "Filter by discipline, location or work mode."
 }
