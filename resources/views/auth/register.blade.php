@@ -7,25 +7,36 @@
 
         <!-- Tipo de usuario -->
         <fieldset>
-            <legend class="block text-sm font-medium text-ink">¿Cómo te unes?</legend>
-            <div class="mt-2 grid grid-cols-2 gap-3">
+            <legend class="block text-sm font-medium text-ink">Elige el tipo de cuenta</legend>
+            <p class="mt-1 text-xs text-warmgray">
+                Elige con cuidado: hoy una cuenta es de un solo tipo. Si te equivocas escríbenos y lo cambiamos.
+            </p>
+            <div class="mt-3 grid gap-3 sm:grid-cols-2">
                 @php $tipo = old('tipo', 'professional'); @endphp
                 <label class="cursor-pointer">
                     <input type="radio" name="tipo" value="professional" class="peer sr-only"
                            {{ $tipo === 'professional' ? 'checked' : '' }} required>
-                    <div class="rounded-xl border border-line bg-white px-4 py-3 text-center transition peer-checked:border-sage peer-checked:bg-sage/5 peer-checked:ring-1 peer-checked:ring-sage peer-focus-visible:ring-2 peer-focus-visible:ring-sage peer-focus-visible:ring-offset-1">
-                        <div class="text-lg" aria-hidden="true">🏋️</div>
-                        <div class="mt-1 text-sm font-semibold text-ink">Soy profesional</div>
-                        <div class="text-xs text-warmgray">Coach, instructor, staff</div>
+                    <div class="h-full rounded-xl border border-line bg-white p-4 transition peer-checked:border-sage peer-checked:bg-sage/5 peer-checked:ring-1 peer-checked:ring-sage peer-focus-visible:ring-2 peer-focus-visible:ring-sage peer-focus-visible:ring-offset-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg" aria-hidden="true">🧘‍♀️</span>
+                            <span class="text-sm font-semibold text-ink">Soy talento</span>
+                        </div>
+                        <p class="mt-2 text-xs leading-relaxed text-warmgray">
+                            Coach, instructor o staff que quiere <strong>que lo encuentren</strong> estudios y marcas.
+                        </p>
                     </div>
                 </label>
                 <label class="cursor-pointer">
                     <input type="radio" name="tipo" value="contractor" class="peer sr-only"
                            {{ $tipo === 'contractor' ? 'checked' : '' }}>
-                    <div class="rounded-xl border border-line bg-white px-4 py-3 text-center transition peer-checked:border-sage peer-checked:bg-sage/5 peer-checked:ring-1 peer-checked:ring-sage peer-focus-visible:ring-2 peer-focus-visible:ring-sage peer-focus-visible:ring-offset-1">
-                        <div class="text-lg" aria-hidden="true">🏢</div>
-                        <div class="mt-1 text-sm font-semibold text-ink">Busco talento</div>
-                        <div class="text-xs text-warmgray">Estudio, gimnasio, marca</div>
+                    <div class="h-full rounded-xl border border-line bg-white p-4 transition peer-checked:border-sage peer-checked:bg-sage/5 peer-checked:ring-1 peer-checked:ring-sage peer-focus-visible:ring-2 peer-focus-visible:ring-sage peer-focus-visible:ring-offset-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg" aria-hidden="true">🏢</span>
+                            <span class="text-sm font-semibold text-ink">Soy estudio o marca</span>
+                        </div>
+                        <p class="mt-2 text-xs leading-relaxed text-warmgray">
+                            Gimnasio, estudio o marca que quiere <strong>buscar y contactar talento</strong> del fitness.
+                        </p>
                     </div>
                 </label>
             </div>

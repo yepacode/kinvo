@@ -65,6 +65,72 @@ class PanelOwnerTest extends TestCase
         $this->assertSame(EstadoUsuario::Suspendido, $activo->fresh()->estado);
     }
 
+    public function test_owner_rechaza_a_un_usuario_pendiente(): void
+    {
+        $owner = User::factory()->admin()->create();
+        $pendiente = User::factory()->pendiente()->create();
+        $perfil = $pendiente->professionalProfile()->create([
+            'is_published' => false,
+            'is_verified' => true,
+            'verified_at' => now(),
+            'headline' => 'Coach',
+        ]);
+
+        $this->actingAs($owner);
+
+        Livewire::test(ListUsers::class)
+            ->callTableAction('rechazar', $pendiente);
+
+        $this->assertSame(EstadoUsuario::Suspendido, $pendiente->fresh()->estado);
+        $perfil->refresh();
+        $this->assertFalse($perfil->is_published);
+        $this->assertFalse($perfil->is_verified);
+        $this->assertNull($perfil->verified_at);
+    }
+
+    public function test_owner_elimina_una_cuenta_desde_el_panel(): void
+    {
+        $owner = User::factory()->admin()->create();
+        $victima = User::factory()->create();
+        $victima->professionalProfile()->create(['headline' => 'Coach']);
+
+        $this->actingAs($owner);
+
+        Livewire::test(ListUsers::class)
+            ->callTableAction('eliminar', $victima);
+
+        $this->assertDatabaseMissing('users', ['id' => $victima->id]);
+        $this->assertDatabaseMissing('professional_profiles', ['user_id' => $victima->id]);
+    }
+
+    public function test_owner_no_puede_eliminarse_ni_a_otro_admin_desde_el_panel(): void
+    {
+        $owner = User::factory()->admin()->create();
+        $otroAdmin = User::factory()->admin()->create();
+
+        $this->actingAs($owner);
+
+        // La acción sobre uno mismo o sobre otro admin ni siquiera está disponible.
+        Livewire::test(ListUsers::class)
+            ->assertTableActionHidden('eliminar', $owner)
+            ->assertTableActionHidden('eliminar', $otroAdmin);
+    }
+
+    public function test_owner_cambia_el_tipo_de_cuenta(): void
+    {
+        $owner = User::factory()->admin()->create();
+        $user = User::factory()->contratante()->create();
+        $user->companyProfile()->create(['company_name' => 'Gym Error']);
+
+        $this->actingAs($owner);
+
+        Livewire::test(ListUsers::class)
+            ->callTableAction('cambiar_tipo', $user, data: ['tipo' => \App\Enums\RolUsuario::Professional->value]);
+
+        $this->assertSame(\App\Enums\RolUsuario::Professional, $user->fresh()->nivel);
+        $this->assertDatabaseMissing('company_profiles', ['user_id' => $user->id]);
+    }
+
     public function test_el_resumen_muestra_metricas(): void
     {
         $owner = User::factory()->admin()->create();

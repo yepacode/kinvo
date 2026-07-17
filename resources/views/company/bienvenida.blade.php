@@ -17,6 +17,13 @@
                 <a href="{{ route('legal.privacidad') }}" target="_blank" class="text-sage underline hover:text-ink">Aviso de Privacidad</a>.
             </p>
 
+            <p class="mt-3 rounded-xl bg-beige px-4 py-3 text-xs text-warmgray">
+                <strong class="text-ink">¿Ibas a registrarte como talento?</strong>
+                Escríbenos a
+                <a href="mailto:hola@kinvoo.com" class="text-sage underline hover:text-ink">hola@kinvoo.com</a>
+                y te cambiamos el tipo de cuenta sin perder tu correo ni tu contraseña.
+            </p>
+
             <div class="mt-8 flex justify-end">
                 <a href="{{ route('company.profile.edit') }}"
                    class="rounded-full bg-sage px-7 py-2.5 text-sm font-semibold text-cream shadow-sm transition hover:bg-ink">

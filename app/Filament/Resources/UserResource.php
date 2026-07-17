@@ -226,6 +226,24 @@ class UserResource extends Resource
                         $u->professionalProfile?->update(['is_published' => true]);
                         $u->notify(new \App\Notifications\CuentaAprobadaNotification());
                     }),
+                Tables\Actions\Action::make('rechazar')
+                    ->label('Rechazar')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Rechazar solicitud')
+                    ->modalDescription('El usuario queda como suspendido y no podrá acceder a la plataforma. Podrás reactivarlo más adelante si cambia la decisión.')
+                    ->modalSubmitActionLabel('Rechazar')
+                    ->visible(fn (User $u) => $u->estado === EstadoUsuario::Pendiente)
+                    ->action(function (User $u) {
+                        $u->forceFill(['estado' => EstadoUsuario::Suspendido])->save();
+                        // Al rechazar antes de publicar: el perfil queda oculto y sin verificar.
+                        $u->professionalProfile?->update([
+                            'is_published' => false,
+                            'is_verified' => false,
+                            'verified_at' => null,
+                        ]);
+                    }),
                 Tables\Actions\Action::make('suspender')
                     ->label('Suspender')
                     ->icon('heroicon-o-no-symbol')
@@ -269,6 +287,62 @@ class UserResource extends Resource
                         'membership_plan_id' => $data['membership_plan_id'] ?? null,
                         'membership_expires_at' => $data['membership_expires_at'] ?? null,
                     ])->save()),
+                Tables\Actions\Action::make('cambiar_tipo')
+                    ->label('Cambiar tipo de cuenta')
+                    ->icon('heroicon-o-arrows-right-left')
+                    ->color('gray')
+                    ->requiresConfirmation()
+                    ->modalHeading('Cambiar tipo de cuenta')
+                    ->modalDescription('Úsalo cuando alguien se registró con el tipo incorrecto (talento cuando quería ser estudio o viceversa). Se borrará el perfil actual y se creará uno vacío del nuevo tipo la próxima vez que el usuario abra su perfil.')
+                    ->modalSubmitActionLabel('Cambiar')
+                    ->visible(fn (User $u) => ! $u->esAdmin())
+                    ->fillForm(fn (User $u) => ['tipo' => $u->nivel->value])
+                    ->form([
+                        \Filament\Forms\Components\Radio::make('tipo')
+                            ->label('Nuevo tipo')
+                            ->options([
+                                RolUsuario::Professional->value => 'Talento (coach, instructor, staff)',
+                                RolUsuario::Contractor->value => 'Estudio / marca (busca talento)',
+                            ])
+                            ->required(),
+                    ])
+                    ->action(function (User $u, array $data) {
+                        $nuevo = RolUsuario::from((int) $data['tipo']);
+                        if ($u->nivel === $nuevo) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Sin cambios')
+                                ->body('La cuenta ya estaba en ese tipo.')
+                                ->info()->send();
+                            return;
+                        }
+                        // Borra el perfil viejo (cascada FK barre relaciones). La próxima
+                        // vez que el usuario abra /mi-perfil o /mi-empresa, el controller
+                        // hace firstOrCreate([]) y le crea uno vacío del nuevo tipo.
+                        $u->professionalProfile()?->delete();
+                        $u->companyProfile()?->delete();
+                        $u->forceFill(['nivel' => $nuevo])->save();
+                        \Filament\Notifications\Notification::make()
+                            ->title('Tipo de cuenta actualizado')
+                            ->body('El usuario podrá completar su nuevo perfil al iniciar sesión.')
+                            ->success()->send();
+                    }),
+                Tables\Actions\Action::make('eliminar')
+                    ->label('Eliminar')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Eliminar cuenta permanentemente')
+                    ->modalDescription('Se borrarán la cuenta, el perfil, contactos, guardados, vistas y todos los archivos subidos. Esta acción es irreversible. Úsala solo si el usuario infringió las normas.')
+                    ->modalSubmitActionLabel('Eliminar definitivamente')
+                    ->visible(fn (User $u) => ! $u->esAdmin() && $u->id !== auth()->id())
+                    ->action(function (User $u) {
+                        $u->deleteConLimpieza();
+                        \Filament\Notifications\Notification::make()
+                            ->title('Cuenta eliminada')
+                            ->body('Se borraron todos los datos y archivos del usuario.')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([]);
     }

@@ -379,7 +379,6 @@ footer {
     <li><a href="#nosotros">Nosotros</a></li>
     <li><a href="#comunidad">Comunidad</a></li>
     <li><a href="#sessions">Sessions</a></li>
-    <li><a href="{{ route('membresias.index') }}">Membresías</a></li>
     @auth
       <li><a href="{{ auth()->user()->homeRoute() }}">Mi cuenta</a></li>
     @else
@@ -521,7 +520,6 @@ footer {
   <ul class="footer-links">
     <li><a href="#nosotros">Nosotros</a></li>
     <li><a href="#sessions">Sessions</a></li>
-    <li><a href="{{ route('membresias.index') }}">Membresías</a></li>
     <li><a href="{{ route('legal.privacidad') }}">Aviso de Privacidad</a></li>
     <li><a href="{{ route('legal.terminos') }}">Términos y Condiciones</a></li>
     <li><a href="mailto:hola@gokinvoo.com">hola@gokinvoo.com</a></li>

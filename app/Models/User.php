@@ -100,6 +100,40 @@ class User extends Authenticatable implements FilamentUser
         return $this->estado === EstadoUsuario::Suspendido;
     }
 
+    /**
+     * Elimina al usuario junto con archivos en disco y notificaciones huérfanas.
+     * Reutilizado por la baja de autoservicio (ProfileController) y por la
+     * acción "Eliminar cuenta" del panel del admin (UserResource).
+     */
+    public function deleteConLimpieza(): void
+    {
+        $publicFiles = collect([
+            $this->professionalProfile?->photo_path,
+            $this->professionalProfile?->media_path,
+            $this->companyProfile?->logo_path,
+            $this->companyProfile?->media_path,
+        ])->filter()->all();
+
+        $localFiles = collect([
+            $this->professionalProfile?->certification_file_path,
+        ])->filter()->all();
+
+        // Notifications son polimórficas (sin FK) → se limpian a mano antes.
+        \Illuminate\Support\Facades\DB::table('notifications')
+            ->where('notifiable_type', static::class)
+            ->where('notifiable_id', $this->id)
+            ->delete();
+
+        $this->delete();
+
+        foreach ($publicFiles as $path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
+        }
+        foreach ($localFiles as $path) {
+            \Illuminate\Support\Facades\Storage::disk('local')->delete($path);
+        }
+    }
+
     public function membershipPlan(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Plan::class, 'membership_plan_id');
