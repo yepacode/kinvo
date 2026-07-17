@@ -111,26 +111,31 @@ class SiteSetting extends Model
             'background_color' => '#F7F4EE',
             'background_image' => null,
 
-            // Mensaje de bienvenida — Profesional
-            'welcome_pro_title' => 'Bienvenid@ a Kinvoo',
+            // Mensaje de bienvenida — Profesional (copy exacto del cliente, docx WEB KINVOO).
+            'welcome_pro_title' => '¡Ya eres parte de Kinvoo!',
             'welcome_pro_body' => <<<'TXT'
-Qué gusto tenerte aquí. Kinvoo es un espacio para cuidar a quien sostiene el fitness día con día. Queremos que te sientas en confianza, en una red que respalda tu trabajo.
+Sabemos todo lo que das cada día: tu energía, tu tiempo, tu entrega a los demás. Aquí queremos hacer lo mismo por ti — acompañarte y sostenerte a ti también.
 
-Antes de empezar, te pedimos llenar tu perfil con honestidad: es lo que te representa ante los estudios.
+Llena tu perfil para que empecemos a conectar oportunidades contigo. Antes de publicarlo, te pedimos completarlo con honestidad: es lo que te representa ante los estudios.
 
 • Sube una foto clara y reciente en donde podamos verte.
 • Marca tu disponibilidad y horarios reales (AM/PM) para que lleguen las oportunidades que sí encajan contigo.
-• En tu estilo de clase, escribe con tus palabras cómo se siente entrenar contigo. Lo auténtico conecta.
+• En "Sobre ti" cuenta con tus palabras cómo se siente entrenar contigo. Lo auténtico conecta.
 • Anota tus certificaciones reales. Podrás adjuntarlas para validación; ese archivo es privado, solo lo ve nuestro equipo.
 • Verifica que tu correo y teléfono estén actualizados: serán el medio por el que te contactaremos cuando exista una oportunidad.
 
 Tus datos de contacto siempre son privados: cuando un estudio quiera conectar, el contacto pasa por Kinvoo. Una vez que completes tu perfil, lo revisamos y, tras ser validado por Kinvoo, se publicará en un máximo de 24 horas.
+
+Cualquier cosa, aquí estamos. — El equipo de Kinvoo.
+Si tienes alguna duda, escríbenos: hola@kinvoo.com
 TXT,
 
-            // Mensaje de bienvenida — Estudio / Cliente
-            'welcome_studio_title' => 'Bienvenido a Kinvoo',
+            // Mensaje de bienvenida — Estudio / Cliente (copy exacto del cliente, docx WEB KINVOO).
+            'welcome_studio_title' => '¡Tu registro fue exitoso!',
             'welcome_studio_body' => <<<'TXT'
-Nos da gusto tenerte aquí. Kinvoo conecta a los estudios con la gente que hace posible el fitness: coaches y staff que dan vida a cada clase. Este es un espacio para que encuentres al profesional correcto, de forma simple y confiable.
+Ya eres parte de Kinvoo. Sabemos que un estudio no es solo un espacio, es la gente que lo hace funcionar todos los días. Por eso, como parte de tu membresía, ya puedes empezar a buscar talento dentro de nuestra comunidad — porque cuidar a tu equipo es también cuidar tu negocio.
+
+Completa tu perfil para comenzar a explorar la bolsa de talento y conectar con quienes pueden sumarse a tu equipo.
 
 • Sube un logo claro y fotos que reflejen bien tu espacio.
 • Mantén tus datos de contacto actualizados: son el medio por el que coordinamos cada conexión.
@@ -138,6 +143,9 @@ Nos da gusto tenerte aquí. Kinvoo conecta a los estudios con la gente que hace 
 • Mantén tu perfil y tus datos al día para aprovechar al máximo la red.
 
 Una vez que completes el perfil de tu estudio, nuestro equipo lo revisará y lo activará en un máximo de 24 horas.
+
+Cualquier duda, aquí estamos. — El equipo de Kinvoo.
+Si tienes alguna duda, escríbenos: hola@kinvoo.com
 TXT,
 
             // Membresías (página pública de planes)
