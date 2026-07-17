@@ -188,6 +188,30 @@ class PerfilProfesionalKinvooTest extends TestCase
             ->assertRedirect(route('professional.enviado'));
     }
 
+    public function test_foto_de_4mb_se_acepta_y_de_6mb_se_rechaza_con_mensaje_en_espanol(): void
+    {
+        // Regresión del bug reportado por el cliente: en móvil salía
+        // "The photo field must not be greater than 2048 kilobytes" y no
+        // dejaba subir fotos normales de teléfono. Ahora el límite es 5 MB
+        // y el mensaje sale en español.
+        $user = User::factory()->create();
+
+        // 4 MB → dentro del límite.
+        $this->actingAs($user)->put('/mi-perfil', [
+            'photo' => \Illuminate\Http\UploadedFile::fake()->image('bien.jpg')->size(4096),
+        ])->assertSessionHasNoErrors();
+
+        // 6 MB → rechazada en español, sin la palabra "photo" cruda.
+        $this->actingAs($user)->put('/mi-perfil', [
+            'photo' => \Illuminate\Http\UploadedFile::fake()->image('grande.jpg')->size(6144),
+        ])->assertSessionHasErrors('photo');
+
+        $errores = session('errors')->get('photo');
+        $this->assertNotEmpty($errores);
+        $this->assertStringContainsString('foto', mb_strtolower($errores[0]));
+        $this->assertStringNotContainsString('photo field', $errores[0]);
+    }
+
     public function test_multimedia_pesada_es_rechazada(): void
     {
         $user = User::factory()->create();

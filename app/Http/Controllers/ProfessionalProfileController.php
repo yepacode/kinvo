@@ -98,7 +98,11 @@ class ProfessionalProfileController extends Controller
             'web' => ['nullable', 'url:http,https', 'max:200'],
             'disciplines' => ['array'],
             'disciplines.*' => [Rule::exists('disciplines', 'id')->where('activo', true)],
-            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=4000,max_height=4000'],
+            // Las fotos de móvil pueden superar 2 MB. 5 MB es holgado para HEIC/JPG
+            // recientes y sigue siendo razonable de subir en LTE. Las dimensiones
+            // (10000×10000 ~ 100 MP) están para bloquear archivos absurdos, no las
+            // fotos reales de iPhone/Samsung actuales.
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=10000,max_height=10000'],
             'remove_photo' => ['nullable', 'boolean'],
             'remove_certification_file' => ['nullable', 'boolean'],
         ], [

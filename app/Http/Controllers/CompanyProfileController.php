@@ -84,7 +84,8 @@ class CompanyProfileController extends Controller
             'media_url' => ['nullable', 'url:http,https', 'max:300'],
             'media_file' => ['nullable', 'file', 'mimes:mp4,webm,mov,m4v,jpg,jpeg,png,webp,gif', 'max:25600'],
             'remove_media_file' => ['nullable', 'boolean'],
-            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=4000,max_height=4000'],
+            // Mismo criterio que la foto de perfil: hasta 5 MB y bloqueo de imágenes absurdas (100 MP).
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=10000,max_height=10000'],
         ], [
             'contact_phone.regex' => 'El teléfono solo puede tener números, espacios y los signos + ( ) - .',
             'postal_code.digits_between' => 'El código postal debe tener 4 o 5 dígitos.',
