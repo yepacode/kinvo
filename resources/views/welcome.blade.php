@@ -376,23 +376,23 @@ footer {
     <span class="nav-sub">{{ landing('brand_tagline') }}</span>
   </div>
   <ul class="nav-links">
-    <li><a href="#nosotros">Nosotros</a></li>
-    <li><a href="#comunidad">Comunidad</a></li>
-    <li><a href="#sessions">Sessions</a></li>
+    <li><a href="#nosotros">{{ __('Nosotros') }}</a></li>
+    <li><a href="#comunidad">{{ __('Comunidad') }}</a></li>
+    <li><a href="#sessions">{{ __('Sessions') }}</a></li>
     @auth
-      <li><a href="{{ auth()->user()->homeRoute() }}">Mi cuenta</a></li>
+      <li><a href="{{ auth()->user()->homeRoute() }}">{{ __('Mi cuenta') }}</a></li>
     @else
-      <li><a href="{{ route('login') }}">Entrar</a></li>
-      <li><a href="{{ route('register') }}" class="nav-cta">Únete</a></li>
+      <li><a href="{{ route('login') }}">{{ __('Entrar') }}</a></li>
+      <li><a href="{{ route('register') }}" class="nav-cta">{{ __('Únete') }}</a></li>
     @endauth
   </ul>
   {{-- Acceso compacto en móvil (el menú completo se oculta) --}}
   <div class="nav-mobile">
     @auth
-      <a href="{{ auth()->user()->homeRoute() }}" class="nav-cta">Mi cuenta</a>
+      <a href="{{ auth()->user()->homeRoute() }}" class="nav-cta">{{ __('Mi cuenta') }}</a>
     @else
-      <a href="{{ route('login') }}">Entrar</a>
-      <a href="{{ route('register') }}" class="nav-cta">Únete</a>
+      <a href="{{ route('login') }}">{{ __('Entrar') }}</a>
+      <a href="{{ route('register') }}" class="nav-cta">{{ __('Únete') }}</a>
     @endauth
   </div>
 </nav>
@@ -518,10 +518,10 @@ footer {
     <span class="footer-tag">{{ landing('footer_tag') }}</span>
   </div>
   <ul class="footer-links">
-    <li><a href="#nosotros">Nosotros</a></li>
-    <li><a href="#sessions">Sessions</a></li>
-    <li><a href="{{ route('legal.privacidad') }}">Aviso de Privacidad</a></li>
-    <li><a href="{{ route('legal.terminos') }}">Términos y Condiciones</a></li>
+    <li><a href="#nosotros">{{ __('Nosotros') }}</a></li>
+    <li><a href="#sessions">{{ __('Sessions') }}</a></li>
+    <li><a href="{{ route('legal.privacidad') }}">{{ __('Aviso de Privacidad') }}</a></li>
+    <li><a href="{{ route('legal.terminos') }}">{{ __('Términos y Condiciones') }}</a></li>
     <li><a href="mailto:hola@gokinvoo.com">hola@gokinvoo.com</a></li>
   </ul>
   <p class="footer-copy">{{ landing('footer_copy') }}</p>

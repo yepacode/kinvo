@@ -23,14 +23,14 @@
             <span><span aria-hidden="true">📍</span> {{ $profile->location->etiqueta() }}</span>
         @endif
         @if ($profile->modalidad)
-            <span>· {{ $profile->modalidad->label() }}</span>
+            <span>· {{ __($profile->modalidad->label()) }}</span>
         @endif
     </div>
 
     @if ($profile->disciplines->isNotEmpty())
         <div class="mt-3 flex flex-wrap gap-1.5">
             @foreach ($profile->disciplines->take(3) as $d)
-                <span class="rounded-full bg-sage/10 px-2.5 py-0.5 text-xs text-sage">{{ $d->nombre }}</span>
+                <span class="rounded-full bg-sage/10 px-2.5 py-0.5 text-xs text-sage">{{ $d->nombreLocalizado() }}</span>
             @endforeach
             @if ($profile->disciplines->count() > 3)
                 <span class="rounded-full bg-beige px-2.5 py-0.5 text-xs text-warmgray">+{{ $profile->disciplines->count() - 3 }}</span>

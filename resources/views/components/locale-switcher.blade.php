@@ -16,7 +16,7 @@
                            {{ $actual === $codigo
                               ? 'bg-sage text-cream'
                               : 'text-warmgray hover:text-sage' }}"
-                    aria-label="{{ $codigo === 'es' ? 'Cambiar a español' : 'Switch to English' }}"
+                    aria-label="{{ $codigo === 'es' ? __('Cambiar a español') : __('Switch to English') }}"
                     @if ($actual === $codigo) aria-current="true" @endif>
                 {{ $etiqueta }}
             </button>

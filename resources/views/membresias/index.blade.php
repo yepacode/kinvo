@@ -2,7 +2,7 @@
     <div class="mx-auto max-w-5xl px-6 py-14 sm:py-20">
         @if (session('status') === 'membresia-requerida')
             <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
-                Para acceder al directorio de talento necesitas una <strong>membresía activa</strong>. Elige un plan abajo o escríbenos.
+                {!! __('Para acceder al directorio de talento necesitas una :status. Elige un plan abajo o escríbenos.', ['status' => '<strong>'.__('membresía activa').'</strong>']) !!}
             </div>
         @endif
 
@@ -27,7 +27,7 @@
                     @foreach ($grupo['planes'] as $plan)
                         <div class="relative flex flex-col rounded-2xl border bg-white p-6 {{ $plan->destacado ? 'border-sage ring-1 ring-sage' : 'border-line' }}">
                             @if ($plan->destacado)
-                                <span class="absolute -top-3 left-6 rounded-full bg-sage px-3 py-1 text-xs font-medium text-cream">Recomendado</span>
+                                <span class="absolute -top-3 left-6 rounded-full bg-sage px-3 py-1 text-xs font-medium text-cream">{{ __('Recomendado') }}</span>
                             @endif
 
                             <h3 class="font-serif text-xl font-medium text-ink">{{ $plan->nombre }}</h3>
@@ -35,9 +35,9 @@
                             <p class="mt-2 text-ink">
                                 @if (! is_null($plan->precio))
                                     <span class="text-2xl font-semibold">${{ number_format($plan->precio, 0) }}</span>
-                                    <span class="text-sm text-warmgray">{{ $plan->moneda }} / {{ $plan->periodoLabel() }}</span>
+                                    <span class="text-sm text-warmgray">{{ $plan->moneda }} / {{ __($plan->periodoLabel()) }}</span>
                                 @else
-                                    <span class="text-lg font-medium text-warmgray">A consultar</span>
+                                    <span class="text-lg font-medium text-warmgray">{{ __('A consultar') }}</span>
                                 @endif
                             </p>
 
@@ -58,13 +58,13 @@
 
                             @if ($plan->cobertura)
                                 <p class="mt-4 border-t border-line pt-3 text-xs text-warmgray">
-                                    <span class="font-medium text-ink">Cobertura:</span> {{ $plan->cobertura }}
+                                    <span class="font-medium text-ink">{{ __('Cobertura:') }}</span> {{ $plan->cobertura }}
                                 </p>
                             @endif
 
                             <a href="{{ route('register') }}"
                                class="mt-6 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition {{ $plan->destacado ? 'bg-sage text-cream hover:bg-ink' : 'border border-line text-ink hover:border-sage hover:text-sage' }}">
-                                Únete
+                                {{ __('Únete') }}
                             </a>
                         </div>
                     @endforeach
@@ -73,7 +73,7 @@
         @endforeach
 
         @if ($individuales->isEmpty() && $estudios->isEmpty())
-            <p class="mt-14 text-center text-warmgray">Pronto publicaremos nuestros planes de membresía.</p>
+            <p class="mt-14 text-center text-warmgray">{{ __('Pronto publicaremos nuestros planes de membresía.') }}</p>
         @endif
 
         @if (landing('membership_note'))

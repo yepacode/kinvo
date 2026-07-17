@@ -109,6 +109,7 @@
     "Prueba con otros filtros o limpia la búsqueda.": "Try other filters or clear the search.",
     ":count profesional": ":count professional",
     ":count profesionales": ":count professionals",
+    ":count profesional|:count profesionales": ":count professional|:count professionals",
 
     "Hola, :name": "Hi, :name",
     "Profesional": "Professional",
@@ -313,5 +314,48 @@
     "Email": "Email",
     "Descripción": "Description",
     "Cuenta qué hace tu estudio y qué tipo de talento buscas.": "Tell us what your studio does and what type of talent you look for.",
-    "Guardar cambios": "Save changes"
+    "Guardar cambios": "Save changes",
+
+    "Notifications, :n unread": "Notifications, :n unread",
+    "Ver todas": "View all",
+    "Cerrar menú": "Close menu",
+    "Abrir menú": "Open menu",
+
+    "Perfil verificado por Kinvoo": "Verified by Kinvoo",
+    "Verificado": "Verified",
+
+    "Cambiar a español": "Switch to Spanish",
+    "Switch to English": "Switch to English",
+
+    "Tu cuenta ya no está activa.": "Your account is no longer active.",
+    "Kinvoo dio de baja tu cuenta. Si crees que fue un error, escríbenos a": "Kinvoo removed your account. If you believe this is a mistake, write to us at",
+
+    "Para acceder al directorio de talento necesitas una :status. Elige un plan abajo o escríbenos.": "To access the talent directory you need :status. Choose a plan below or write to us.",
+    "membresía activa": "an active membership",
+    "Recomendado": "Recommended",
+    "A consultar": "Contact us",
+    "Cobertura:": "Coverage:",
+    "Pronto publicaremos nuestros planes de membresía.": "We'll publish our membership plans soon.",
+    "mensual": "monthly",
+    "anual": "annual",
+    "trimestral": "quarterly",
+
+    "Recupera tu contraseña": "Recover your password",
+    "Escribe tu correo y te enviaremos un enlace para crear una nueva contraseña.": "Enter your email and we'll send you a link to create a new password.",
+    "Volver a entrar": "Back to sign in",
+    "Enviar enlace": "Send link",
+    "Nueva contraseña": "New password",
+    "Guardar contraseña": "Save password",
+
+    "Esta es un área segura. Confirma tu contraseña para continuar.": "This is a secure area. Confirm your password to continue.",
+    "Confirmar": "Confirm",
+
+    "Verifica tu correo": "Verify your email",
+    "¡Gracias por unirte a Kinvoo! Antes de empezar, confirma tu correo dando clic en el enlace que te acabamos de enviar. Si no lo recibiste, con gusto te mandamos otro.": "Thanks for joining Kinvoo! Before you start, confirm your email by clicking the link we just sent. If you didn't receive it, we'll gladly send another.",
+    "Te enviamos un nuevo enlace de verificación al correo que usaste al registrarte.": "We sent a new verification link to the email you signed up with.",
+    "Reenviar verificación": "Resend verification",
+
+    "Nosotros": "About us",
+    "Comunidad": "Community",
+    "Sessions": "Sessions"
 }

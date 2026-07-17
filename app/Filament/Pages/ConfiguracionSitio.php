@@ -161,12 +161,18 @@ class ConfiguracionSitio extends Page implements HasForms
                     ]),
 
                     Tabs\Tab::make('Mensajes')->icon('heroicon-o-hand-raised')->schema([
-                        TextInput::make('welcome_pro_title')->label('Bienvenida Profesional · Título'),
-                        Textarea::make('welcome_pro_body')->label('Bienvenida Profesional · Texto')->rows(10)
+                        TextInput::make('welcome_pro_title')->label('Bienvenida Profesional · Título (ES)'),
+                        Textarea::make('welcome_pro_body')->label('Bienvenida Profesional · Texto (ES)')->rows(10)
                             ->helperText('Se muestra al profesional al editar su perfil. Usa "• " para viñetas.'),
-                        TextInput::make('welcome_studio_title')->label('Bienvenida Estudio · Título'),
-                        Textarea::make('welcome_studio_body')->label('Bienvenida Estudio · Texto')->rows(8)
+                        TextInput::make('welcome_pro_title_en')->label('Bienvenida Profesional · Título (EN)'),
+                        Textarea::make('welcome_pro_body_en')->label('Bienvenida Profesional · Texto (EN)')->rows(10)
+                            ->helperText('Opcional. Se muestra solo cuando el usuario navega en inglés.'),
+                        TextInput::make('welcome_studio_title')->label('Bienvenida Estudio · Título (ES)'),
+                        Textarea::make('welcome_studio_body')->label('Bienvenida Estudio · Texto (ES)')->rows(8)
                             ->helperText('Se muestra al estudio/cliente al editar su perfil. Usa "• " para viñetas.'),
+                        TextInput::make('welcome_studio_title_en')->label('Bienvenida Estudio · Título (EN)'),
+                        Textarea::make('welcome_studio_body_en')->label('Bienvenida Estudio · Texto (EN)')->rows(8)
+                            ->helperText('Opcional. Se muestra solo cuando el estudio navega en inglés.'),
                     ]),
 
                     Tabs\Tab::make('Legales')->icon('heroicon-o-scale')->schema([

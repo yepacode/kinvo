@@ -294,12 +294,12 @@
                 <div>
                     <x-input-label for="instagram" :value="__('Instagram')" />
                     <x-text-input id="instagram" name="instagram" type="text" class="mt-1 block w-full"
-                                  :value="old('instagram', $profile->socials['instagram'] ?? '')" placeholder="@{{ __('usuario') }}" />
+                                  :value="old('instagram', $profile->socials['instagram'] ?? '')" placeholder="{{ '@'.__('usuario') }}" />
                 </div>
                 <div>
                     <x-input-label for="tiktok" :value="__('TikTok')" />
                     <x-text-input id="tiktok" name="tiktok" type="text" class="mt-1 block w-full"
-                                  :value="old('tiktok', $profile->socials['tiktok'] ?? '')" placeholder="@{{ __('usuario') }}" />
+                                  :value="old('tiktok', $profile->socials['tiktok'] ?? '')" placeholder="{{ '@'.__('usuario') }}" />
                 </div>
             </div>
 

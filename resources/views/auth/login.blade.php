@@ -10,6 +10,14 @@
                 {{ __('Se borraron tu perfil, tus contactos y tus archivos. Nos alegra que hayas sido parte de Kinvoo. Si quieres volver, puedes crear una cuenta nueva.') }}
             </p>
         </div>
+    @elseif (session('status') === 'admin-elimino-cuenta')
+        <div class="mb-4 rounded-2xl border border-lime/40 bg-lime/10 px-4 py-3 text-sm text-ink">
+            <p><strong>{{ __('Tu cuenta ya no está activa.') }}</strong></p>
+            <p class="mt-1 text-warmgray">
+                {{ __('Kinvoo dio de baja tu cuenta. Si crees que fue un error, escríbenos a') }}
+                <a href="mailto:hola@kinvoo.com" class="text-sage underline">hola@kinvoo.com</a>.
+            </p>
+        </div>
     @else
         <x-auth-session-status class="mb-4" :status="session('status')" />
     @endif

@@ -148,6 +148,42 @@ Cualquier duda, aquí estamos. — El equipo de Kinvoo.
 Si tienes alguna duda, escríbenos: hola@kinvoo.com
 TXT,
 
+            // Bienvenidas en inglés — copy inicial (editable desde el panel).
+            // El helper landing() elige la variante _en cuando el locale es EN.
+            'welcome_pro_title_en' => 'You\'re now part of Kinvoo!',
+            'welcome_pro_body_en' => <<<'TXT'
+We know how much you give every day: your energy, your time, your dedication to others. Here we want to do the same for you — to support and back you up.
+
+Fill in your profile so we can start connecting opportunities with you. Before publishing, please complete it honestly: it's what represents you before studios.
+
+• Upload a clear, recent photo where we can see you.
+• Mark your real availability and time slots (AM/PM) so the right opportunities reach you.
+• In "About you", write in your own words what it feels like to train with you. Authentic connects.
+• List your real certifications. You can attach them for validation; that file is private, only our team sees it.
+• Make sure your email and phone are up to date: they'll be how we contact you when an opportunity comes up.
+
+Your contact information is always private: when a studio wants to connect, the contact goes through Kinvoo. Once you complete your profile, we'll review it and, once validated by Kinvoo, it'll be published within 24 hours.
+
+Anything you need, we're here. — The Kinvoo team.
+Any questions? Write to us: hola@kinvoo.com
+TXT,
+            'welcome_studio_title_en' => 'Registration successful!',
+            'welcome_studio_body_en' => <<<'TXT'
+You're now part of Kinvoo. We know a studio isn't just a space — it's the people who make it run every day. That's why, as part of your membership, you can already start finding talent inside our community — because taking care of your team is also taking care of your business.
+
+Complete your profile to start exploring the talent pool and connect with those who could join your team.
+
+• Upload a clear logo and photos that reflect your space.
+• Keep your contact information up to date: it's how we coordinate each connection.
+• When you find a profile you like, request the contact through Kinvoo. We build the bridge.
+• Keep your profile and details current to make the most of the network.
+
+Once you complete your studio profile, our team will review and activate it within 24 hours.
+
+Any questions, we're here. — The Kinvoo team.
+Write to us: hola@kinvoo.com
+TXT,
+
             // Membresías (página pública de planes)
             'membership_eyebrow' => 'Membresías',
             'membership_title' => 'Elige tu membresía',

@@ -146,6 +146,25 @@ class ProfileTest extends TestCase
             ->where('notifiable_id', $user->id)->count());
     }
 
+    public function test_usuario_con_sesion_viva_cuya_cuenta_fue_borrada_ve_aviso_claro(): void
+    {
+        // Escenario: el admin (u otro proceso) elimina al user mientras su sesión
+        // sigue viva. En el siguiente click, el middleware DetectDeletedUser lo
+        // debe llevar a /login con un status legible en vez de un logout mudo.
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+        $user->deleteConLimpieza();
+
+        $this->get('/dashboard')
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('status', 'admin-elimino-cuenta');
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('Tu cuenta ya no está activa.');
+    }
+
     public function test_correct_password_must_be_provided_to_delete_account(): void
     {
         $user = User::factory()->create();
