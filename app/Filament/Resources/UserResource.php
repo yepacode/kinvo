@@ -232,17 +232,12 @@ class UserResource extends Resource
                     ->color('danger')
                     ->requiresConfirmation()
                     ->modalHeading('Rechazar solicitud')
-                    ->modalDescription('El usuario queda como suspendido y no podrá acceder a la plataforma. Podrás reactivarlo más adelante si cambia la decisión.')
+                    ->modalDescription('El usuario queda como suspendido y no podrá acceder a la plataforma. Si más adelante lo reactivas, tendrás que aprobarlo de nuevo para publicar su perfil.')
                     ->modalSubmitActionLabel('Rechazar')
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Pendiente)
                     ->action(function (User $u) {
-                        $u->forceFill(['estado' => EstadoUsuario::Suspendido])->save();
-                        // Al rechazar antes de publicar: el perfil queda oculto y sin verificar.
-                        $u->professionalProfile?->update([
-                            'is_published' => false,
-                            'is_verified' => false,
-                            'verified_at' => null,
-                        ]);
+                        $u->suspenderYOcultarPerfil();
+                        $u->notify(new \App\Notifications\CuentaRechazadaNotification());
                     }),
                 Tables\Actions\Action::make('suspender')
                     ->label('Suspender')
@@ -250,15 +245,7 @@ class UserResource extends Resource
                     ->color('danger')
                     ->requiresConfirmation()
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Activo)
-                    ->action(function (User $u) {
-                        $u->forceFill(['estado' => EstadoUsuario::Suspendido])->save();
-                        // Al suspender: ocultar el perfil (despublicar) y revocar la verificación.
-                        $u->professionalProfile?->update([
-                            'is_published' => false,
-                            'is_verified' => false,
-                            'verified_at' => null,
-                        ]);
-                    }),
+                    ->action(fn (User $u) => $u->suspenderYOcultarPerfil()),
                 Tables\Actions\Action::make('reactivar')
                     ->label('Reactivar')
                     ->icon('heroicon-o-arrow-path')
@@ -293,21 +280,33 @@ class UserResource extends Resource
                     ->color('gray')
                     ->requiresConfirmation()
                     ->modalHeading('Cambiar tipo de cuenta')
-                    ->modalDescription('Úsalo cuando alguien se registró con el tipo incorrecto (talento cuando quería ser estudio o viceversa). Se borrará el perfil actual y se creará uno vacío del nuevo tipo la próxima vez que el usuario abra su perfil.')
+                    ->modalDescription('Úsalo cuando alguien se registró con el tipo incorrecto (talento cuando quería ser estudio o viceversa). Se borrará el perfil actual, sus contactos y la membresía si la tenía, y se creará uno vacío del nuevo tipo la próxima vez que el usuario abra su perfil.')
                     ->modalSubmitActionLabel('Cambiar')
                     ->visible(fn (User $u) => ! $u->esAdmin())
-                    ->fillForm(fn (User $u) => ['tipo' => $u->nivel->value])
+                    ->fillForm(fn (User $u) => ['tipo' => (string) $u->nivel->value])
                     ->form([
                         \Filament\Forms\Components\Radio::make('tipo')
                             ->label('Nuevo tipo')
                             ->options([
-                                RolUsuario::Professional->value => 'Talento (coach, instructor, staff)',
-                                RolUsuario::Contractor->value => 'Estudio / marca (busca talento)',
+                                (string) RolUsuario::Professional->value => 'Talento (coach, instructor, staff)',
+                                (string) RolUsuario::Contractor->value => 'Estudio / marca (busca talento)',
                             ])
+                            ->in([(string) RolUsuario::Professional->value, (string) RolUsuario::Contractor->value])
                             ->required(),
                     ])
                     ->action(function (User $u, array $data) {
-                        $nuevo = RolUsuario::from((int) $data['tipo']);
+                        // Whitelist server-side: Filament no aplica `in:` sobre `options()`,
+                        // así que un submit manipulado con tipo=0 (Admin) pasaría RolUsuario::from()
+                        // y escalaría privilegios. Aquí lo bloqueamos explícitamente.
+                        $valorSolicitado = (int) $data['tipo'];
+                        if (! in_array($valorSolicitado, [
+                            RolUsuario::Professional->value,
+                            RolUsuario::Contractor->value,
+                        ], true)) {
+                            abort(422, 'Tipo de cuenta inválido.');
+                        }
+                        $nuevo = RolUsuario::from($valorSolicitado);
+
                         if ($u->nivel === $nuevo) {
                             \Filament\Notifications\Notification::make()
                                 ->title('Sin cambios')
@@ -315,15 +314,43 @@ class UserResource extends Resource
                                 ->info()->send();
                             return;
                         }
-                        // Borra el perfil viejo (cascada FK barre relaciones). La próxima
-                        // vez que el usuario abra /mi-perfil o /mi-empresa, el controller
-                        // hace firstOrCreate([]) y le crea uno vacío del nuevo tipo.
-                        $u->professionalProfile()?->delete();
-                        $u->companyProfile()?->delete();
-                        $u->forceFill(['nivel' => $nuevo])->save();
+
+                        \Illuminate\Support\Facades\DB::transaction(function () use ($u, $nuevo) {
+                            // Los perfiles se borran por FK cascade sobre user_id. Pero los
+                            // Save de OTROS usuarios que guardaron este perfil son polimórficos
+                            // (sin FK): quedarían dangling en /guardados. Los limpiamos primero.
+                            if ($pp = $u->professionalProfile) {
+                                \App\Models\Save::where('saveable_type', \App\Models\ProfessionalProfile::class)
+                                    ->where('saveable_id', $pp->id)
+                                    ->delete();
+                            }
+                            if ($cp = $u->companyProfile) {
+                                \App\Models\Save::where('saveable_type', \App\Models\CompanyProfile::class)
+                                    ->where('saveable_id', $cp->id)
+                                    ->delete();
+                            }
+
+                            $u->professionalProfile()?->delete();
+                            $u->companyProfile()?->delete();
+
+                            // Contactos ENVIADOS por el user cuando era contratante: no tienen
+                            // sentido si ahora es talento (el "estudio" que envió ya no lo es).
+                            \App\Models\Contact::where('contractor_user_id', $u->id)->delete();
+
+                            // Membresía: el plan es específico del rol de contratante. Si cambia
+                            // de tipo, la pierde. El owner puede reasignarla si corresponde.
+                            $u->forceFill([
+                                'nivel' => $nuevo,
+                                'membership_plan_id' => null,
+                                'membership_expires_at' => null,
+                            ])->save();
+                        });
+
+                        $u->notify(new \App\Notifications\TipoDeCuentaCambiadoNotification($nuevo));
+
                         \Filament\Notifications\Notification::make()
                             ->title('Tipo de cuenta actualizado')
-                            ->body('El usuario podrá completar su nuevo perfil al iniciar sesión.')
+                            ->body('El usuario recibió aviso en su campanita y podrá completar su nuevo perfil al iniciar sesión.')
                             ->success()->send();
                     }),
                 Tables\Actions\Action::make('eliminar')

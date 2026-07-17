@@ -101,9 +101,29 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Marca al usuario como Suspendido y oculta/desverifica su perfil profesional
+     * si tiene uno. Fuente única de verdad para las acciones "Suspender" (sobre
+     * activos) y "Rechazar" (sobre pendientes) del panel del owner.
+     */
+    public function suspenderYOcultarPerfil(): void
+    {
+        $this->forceFill(['estado' => EstadoUsuario::Suspendido])->save();
+        $this->professionalProfile?->update([
+            'is_published' => false,
+            'is_verified' => false,
+            'verified_at' => null,
+        ]);
+    }
+
+    /**
      * Elimina al usuario junto con archivos en disco y notificaciones huérfanas.
      * Reutilizado por la baja de autoservicio (ProfileController) y por la
      * acción "Eliminar cuenta" del panel del admin (UserResource).
+     *
+     * El borrado de notifications se hace vía el listener `deleting` de $booted:
+     * no lo duplicamos aquí para no dividir la fuente de verdad. Los archivos
+     * se borran DESPUÉS del delete (fuera de la transacción) para que un fallo
+     * de disco no rollbackee el borrado en BD.
      */
     public function deleteConLimpieza(): void
     {
@@ -118,13 +138,7 @@ class User extends Authenticatable implements FilamentUser
             $this->professionalProfile?->certification_file_path,
         ])->filter()->all();
 
-        // Notifications son polimórficas (sin FK) → se limpian a mano antes.
-        \Illuminate\Support\Facades\DB::table('notifications')
-            ->where('notifiable_type', static::class)
-            ->where('notifiable_id', $this->id)
-            ->delete();
-
-        $this->delete();
+        \Illuminate\Support\Facades\DB::transaction(fn () => $this->delete());
 
         foreach ($publicFiles as $path) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
