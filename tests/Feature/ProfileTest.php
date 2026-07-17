@@ -73,10 +73,77 @@ class ProfileTest extends TestCase
 
         $response
             ->assertSessionHasNoErrors()
-            ->assertRedirect('/');
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('status', 'cuenta-eliminada');
 
         $this->assertGuest();
-        $this->assertNull($user->fresh());
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+    }
+
+    public function test_login_muestra_confirmacion_de_cuenta_eliminada(): void
+    {
+        $this->get(route('login'))->assertOk();
+
+        $this->withSession(['status' => 'cuenta-eliminada'])
+            ->get(route('login'))
+            ->assertOk()
+            ->assertSee('Tu cuenta fue eliminada');
+    }
+
+    public function test_admin_no_puede_autoeliminarse(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this
+            ->actingAs($admin)
+            ->delete('/profile', ['password' => 'password'])
+            ->assertRedirect(route('profile.edit'))
+            ->assertSessionHas('status', 'admin-no-se-elimina');
+
+        $this->assertDatabaseHas('users', ['id' => $admin->id]);
+    }
+
+    public function test_admin_no_ve_la_seccion_de_eliminar_cuenta(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get('/profile')
+            ->assertOk()
+            ->assertDontSee('Eliminar cuenta');
+    }
+
+    public function test_eliminar_cuenta_limpia_archivos_y_datos_relacionados(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        \Illuminate\Support\Facades\Storage::fake('local');
+
+        $user = User::factory()->create();
+        // Sube foto y adjunto para tener rastro en disco.
+        $this->actingAs($user)->put('/mi-perfil', [
+            'photo' => \Illuminate\Http\UploadedFile::fake()->image('f.jpg'),
+            'certification_file' => \Illuminate\Http\UploadedFile::fake()->create('c.pdf', 100, 'application/pdf'),
+        ]);
+        $profile = $user->professionalProfile()->first();
+        $photo = $profile->photo_path;
+        $cert = $profile->certification_file_path;
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($photo);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertExists($cert);
+
+        // Crea una notificación in-app para probar limpieza polimórfica.
+        $user->notify(new \App\Notifications\CuentaAprobadaNotification());
+        $this->assertSame(1, \Illuminate\Support\Facades\DB::table('notifications')
+            ->where('notifiable_id', $user->id)->count());
+
+        $this->actingAs($user)
+            ->delete('/profile', ['password' => 'password'])
+            ->assertRedirect(route('login'));
+
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertMissing($photo);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertMissing($cert);
+        $this->assertSame(0, \Illuminate\Support\Facades\DB::table('notifications')
+            ->where('notifiable_id', $user->id)->count());
     }
 
     public function test_correct_password_must_be_provided_to_delete_account(): void

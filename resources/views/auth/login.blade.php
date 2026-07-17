@@ -3,7 +3,17 @@
     <p class="mb-6 text-center text-sm text-warmgray">Bienvenido de vuelta a Kinvoo</p>
 
     <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    @if (session('status') === 'cuenta-eliminada')
+        <div class="mb-4 rounded-2xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm text-ink">
+            <p><strong>Tu cuenta fue eliminada.</strong></p>
+            <p class="mt-1 text-warmgray">
+                Se borraron tu perfil, tus contactos y tus archivos. Nos alegra que hayas
+                sido parte de Kinvoo. Si quieres volver, puedes crear una cuenta nueva.
+            </p>
+        </div>
+    @else
+        <x-auth-session-status class="mb-4" :status="session('status')" />
+    @endif
 
     <form method="POST" action="{{ route('login') }}">
         @csrf
