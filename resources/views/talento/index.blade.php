@@ -57,7 +57,7 @@
                 <p class="mt-1 text-sm text-warmgray">Prueba con otros filtros o limpia la búsqueda.</p>
             </div>
         @else
-            <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 @foreach ($profiles as $profile)
                     <x-talento-card :profile="$profile" />
                 @endforeach

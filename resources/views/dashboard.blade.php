@@ -3,9 +3,10 @@
         <h2 class="font-serif text-2xl font-medium text-ink">Hola, {{ \Illuminate\Support\Str::before(auth()->user()->name, ' ') }}</h2>
     </x-slot>
 
-    <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+    <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         @if (auth()->user()->esProfesional())
             @php $profile = auth()->user()->professionalProfile; @endphp
+            <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
             <div class="rounded-2xl border border-line bg-white p-6 sm:p-8">
                 <p class="text-sm font-medium uppercase tracking-widest text-sage">Profesional</p>
                 <h3 class="mt-2 font-serif text-2xl font-medium text-ink">Tu perfil en Kinvoo</h3>
@@ -54,7 +55,7 @@
                     $totalVistas = $profile->views()->count();
                     $vistasRecientes = $profile->views()->with('viewer')->latest()->take(6)->get();
                 @endphp
-                <div class="mt-6 rounded-2xl border border-line bg-white p-6">
+                <div class="rounded-2xl border border-line bg-white p-6">
                     <div class="flex items-baseline justify-between">
                         <h3 class="font-serif text-xl font-medium text-ink">Quién vio tu perfil</h3>
                         <span class="text-2xl font-medium text-sage">{{ $totalVistas }}</span>
@@ -73,6 +74,7 @@
                     @endif
                 </div>
             @endif
+            </div>{{-- /grid dashboard talento --}}
         @elseif (auth()->user()->esContratante())
             <div class="rounded-2xl border border-line bg-white p-6 sm:p-8">
                 <p class="text-sm font-medium uppercase tracking-widest text-sage">Contratante</p>

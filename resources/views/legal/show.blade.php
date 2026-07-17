@@ -1,5 +1,5 @@
 <x-public-layout :title="$title.' · Kinvoo'" :description="'Kinvoo · '.$title">
-    <article class="mx-auto max-w-3xl px-6 py-16 sm:py-20">
+    <article class="mx-auto max-w-2xl px-6 py-16 sm:py-20">
         <header class="mb-10 border-b border-line/70 pb-8">
             <h1 class="font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl">{{ $title }}</h1>
             @if ($updated)

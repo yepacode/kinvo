@@ -22,7 +22,9 @@
             @csrf
             @method('PUT')
 
-            {{-- Foto: preview inmediato al seleccionar (Alpine + FileReader). --}}
+            {{-- Foto: preview inmediato al seleccionar (Alpine + FileReader).
+                 min-w-0 en el div derecho + max-w-full en el input evitan que
+                 el file input nativo se desborde en móviles angostos (~375). --}}
             <div class="flex items-center gap-5"
                  x-data="{
                      preview: null,
@@ -49,11 +51,11 @@
                         </div>
                     </template>
                 </div>
-                <div>
+                <div class="min-w-0 flex-1">
                     <x-input-label for="photo" :value="'Foto de perfil'" />
                     <input id="photo" name="photo" type="file" accept="image/*"
                            @change="onSelect($event)"
-                           class="mt-1 block text-sm text-warmgray file:mr-3 file:rounded-full file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-cream hover:file:bg-ink">
+                           class="mt-1 block w-full max-w-full text-sm text-warmgray file:mr-3 file:rounded-full file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-cream hover:file:bg-ink">
                     <p class="mt-1 text-xs text-warmgray" x-show="preview" x-cloak>
                         Así se verá tu foto de perfil. Guarda los cambios para publicarla.
                     </p>

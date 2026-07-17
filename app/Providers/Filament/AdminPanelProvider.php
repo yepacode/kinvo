@@ -27,6 +27,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->brandName('Kinvoo · Bolsa de Talento')
+            ->sidebarCollapsibleOnDesktop()  // en tablet/desktop el sidebar puede plegarse
             ->login()
             ->colors([
                 'primary' => Color::hex('#5C7A5F'),  // verde salvia Kinvoo

@@ -8,7 +8,7 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                <div class="hidden space-x-8 lg:-my-px lg:ms-10 lg:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         Inicio
                     </x-nav-link>
@@ -34,7 +34,7 @@
             </div>
 
             <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6 sm:gap-2">
+            <div class="hidden lg:flex lg:items-center lg:ms-6 lg:gap-2">
                 <x-locale-switcher class="mr-1" />
                 @include('partials.notification-bell')
 
@@ -66,8 +66,8 @@
                 </x-dropdown>
             </div>
 
-            <!-- Móvil: campana + hamburguesa -->
-            <div class="flex items-center gap-1 sm:hidden">
+            <!-- Móvil/tablet: campana + hamburguesa (hasta lg, colapsamos el nav completo). -->
+            <div class="flex items-center gap-1 lg:hidden">
                 @php $unreadNav = auth()->user()->unreadNotifications()->count(); @endphp
                 <a href="{{ route('notifications.index') }}"
                    class="relative flex h-10 w-10 items-center justify-center rounded-md text-warmgray hover:bg-beige"
@@ -93,7 +93,7 @@
     </div>
 
     <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden" id="mobile-menu">
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden lg:hidden" id="mobile-menu">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 Inicio

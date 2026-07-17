@@ -64,11 +64,11 @@
                         </div>
                     </template>
                 </div>
-                <div>
+                <div class="min-w-0 flex-1">
                     <x-input-label for="logo" :value="'Logo'" />
                     <input id="logo" name="logo" type="file" accept="image/*"
                            @change="onSelect($event)"
-                           class="mt-1 block text-sm text-warmgray file:mr-3 file:rounded-full file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-cream hover:file:bg-ink">
+                           class="mt-1 block w-full max-w-full text-sm text-warmgray file:mr-3 file:rounded-full file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-cream hover:file:bg-ink">
                     <p class="mt-1 text-xs text-warmgray" x-show="preview" x-cloak>
                         Así se verá tu logo. Guarda los cambios para publicarlo.
                     </p>
