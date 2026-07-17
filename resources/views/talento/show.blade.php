@@ -31,7 +31,7 @@
     <div class="mx-auto max-w-3xl px-6 py-10">
         @if (session('status') === 'contacto-enviado')
             <div class="mb-6 rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm text-sage">
-                ✓ Tu mensaje fue enviado a {{ $profile->user->name }}. Te contactará al correo que dejaste.
+                ✓ {{ __('Tu mensaje fue enviado a :name. Te contactará al correo que dejaste.', ['name' => $profile->user->name]) }}
             </div>
         @endif
 
@@ -57,10 +57,10 @@
                             <span><span aria-hidden="true">📍</span> {{ $profile->colonia }}</span>
                         @endif
                         @if ($profile->modalidad)
-                            <span>· {{ $profile->modalidad->label() }}</span>
+                            <span>· {{ __($profile->modalidad->label()) }}</span>
                         @endif
                         @if (! is_null($profile->years_experience))
-                            <span>· {{ $profile->years_experience }} {{ (int) $profile->years_experience === 1 ? 'año' : 'años' }} de experiencia</span>
+                            <span>· {{ trans_choice(':count año|:count años', (int) $profile->years_experience, ['count' => $profile->years_experience]) }} {{ __('de experiencia') }}</span>
                         @endif
                     </div>
                 </div>
@@ -73,7 +73,7 @@
                         @if (auth()->user()->esContratante() && auth()->user()->estaActivo())
                             <a href="{{ route('contacto.create', $profile->slug) }}"
                                class="flex flex-1 items-center justify-center rounded-full bg-sage px-7 py-3 text-sm font-semibold text-cream transition hover:bg-ink">
-                                Contactar a {{ \Illuminate\Support\Str::before($profile->user->name, ' ') }}
+                                {{ __('Contactar a :name', ['name' => \Illuminate\Support\Str::before($profile->user->name, ' ')]) }}
                             </a>
                         @endif
                         <x-save-button :profile="$profile" />
@@ -81,14 +81,14 @@
                 @else
                     <a href="{{ route('login') }}"
                        class="flex items-center justify-center rounded-full border border-line px-7 py-3 text-sm font-medium text-warmgray transition hover:border-sage hover:text-sage">
-                        Inicia sesión como contratante para contactar
+                        {{ __('Inicia sesión como contratante para contactar') }}
                     </a>
                 @endauth
 
                 {{-- Bio --}}
                 @if ($profile->bio)
                     <div>
-                        <h2 class="font-serif text-xl font-medium text-ink">Sobre {{ \Illuminate\Support\Str::before($nombre, ' ') }}</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">{{ __('Sobre :name', ['name' => \Illuminate\Support\Str::before($nombre, ' ')]) }}</h2>
                         <p class="mt-2 whitespace-pre-line text-warmgray">{{ $profile->bio }}</p>
                     </div>
                 @endif
@@ -96,10 +96,10 @@
                 {{-- Disciplinas --}}
                 @if ($profile->disciplines->isNotEmpty())
                     <div>
-                        <h2 class="font-serif text-xl font-medium text-ink">Disciplinas</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">{{ __('Disciplinas') }}</h2>
                         <div class="mt-3 flex flex-wrap gap-2">
                             @foreach ($profile->disciplines as $d)
-                                <span class="rounded-full bg-sage/10 px-3 py-1 text-sm text-sage">{{ $d->nombre }}</span>
+                                <span class="rounded-full bg-sage/10 px-3 py-1 text-sm text-sage">{{ $d->nombreLocalizado() }}</span>
                             @endforeach
                         </div>
                     </div>
@@ -108,10 +108,10 @@
                 {{-- Idiomas --}}
                 @if (! empty($profile->languages))
                     <div>
-                        <h2 class="font-serif text-xl font-medium text-ink">Idiomas</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">{{ __('Idiomas') }}</h2>
                         <div class="mt-3 flex flex-wrap gap-2">
                             @foreach ($profile->idiomasLegibles() as $idioma)
-                                <span class="rounded-full bg-beige px-3 py-1 text-sm text-ink">{{ $idioma }}</span>
+                                <span class="rounded-full bg-beige px-3 py-1 text-sm text-ink">{{ __($idioma) }}</span>
                             @endforeach
                         </div>
                     </div>
@@ -121,11 +121,11 @@
                 @php $dispo = $profile->disponibilidadPorDia(); @endphp
                 @if (! empty($dispo))
                     <div>
-                        <h2 class="font-serif text-xl font-medium text-ink">Disponibilidad</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">{{ __('Disponibilidad') }}</h2>
                         <dl class="mt-3 divide-y divide-line overflow-hidden rounded-xl border border-line">
                             @foreach ($dispo as $dia => $franjas)
                                 <div class="flex items-center justify-between px-4 py-2 text-sm odd:bg-cream/50">
-                                    <dt class="text-warmgray">{{ $dia }}</dt>
+                                    <dt class="text-warmgray">{{ __($dia) }}</dt>
                                     <dd class="font-medium text-sage">{{ $franjas }}</dd>
                                 </div>
                             @endforeach
@@ -136,7 +136,7 @@
                 {{-- Certificaciones (texto) --}}
                 @if ($profile->certifications_text)
                     <div>
-                        <h2 class="font-serif text-xl font-medium text-ink">Certificaciones</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">{{ __('Certificaciones') }}</h2>
                         <p class="mt-2 whitespace-pre-line text-warmgray">{{ $profile->certifications_text }}</p>
                     </div>
                 @endif
@@ -144,13 +144,13 @@
                 {{-- Contenido multimedia: archivo subido y/o enlace externo. --}}
                 @if ($profile->media_path || $profile->media_url)
                     <div>
-                        <h2 class="font-serif text-xl font-medium text-ink">Contenido multimedia</h2>
+                        <h2 class="font-serif text-xl font-medium text-ink">{{ __('Contenido multimedia') }}</h2>
                         @if ($profile->media_path)
                             <div class="mt-3">
                                 @if ($profile->media_type === 'video')
                                     <video class="w-full max-w-2xl rounded-md border border-line" controls playsinline preload="metadata">
                                         <source src="{{ Storage::url($profile->media_path) }}">
-                                        Tu navegador no soporta este video.
+                                        {{ __('Tu navegador no soporta este video.') }}
                                     </video>
                                 @else
                                     <img class="w-full max-w-2xl rounded-md border border-line" src="{{ Storage::url($profile->media_path) }}" alt="Multimedia de {{ $profile->headline ?: $profile->user->name }}">
@@ -160,7 +160,7 @@
                         @if ($profile->media_url)
                             <a href="{{ $profile->media_url }}" target="_blank" rel="noopener noreferrer"
                                class="mt-3 inline-flex items-center gap-2 text-sage underline hover:text-ink">
-                                Ver contenido ↗
+                                {{ __('Ver contenido ↗') }}
                             </a>
                         @endif
                     </div>

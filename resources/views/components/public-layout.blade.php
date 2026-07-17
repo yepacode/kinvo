@@ -61,7 +61,9 @@
                     <a href="{{ route('legal.privacidad') }}" class="hover:text-sage">{{ __('Aviso de Privacidad') }}</a>
                     <a href="{{ route('legal.terminos') }}" class="hover:text-sage">{{ __('Términos y Condiciones') }}</a>
                 </nav>
-                <p>{{ landing('footer_copy') }}</p>
+                <p>{{ app()->getLocale() === 'en'
+                    ? '© '.date('Y').' | Kinvoo Wellness - All rights reserved'
+                    : landing('footer_copy') }}</p>
             </div>
         </footer>
     </body>

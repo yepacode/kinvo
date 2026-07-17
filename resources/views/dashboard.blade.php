@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-serif text-2xl font-medium text-ink">Hola, {{ \Illuminate\Support\Str::before(auth()->user()->name, ' ') }}</h2>
+        <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Hola, :name', ['name' => \Illuminate\Support\Str::before(auth()->user()->name, ' ')]) }}</h2>
     </x-slot>
 
     <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -8,20 +8,20 @@
             @php $profile = auth()->user()->professionalProfile; @endphp
             <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
             <div class="rounded-2xl border border-line bg-white p-6 sm:p-8">
-                <p class="text-sm font-medium uppercase tracking-widest text-sage">Profesional</p>
-                <h3 class="mt-2 font-serif text-2xl font-medium text-ink">Tu perfil en Kinvoo</h3>
+                <p class="text-sm font-medium uppercase tracking-widest text-sage">{{ __('Profesional') }}</p>
+                <h3 class="mt-2 font-serif text-2xl font-medium text-ink">{{ __('Tu perfil en Kinvoo') }}</h3>
                 <p class="mt-2 text-warmgray">
                     @if ($profile && $profile->is_published)
-                        Tu perfil está <strong class="text-sage">publicado</strong> y visible para contratantes.
+                        {!! __('Tu perfil está :status y visible para contratantes.', ['status' => '<strong class="text-sage">'.__('publicado').'</strong>']) !!}
                     @else
-                        Tu perfil está <strong>oculto</strong>. Complétalo y publícalo para que te encuentren.
+                        {!! __('Tu perfil está :status. Complétalo y publícalo para que te encuentren.', ['status' => '<strong>'.__('oculto').'</strong>']) !!}
                     @endif
                 </p>
                 @if ($profile)
                     @php $pct = $profile->porcentajeCompleto(); $faltan = $profile->faltantesPerfil(); @endphp
                     <div class="mt-5">
                         <div class="flex items-center justify-between text-sm">
-                            <span class="font-medium text-ink">Perfil completo</span>
+                            <span class="font-medium text-ink">{{ __('Perfil completo') }}</span>
                             <span class="font-semibold text-sage">{{ $pct }}%</span>
                         </div>
                         <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-beige">
@@ -29,7 +29,7 @@
                         </div>
                         @if (! empty($faltan))
                             <p class="mt-2 text-xs text-warmgray">
-                                Te falta: {{ implode(', ', $faltan) }}.
+                                {{ __('Te falta: :items.', ['items' => implode(', ', array_map(fn ($f) => __($f), $faltan))]) }}
                             </p>
                         @endif
                     </div>
@@ -38,12 +38,12 @@
                 <div class="mt-6 flex flex-wrap gap-3">
                     <a href="{{ route('professional.profile.edit') }}"
                        class="rounded-full bg-sage px-6 py-2.5 text-sm font-semibold text-cream transition hover:bg-ink">
-                        Editar mi perfil
+                        {{ __('Editar mi perfil') }}
                     </a>
                     @if ($profile && $profile->is_published)
                         <a href="{{ route('talento.show', $profile->slug) }}" target="_blank"
                            class="rounded-full border border-line px-6 py-2.5 text-sm font-medium text-warmgray transition hover:border-sage hover:text-sage">
-                            Ver perfil público ↗
+                            {{ __('Ver perfil público ↗') }}
                         </a>
                     @endif
                 </div>
@@ -57,16 +57,16 @@
                 @endphp
                 <div class="rounded-2xl border border-line bg-white p-6">
                     <div class="flex items-baseline justify-between">
-                        <h3 class="font-serif text-xl font-medium text-ink">Quién vio tu perfil</h3>
+                        <h3 class="font-serif text-xl font-medium text-ink">{{ __('Quién vio tu perfil') }}</h3>
                         <span class="text-2xl font-medium text-sage">{{ $totalVistas }}</span>
                     </div>
                     @if ($vistasRecientes->isEmpty())
-                        <p class="mt-2 text-sm text-warmgray">Aún nadie ha visto tu perfil. Publícalo y compártelo para empezar.</p>
+                        <p class="mt-2 text-sm text-warmgray">{{ __('Aún nadie ha visto tu perfil. Publícalo y compártelo para empezar.') }}</p>
                     @else
                         <ul class="mt-4 divide-y divide-line/60">
                             @foreach ($vistasRecientes as $v)
                                 <li class="flex items-center justify-between py-2 text-sm">
-                                    <span class="text-ink">{{ $v->viewer?->name ?? 'Alguien' }}</span>
+                                    <span class="text-ink">{{ $v->viewer?->name ?? __('Alguien') }}</span>
                                     <span class="text-warmgray">{{ $v->created_at->diffForHumans() }}</span>
                                 </li>
                             @endforeach
@@ -77,17 +77,17 @@
             </div>{{-- /grid dashboard talento --}}
         @elseif (auth()->user()->esContratante())
             <div class="rounded-2xl border border-line bg-white p-6 sm:p-8">
-                <p class="text-sm font-medium uppercase tracking-widest text-sage">Contratante</p>
-                <h3 class="mt-2 font-serif text-2xl font-medium text-ink">Encuentra talento fitness</h3>
-                <p class="mt-2 text-warmgray">Explora perfiles de profesionales o completa los datos de tu empresa.</p>
+                <p class="text-sm font-medium uppercase tracking-widest text-sage">{{ __('Contratante') }}</p>
+                <h3 class="mt-2 font-serif text-2xl font-medium text-ink">{{ __('Encuentra talento fitness') }}</h3>
+                <p class="mt-2 text-warmgray">{{ __('Explora perfiles de profesionales o completa los datos de tu empresa.') }}</p>
                 <div class="mt-6 flex flex-wrap gap-3">
                     <a href="{{ route('talento.index') }}"
                        class="rounded-full bg-sage px-6 py-2.5 text-sm font-semibold text-cream transition hover:bg-ink">
-                        Buscar talento
+                        {{ __('Buscar talento') }}
                     </a>
                     <a href="{{ route('company.profile.edit') }}"
                        class="rounded-full border border-line px-6 py-2.5 text-sm font-medium text-warmgray transition hover:border-sage hover:text-sage">
-                        Editar mi empresa
+                        {{ __('Editar mi empresa') }}
                     </a>
                 </div>
             </div>

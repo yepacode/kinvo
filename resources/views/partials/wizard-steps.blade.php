@@ -1,6 +1,6 @@
 {{-- Indicador de pasos del onboarding. Uso: @include('partials.wizard-steps', ['paso' => 1..3]) --}}
-@php $pasos = ['Bienvenida', 'Tu perfil', 'Listo']; @endphp
-<ol class="mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs" aria-label="Progreso del registro">
+@php $pasos = [__('Bienvenida'), __('Tu perfil'), __('Listo')]; @endphp
+<ol class="mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs" aria-label="{{ __('Progreso del registro') }}">
     @foreach ($pasos as $i => $nombre)
         @php $n = $i + 1; @endphp
         <li class="flex items-center gap-2">

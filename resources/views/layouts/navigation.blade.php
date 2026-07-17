@@ -10,24 +10,24 @@
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 lg:-my-px lg:ms-10 lg:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        Inicio
+                        {{ __('Inicio') }}
                     </x-nav-link>
                     @if (auth()->user()->esProfesional())
                         <x-nav-link :href="route('professional.profile.edit')" :active="request()->routeIs('professional.profile.*')">
-                            Mi perfil
+                            {{ __('Mi perfil') }}
                         </x-nav-link>
                         <x-nav-link :href="route('professional.contactos')" :active="request()->routeIs('professional.contactos')">
-                            Contactos
+                            {{ __('Contactos') }}
                         </x-nav-link>
                     @elseif (auth()->user()->esContratante())
                         <x-nav-link :href="route('company.profile.edit')" :active="request()->routeIs('company.profile.*')">
-                            Mi empresa
+                            {{ __('Mi empresa') }}
                         </x-nav-link>
                         <x-nav-link :href="route('talento.index')" :active="request()->routeIs('talento.index')">
-                            Buscar talento
+                            {{ __('Buscar talento') }}
                         </x-nav-link>
                         <x-nav-link :href="route('saves.index')" :active="request()->routeIs('saves.*')">
-                            Guardados
+                            {{ __('Guardados') }}
                         </x-nav-link>
                     @endif
                 </div>
@@ -52,14 +52,14 @@
 
                     <x-slot name="content">
                         <x-dropdown-link :href="route('profile.edit')">
-                            Mi cuenta
+                            {{ __('Mi cuenta') }}
                         </x-dropdown-link>
 
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault(); this.closest('form').submit();">
-                                Cerrar sesión
+                                {{ __('Cerrar sesión') }}
                             </x-dropdown-link>
                         </form>
                     </x-slot>
@@ -96,24 +96,24 @@
     <div :class="{'block': open, 'hidden': ! open}" class="hidden lg:hidden" id="mobile-menu">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                Inicio
+                {{ __('Inicio') }}
             </x-responsive-nav-link>
             @if (auth()->user()->esProfesional())
                 <x-responsive-nav-link :href="route('professional.profile.edit')" :active="request()->routeIs('professional.profile.*')">
-                    Mi perfil
+                    {{ __('Mi perfil') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('professional.contactos')" :active="request()->routeIs('professional.contactos')">
-                    Contactos
+                    {{ __('Contactos') }}
                 </x-responsive-nav-link>
             @elseif (auth()->user()->esContratante())
                 <x-responsive-nav-link :href="route('company.profile.edit')" :active="request()->routeIs('company.profile.*')">
-                    Mi empresa
+                    {{ __('Mi empresa') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('talento.index')" :active="request()->routeIs('talento.index')">
-                    Buscar talento
+                    {{ __('Buscar talento') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('saves.index')" :active="request()->routeIs('saves.*')">
-                    Guardados
+                    {{ __('Guardados') }}
                 </x-responsive-nav-link>
             @endif
         </div>
@@ -126,14 +126,14 @@
 
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">
-                    Mi cuenta
+                    {{ __('Mi cuenta') }}
                 </x-responsive-nav-link>
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <x-responsive-nav-link :href="route('logout')"
                             onclick="event.preventDefault(); this.closest('form').submit();">
-                        Cerrar sesión
+                        {{ __('Cerrar sesión') }}
                     </x-responsive-nav-link>
                 </form>
             </div>
