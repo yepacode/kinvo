@@ -121,11 +121,13 @@ return [
     'not_regex' => 'El formato del campo :attribute no es válido.',
     'numeric' => 'El campo :attribute debe ser numérico.',
     'password' => [
-        'letters' => 'El campo :attribute debe contener al menos una letra.',
-        'mixed' => 'El campo :attribute debe contener al menos una mayúscula y una minúscula.',
-        'numbers' => 'El campo :attribute debe contener al menos un número.',
-        'symbols' => 'El campo :attribute debe contener al menos un símbolo.',
-        'uncompromised' => 'El :attribute ingresado apareció en una filtración de datos. Elige un :attribute distinto.',
+        // La regla `Password::defaults()` sólo se aplica a contraseñas → hardcodeamos
+        // el género femenino y evitamos "El contraseña / ingresado / distinto".
+        'letters' => 'La contraseña debe contener al menos una letra.',
+        'mixed' => 'La contraseña debe contener al menos una mayúscula y una minúscula.',
+        'numbers' => 'La contraseña debe contener al menos un número.',
+        'symbols' => 'La contraseña debe contener al menos un símbolo.',
+        'uncompromised' => 'La contraseña ingresada apareció en una filtración de datos. Elige una contraseña distinta.',
     ],
     'present' => 'El campo :attribute debe estar presente.',
     'present_if' => 'El campo :attribute debe estar presente cuando :other es :value.',

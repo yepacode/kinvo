@@ -49,4 +49,31 @@ class LocaleSwitchTest extends TestCase
     {
         $this->post(route('locale.switch', 'fr'))->assertNotFound();
     }
+
+    public function test_paginacion_en_espanol_no_muestra_claves_literales(): void
+    {
+        // Regresión reportada por el cliente: los botones del paginador salían
+        // como "pagination.previous / pagination.next" porque faltaba
+        // lang/es/pagination.php.
+        \App\Models\User::factory()->count(20)->create();
+        // Necesitamos que /talento resuelva con el paginador; usamos el
+        // rendered string directamente.
+        $html = trans('pagination.previous');
+        $this->assertSame('&laquo; Anterior', $html);
+        $this->assertSame('Siguiente &raquo;', trans('pagination.next'));
+    }
+
+    public function test_password_uncompromised_usa_genero_femenino_correcto(): void
+    {
+        // Regresión reportada por el cliente: salía "El contraseña ingresado
+        // apareció... Elige un contraseña distinto." La regla `uncompromised`
+        // sólo aplica a contraseñas, así que hardcodeamos el género femenino.
+        $mensaje = trans('validation.password.uncompromised');
+
+        $this->assertStringContainsString('La contraseña', $mensaje);
+        $this->assertStringContainsString('ingresada', $mensaje);
+        $this->assertStringContainsString('distinta', $mensaje);
+        $this->assertStringNotContainsString('El :attribute', $mensaje);
+        $this->assertStringNotContainsString('un :attribute', $mensaje);
+    }
 }
