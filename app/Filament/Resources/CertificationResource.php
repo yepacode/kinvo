@@ -67,6 +67,10 @@ class CertificationResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                // Certification es catálogo de referencia (los perfiles capturan sus
+                // certificaciones como texto libre); no está enlazado a perfiles,
+                // por lo que el borrado no arrastra datos.
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

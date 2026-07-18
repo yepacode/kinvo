@@ -22,8 +22,13 @@ class NuevoContacto extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
+        // El nombre viene del formulario público → limpiamos CRLF y truncamos
+        // para evitar inyección de cabeceras y asuntos gigantes.
+        $nombre = trim(preg_replace("/[\r\n]+/", ' ', (string) $this->contact->contact_name));
+        $nombre = mb_strimwidth($nombre, 0, 80, '…', 'UTF-8');
+
         return new Envelope(
-            subject: 'Nuevo contacto en Kinvoo — '.$this->contact->contact_name,
+            subject: __('Nuevo contacto en Kinvoo — :nombre', ['nombre' => $nombre]),
         );
     }
 

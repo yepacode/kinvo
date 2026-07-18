@@ -15,7 +15,7 @@
             <p><strong>{{ __('Tu cuenta ya no está activa.') }}</strong></p>
             <p class="mt-1 text-warmgray">
                 {{ __('Kinvoo dio de baja tu cuenta. Si crees que fue un error, escríbenos a') }}
-                <a href="mailto:hola@kinvoo.com" class="text-sage underline">hola@kinvoo.com</a>.
+                <a href="mailto:hola@gokinvoo.com" class="text-sage underline">hola@gokinvoo.com</a>.
             </p>
         </div>
     @else

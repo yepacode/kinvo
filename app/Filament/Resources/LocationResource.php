@@ -71,10 +71,35 @@ class LocationResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->before(function (Location $record, Tables\Actions\DeleteAction $action) {
+                        // FK con nullOnDelete: sin este guard, borrar una ubicación
+                        // dejaría los perfiles con `location_id=null` en silencio.
+                        $prof = $record->professionalProfiles()->count();
+                        $emp = $record->companyProfiles()->count();
+                        $total = $prof + $emp;
+                        if ($total > 0) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('No se puede eliminar')
+                                ->body('"'.$record->ciudad.'" tiene '.$total.' perfil(es) usándola. Marca la ubicación como "Inactiva" o reasigna los perfiles primero.')
+                                ->danger()->persistent()->send();
+                            $action->cancel();
+                        }
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->before(function (\Illuminate\Support\Collection $records, Tables\Actions\DeleteBulkAction $action) {
+                            $enUso = $records->filter(fn (Location $l) => $l->professionalProfiles()->exists() || $l->companyProfiles()->exists());
+                            if ($enUso->isNotEmpty()) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Hay ubicaciones en uso')
+                                    ->body('No se puede eliminar en masa: '.$enUso->pluck('ciudad')->join(', ').'. Marca como "Inactivas" o reasigna primero.')
+                                    ->danger()->persistent()->send();
+                                $action->cancel();
+                            }
+                        }),
                 ]),
             ]);
     }

@@ -357,5 +357,33 @@
 
     "Nosotros": "About us",
     "Comunidad": "Community",
-    "Sessions": "Sessions"
+    "Sessions": "Sessions",
+
+    "Bienvenido a Kinvoo 🌿": "Welcome to Kinvoo 🌿",
+    "Nuevo contacto en Kinvoo — :nombre": "New contact on Kinvoo — :nombre",
+    "¡Ya eres parte de Kinvoo!": "You're now part of Kinvoo!",
+    "Sabemos todo lo que das cada día: tu energía, tu tiempo, tu entrega a los demás. Aquí queremos hacer lo mismo por ti — acompañarte y sostenerte a ti también.": "We know how much you give every day: your energy, your time, your dedication to others. Here we want to do the same for you — to support and back you up.",
+    "Llena tu perfil para que empecemos a conectar oportunidades contigo.": "Fill in your profile so we can start connecting opportunities with you.",
+    "Completar mi perfil": "Complete my profile",
+    "Cualquier cosa, aquí estamos.": "Anything you need, we're here.",
+    "El equipo de Kinvoo": "The Kinvoo team",
+    "Si tienes alguna duda, escríbenos:": "Any questions? Write to us:",
+    "¡Tu registro fue exitoso! Ya eres parte de Kinvoo.": "Registration successful! You're now part of Kinvoo.",
+    "Sabemos que un estudio no es solo un espacio, es la gente que lo hace funcionar todos los días. Por eso, como parte de tu membresía, ya puedes empezar a buscar talento dentro de nuestra comunidad — porque cuidar a tu equipo es también cuidar tu negocio.": "We know a studio isn't just a space — it's the people who make it run every day. That's why, as part of your membership, you can already start finding talent inside our community — because taking care of your team is also taking care of your business.",
+    "Completa tu perfil para comenzar a explorar la bolsa de talento y conectar con quienes pueden sumarse a tu equipo.": "Complete your profile to start exploring the talent pool and connect with those who could join your team.",
+    "Cualquier duda, aquí estamos.": "Any questions, we're here.",
+    "Tienes un nuevo contacto": "You have a new contact",
+    "Hola :nombre, un estudio te contactó a través de tu perfil en **Kinvoo**.": "Hi :nombre, a studio contacted you through your profile on **Kinvoo**.",
+    "De:": "From:",
+    "Mensaje:": "Message:",
+    "Ver en mi bandeja": "View in my inbox",
+    "En Kinvoo cuidamos los datos de ambas partes: si quieres avanzar con esta oportunidad, respóndenos y nosotros hacemos el puente con el estudio. No compartimos ni tu correo ni el suyo hasta que ambas partes lo confirmen.": "At Kinvoo we protect both sides' data: if you'd like to move forward with this opportunity, reply to us and we'll bridge you with the studio. We don't share your email nor theirs until both sides confirm.",
+    "Gracias,": "Thank you,",
+
+    "¡Tu cuenta fue aprobada!": "Your account has been approved!",
+    "Ya puedes completar y publicar tu perfil en Kinvoo.": "You can now complete and publish your profile on Kinvoo.",
+    "Nuevo contacto de :nombre": "New contact from :nombre",
+    ":extracto": ":extracto",
+
+    "Debes aceptar los Términos y Condiciones y el Aviso de Privacidad.": "You must accept the Terms and Conditions and the Privacy Notice."
 }

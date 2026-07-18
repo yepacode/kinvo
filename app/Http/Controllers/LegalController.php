@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SiteSetting;
 use Illuminate\View\View;
 
 class LegalController extends Controller
@@ -11,9 +10,9 @@ class LegalController extends Controller
     public function privacidad(): View
     {
         return view('legal.show', [
-            'title' => SiteSetting::get('legal_privacy_title'),
-            'updated' => SiteSetting::get('legal_privacy_updated'),
-            'body' => SiteSetting::get('legal_privacy_body'),
+            'title' => landing('legal_privacy_title'),
+            'updated' => landing('legal_privacy_updated'),
+            'body' => landing('legal_privacy_body'),
         ]);
     }
 
@@ -21,9 +20,9 @@ class LegalController extends Controller
     public function terminos(): View
     {
         return view('legal.show', [
-            'title' => SiteSetting::get('legal_terms_title'),
-            'updated' => SiteSetting::get('legal_terms_updated'),
-            'body' => SiteSetting::get('legal_terms_body'),
+            'title' => landing('legal_terms_title'),
+            'updated' => landing('legal_terms_updated'),
+            'body' => landing('legal_terms_body'),
         ]);
     }
 }

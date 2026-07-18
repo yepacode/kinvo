@@ -43,7 +43,7 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'acepta_legales' => ['accepted'],
         ], [
-            'acepta_legales.accepted' => 'Debes aceptar los Términos y Condiciones y el Aviso de Privacidad.',
+            'acepta_legales.accepted' => __('Debes aceptar los Términos y Condiciones y el Aviso de Privacidad.'),
         ]);
 
         // El tipo de registro define el rol; nunca se crea un Admin desde el registro público.
@@ -56,10 +56,13 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
-        // nivel/estado no son mass-assignable: se setean explícitamente.
+        // nivel/estado/locale no son mass-assignable: se setean explícitamente.
+        // locale se toma del idioma activo en la sesión de registro para que el correo
+        // de bienvenida se envíe en el idioma que el usuario estaba usando.
         $user->forceFill([
             'nivel' => $rol,
             'estado' => EstadoUsuario::Pendiente, // aprobación activada
+            'locale' => in_array(app()->getLocale(), ['es', 'en'], true) ? app()->getLocale() : 'es',
         ])->save();
 
         // Perfil vacío según el rol, listo para autoeditar.

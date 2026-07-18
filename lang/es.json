@@ -20,5 +20,15 @@
     "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.": "Al eliminar tu cuenta, todos tus datos se borrarán de forma permanente. Ingresa tu contraseña para confirmar.",
     "Password": "Contraseña",
     "Cancel": "Cancelar",
-    "All rights reserved.": "Todos los derechos reservados."
+    "All rights reserved.": "Todos los derechos reservados.",
+    ":count año|:count años": ":count año|:count años",
+    ":count profesional|:count profesionales": ":count profesional|:count profesionales",
+    "Notifications": "Notificaciones",
+    "Notifications, :n unread": "Notificaciones, :n sin leer",
+    "Showing": "Mostrando",
+    "to": "a",
+    "of": "de",
+    "results": "resultados",
+    "pagination.previous": "&laquo; Anterior",
+    "pagination.next": "Siguiente &raquo;"
 }

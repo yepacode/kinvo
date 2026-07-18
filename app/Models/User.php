@@ -6,13 +6,14 @@ use App\Enums\EstadoUsuario;
 use App\Enums\RolUsuario;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasLocalePreference
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -98,6 +99,16 @@ class User extends Authenticatable implements FilamentUser
     public function estaSuspendido(): bool
     {
         return $this->estado === EstadoUsuario::Suspendido;
+    }
+
+    /**
+     * Idioma preferido — usado por Laravel Mail y Notifications para procesar
+     * correos en el idioma del receptor aunque la cola se ejecute más tarde
+     * (después de que la sesión web / cookie del usuario ya no exista).
+     */
+    public function preferredLocale(): string
+    {
+        return in_array($this->locale, ['es', 'en'], true) ? $this->locale : 'es';
     }
 
     /**

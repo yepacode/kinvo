@@ -18,8 +18,16 @@
                    class="flex gap-4 border-b border-line/60 px-5 py-4 transition hover:bg-cream {{ is_null($n->read_at) ? 'bg-sage/5' : '' }}">
                     <span class="text-2xl" aria-hidden="true">{{ $n->data['icono'] ?? '🔔' }}</span>
                     <div class="min-w-0 flex-1">
-                        <p class="text-sm font-medium text-ink">{{ $n->data['titulo'] ?? __('Notificación') }}</p>
-                        <p class="text-sm text-warmgray">{{ $n->data['mensaje'] ?? '' }}</p>
+                        @php
+                            $titulo = isset($n->data['titulo_key'])
+                                ? __($n->data['titulo_key'], $n->data['titulo_params'] ?? [])
+                                : ($n->data['titulo'] ?? __('Notificación'));
+                            $mensaje = isset($n->data['mensaje_key'])
+                                ? __($n->data['mensaje_key'], $n->data['mensaje_params'] ?? [])
+                                : ($n->data['mensaje'] ?? '');
+                        @endphp
+                        <p class="text-sm font-medium text-ink">{{ $titulo }}</p>
+                        <p class="text-sm text-warmgray">{{ $mensaje }}</p>
                         <p class="mt-1 text-xs text-warmgray">{{ $n->created_at->diffForHumans() }}</p>
                     </div>
                     @if (is_null($n->read_at))

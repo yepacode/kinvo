@@ -385,9 +385,11 @@ footer {
       <li><a href="{{ route('login') }}">{{ __('Entrar') }}</a></li>
       <li><a href="{{ route('register') }}" class="nav-cta">{{ __('Únete') }}</a></li>
     @endauth
+    <li><x-locale-switcher /></li>
   </ul>
   {{-- Acceso compacto en móvil (el menú completo se oculta) --}}
   <div class="nav-mobile">
+    <x-locale-switcher />
     @auth
       <a href="{{ auth()->user()->homeRoute() }}" class="nav-cta">{{ __('Mi cuenta') }}</a>
     @else

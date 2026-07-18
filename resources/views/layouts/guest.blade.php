@@ -10,6 +10,9 @@
         @include('partials.head-assets')
     </head>
     <body class="font-sans text-ink antialiased">
+        <div class="fixed right-4 top-4 z-20">
+            <x-locale-switcher />
+        </div>
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0">
             <div>
                 <a href="/" class="font-serif text-3xl font-medium tracking-tight text-ink">Kinvoo</a>

@@ -31,8 +31,16 @@
                    class="flex gap-3 border-b border-line/60 px-4 py-3 transition hover:bg-cream {{ is_null($n->read_at) ? 'bg-sage/5' : '' }}">
                     <span class="text-lg" aria-hidden="true">{{ $n->data['icono'] ?? '🔔' }}</span>
                     <div class="min-w-0">
-                        <p class="truncate text-sm font-medium text-ink">{{ $n->data['titulo'] ?? __('Notificación') }}</p>
-                        <p class="truncate text-xs text-warmgray">{{ $n->data['mensaje'] ?? '' }}</p>
+                        @php
+                            $titulo = isset($n->data['titulo_key'])
+                                ? __($n->data['titulo_key'], $n->data['titulo_params'] ?? [])
+                                : ($n->data['titulo'] ?? __('Notificación'));
+                            $mensaje = isset($n->data['mensaje_key'])
+                                ? __($n->data['mensaje_key'], $n->data['mensaje_params'] ?? [])
+                                : ($n->data['mensaje'] ?? '');
+                        @endphp
+                        <p class="truncate text-sm font-medium text-ink">{{ $titulo }}</p>
+                        <p class="truncate text-xs text-warmgray">{{ $mensaje }}</p>
                         <p class="mt-0.5 text-[11px] text-warmgray">{{ $n->created_at->diffForHumans() }}</p>
                     </div>
                 </a>

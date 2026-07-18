@@ -71,10 +71,33 @@ class DisciplineResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->before(function (Discipline $record, Tables\Actions\DeleteAction $action) {
+                        // Guard adicional al hook `deleting` del modelo: notificamos
+                        // al admin en vez de fallar silenciosamente si está en uso.
+                        $usos = $record->professionals()->count();
+                        if ($usos > 0) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('No se puede eliminar')
+                                ->body('"'.$record->nombre.'" tiene '.$usos.' profesional(es) asociados. Marca la disciplina como "Inactiva" o desasocia primero a los perfiles.')
+                                ->danger()->persistent()->send();
+                            $action->cancel();
+                        }
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->before(function (\Illuminate\Support\Collection $records, Tables\Actions\DeleteBulkAction $action) {
+                            $enUso = $records->filter(fn (Discipline $d) => $d->professionals()->exists());
+                            if ($enUso->isNotEmpty()) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Hay disciplinas en uso')
+                                    ->body('No se puede eliminar en masa: '.$enUso->pluck('nombre')->join(', ').'. Marca como "Inactivas" o desasocia primero.')
+                                    ->danger()->persistent()->send();
+                                $action->cancel();
+                            }
+                        }),
                 ]),
             ]);
     }

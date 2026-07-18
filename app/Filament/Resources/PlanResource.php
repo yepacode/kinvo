@@ -127,10 +127,35 @@ class PlanResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->before(function (Plan $record, Tables\Actions\DeleteAction $action) {
+                        // FK users.membership_plan_id es nullOnDelete: sin este guard,
+                        // borrar un plan dejaría a los contratantes con plan=null pero
+                        // `membership_expires_at` seguirá activa (membresía "fantasma").
+                        $activos = \App\Models\User::where('membership_plan_id', $record->id)->count();
+                        if ($activos > 0) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('No se puede eliminar')
+                                ->body('"'.$record->nombre.'" tiene '.$activos.' usuario(s) con membresía activa. Marca el plan como "Inactivo" (queda oculto en la página pública, sin romper las membresías existentes).')
+                                ->danger()->persistent()->send();
+                            $action->cancel();
+                        }
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->before(function (\Illuminate\Support\Collection $records, Tables\Actions\DeleteBulkAction $action) {
+                            $ids = $records->pluck('id')->all();
+                            $activos = \App\Models\User::whereIn('membership_plan_id', $ids)->count();
+                            if ($activos > 0) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Hay planes con membresías activas')
+                                    ->body('Hay '.$activos.' usuario(s) con membresía en alguno de los planes seleccionados. Marca los planes como "Inactivos" en vez de eliminarlos.')
+                                    ->danger()->persistent()->send();
+                                $action->cancel();
+                            }
+                        }),
                 ]),
             ]);
     }

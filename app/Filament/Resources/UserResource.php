@@ -219,6 +219,9 @@ class UserResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
+                    ->modalHeading('Aprobar cuenta')
+                    ->modalDescription('El usuario podrá iniciar sesión y su perfil se publicará para que aparezca en el buscador. Esta acción envía una notificación de bienvenida.')
+                    ->modalSubmitActionLabel('Aprobar')
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Pendiente)
                     ->action(function (User $u) {
                         $u->forceFill(['estado' => EstadoUsuario::Activo])->save();
@@ -244,14 +247,29 @@ class UserResource extends Resource
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
                     ->requiresConfirmation()
+                    ->modalHeading('Suspender cuenta')
+                    ->modalDescription('El usuario no podrá iniciar sesión y su perfil se ocultará del buscador. Podrás reactivarla más adelante.')
+                    ->modalSubmitActionLabel('Suspender')
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Activo)
                     ->action(fn (User $u) => $u->suspenderYOcultarPerfil()),
                 Tables\Actions\Action::make('reactivar')
                     ->label('Reactivar')
                     ->icon('heroicon-o-arrow-path')
                     ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Reactivar cuenta')
+                    ->modalDescription('El usuario podrá volver a iniciar sesión y su perfil se publicará de nuevo en el buscador.')
+                    ->modalSubmitActionLabel('Reactivar')
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Suspendido)
-                    ->action(fn (User $u) => $u->forceFill(['estado' => EstadoUsuario::Activo])->save()),
+                    ->action(function (User $u) {
+                        // Reactivación restaura el estado Activo Y republica el perfil,
+                        // porque suspender/rechazar lo despublica. Sin esto, un flujo
+                        // Rechazar → Reactivar dejaba al usuario Activo con perfil
+                        // is_published=false y sin la acción "Aprobar" disponible
+                        // (visible solo si estado=Pendiente) → invisible sin fix.
+                        $u->forceFill(['estado' => EstadoUsuario::Activo])->save();
+                        $u->professionalProfile?->update(['is_published' => true]);
+                    }),
                 Tables\Actions\Action::make('membresia')
                     ->label('Membresía')
                     ->icon('heroicon-o-credit-card')
@@ -315,6 +333,20 @@ class UserResource extends Resource
                             return;
                         }
 
+                        // Capturamos rutas de archivos ANTES de la transacción para
+                        // borrarlos del disco DESPUÉS (Storage::delete no revierte si
+                        // la BD hace rollback, así que primero commit BD y luego disco).
+                        $archivosPublic = [];
+                        $archivosLocal = [];
+                        if ($pp = $u->professionalProfile) {
+                            if ($pp->photo_path) $archivosPublic[] = $pp->photo_path;
+                            if ($pp->media_path) $archivosPublic[] = $pp->media_path;
+                            if ($pp->certification_file_path) $archivosLocal[] = $pp->certification_file_path;
+                        }
+                        if ($cp = $u->companyProfile) {
+                            if ($cp->logo_path) $archivosPublic[] = $cp->logo_path;
+                        }
+
                         \Illuminate\Support\Facades\DB::transaction(function () use ($u, $nuevo) {
                             // Los perfiles se borran por FK cascade sobre user_id. Pero los
                             // Save de OTROS usuarios que guardaron este perfil son polimórficos
@@ -345,6 +377,15 @@ class UserResource extends Resource
                                 'membership_expires_at' => null,
                             ])->save();
                         });
+
+                        // Fuera de la transacción: limpiamos archivos huérfanos del disco.
+                        // Si el archivo ya no existe, delete() lo ignora silenciosamente.
+                        if ($archivosPublic) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($archivosPublic);
+                        }
+                        if ($archivosLocal) {
+                            \Illuminate\Support\Facades\Storage::disk('local')->delete($archivosLocal);
+                        }
 
                         $u->notify(new \App\Notifications\TipoDeCuentaCambiadoNotification($nuevo));
 

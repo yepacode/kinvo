@@ -105,7 +105,7 @@ class SiteSetting extends Model
 
             // Pie
             'footer_tag' => 'Where talent meets fitness.',
-            'footer_copy' => '© 2026 | Kinvoo Wellness - Todos los derechos reservados',
+            'footer_copy' => '© '.date('Y').' | Kinvoo Wellness - Todos los derechos reservados',
 
             // Fondo del sitio (páginas públicas). Editable desde el panel.
             'background_color' => '#F7F4EE',
@@ -147,6 +147,101 @@ Una vez que completes el perfil de tu estudio, nuestro equipo lo revisará y lo 
 Cualquier duda, aquí estamos. — El equipo de Kinvoo.
 Si tienes alguna duda, escríbenos: hola@kinvoo.com
 TXT,
+
+            // ================================================================
+            // Traducciones EN de la landing (editables desde el panel).
+            // El helper landing() busca automáticamente la variante `_en`
+            // cuando app()->getLocale() === 'en' y cae al ES si está vacío.
+            // ================================================================
+
+            // SEO EN
+            'seo_title_en' => 'Kinvoo — Where talent meets fitness',
+            'seo_description_en' => 'Kinvoo, the professional network for the fitness industry. Community, opportunities and support for coaches, instructors and studios.',
+
+            // Marca EN
+            'brand_tagline_en' => 'Where talent meets fitness.',
+
+            // Hero EN
+            'hero_eyebrow_en' => 'Welcome to Kinvoo',
+            'hero_title_en' => "The professional network\nfor the *fitness*\nindustry.",
+            'hero_body_en' => 'For the people who sustain wellness every single day. Community, opportunities and support — all in one place.',
+            'hero_cta1_en' => 'Join the community',
+            'hero_cta2_en' => 'Explore the talent',
+            'hero_pill_en' => 'Where talent meets fitness.',
+
+            // Misión EN
+            'mission_label_en' => 'Our mission',
+            'mission_text_en' => "Fitness already changed the world.\nKinvoo empowers the people *who make it happen every day.*",
+
+            // Pilares EN
+            'pillars_label_en' => 'Why Kinvoo',
+            'pillars_heading_en' => 'What professional fitness needs now.',
+            'pillar1_title_en' => 'Community',
+            'pillar1_body_en' => 'A network built for you. Real connection, real belonging.',
+            'pillar2_title_en' => 'Opportunities',
+            'pillar2_body_en' => 'Connect with studios and brands. Find your next step.',
+            'pillar3_title_en' => 'Benefits',
+            'pillar3_body_en' => 'Health, legal support and wellbeing. So the fitness experience feels as good inside as it does outside.',
+            'pillar4_title_en' => 'Growth',
+            'pillar4_body_en' => 'Your career deserves structure, development and a place to belong.',
+
+            // Sessions EN
+            'sessions_label_en' => 'Kinvoo Sessions',
+            'sessions_heading_en' => 'The conversation the wellness talent *needed to have.*',
+            'sessions_body_en' => 'Intimate, curated gatherings to talk about what really matters. With the right people, at the right time.',
+            'sessions_cta_en' => 'I want to attend',
+            'session_topic_1_en' => 'Growth and professional development',
+            'session_topic_2_en' => 'Community and professional identity',
+            'session_topic_3_en' => 'Wellness of the wellness talent',
+            'session_topic_4_en' => 'Benefits and professional backing',
+            'session_topic_5_en' => 'The future of work and wellbeing',
+
+            // Para quién EN
+            'forwho_label_en' => 'For whom',
+            'forwho_heading_en' => "Built for those who\n*move fitness.*",
+            'forwho_body_en' => 'The ecosystem where fitness talent and opportunities meet, grow and sustain each other.',
+            'card1_label_en' => 'Talent',
+            'card1_title_en' => 'Coaches & Instructors',
+            'card1_body_en' => 'The ones who build experiences every day and deserve a community that matches them.',
+            'card2_label_en' => 'Brands',
+            'card2_title_en' => 'Studios & Brands',
+            'card2_body_en' => 'Find and retain the best talent. Build a team that grows with you.',
+            'card3_label_en' => 'Operations',
+            'card3_title_en' => 'The talent that keeps studios alive',
+            'card3_body_en' => 'Front desk, studio managers, operations staff — those who sustain the experience from within.',
+
+            // Cita EN
+            'quote_text_en' => '"Fitness has evolved. The way we take care of those who sustain it, *has too.*"',
+            'quote_attr_en' => '— Kinvoo Community',
+
+            // Únete EN
+            'join_label_en' => 'Join Kinvoo',
+            'join_heading_en' => "Where *talent*\nmeets fitness.",
+            'join_body_en' => 'Be part of this from the beginning. We are building something the industry needed — and we want you in.',
+            'join_cta_en' => 'Create my account',
+            'join_note_en' => 'Are you talent or a studio? Choose below.',
+            'join_tog1_en' => 'I am fitness talent',
+            'join_tog2_en' => 'I am a studio / brand',
+            'join_tog3_en' => 'I want to attend a session',
+
+            // Pie EN
+            'footer_tag_en' => 'Where talent meets fitness.',
+            'footer_copy_en' => '© '.date('Y').' | Kinvoo Wellness - All rights reserved',
+
+            // Membresías EN
+            'membership_eyebrow_en' => 'Memberships',
+            'membership_title_en' => 'Choose your membership',
+            'membership_body_en' => 'Plans designed for talent and for studios. Join the network and get access to the Kinvoo community, opportunities and support.',
+            'membership_note_en' => 'Prices and benefits may vary. Reach out if you have questions.',
+            'membership_individual_title_en' => 'For talent (individuals)',
+            'membership_studio_title_en' => 'For studios and brands',
+
+            // Legales EN — Los cuerpos oficiales están en ES por jurisdicción mexicana.
+            // Traducimos títulos y fecha, y en el body dejamos una nota + copy en español.
+            'legal_privacy_title_en' => 'Privacy Notice',
+            'legal_privacy_updated_en' => 'Last updated: 2026',
+            'legal_terms_title_en' => 'Terms and Conditions',
+            'legal_terms_updated_en' => 'Last updated: 2026',
 
             // Bienvenidas en inglés — copy inicial (editable desde el panel).
             // El helper landing() elige la variante _en cuando el locale es EN.
