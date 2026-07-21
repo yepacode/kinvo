@@ -127,7 +127,7 @@ Llena tu perfil para que empecemos a conectar oportunidades contigo. Antes de pu
 Tus datos de contacto siempre son privados: cuando un estudio quiera conectar, el contacto pasa por Kinvoo. Una vez que completes tu perfil, lo revisamos y, tras ser validado por Kinvoo, se publicará en un máximo de 24 horas.
 
 Cualquier cosa, aquí estamos. — El equipo de Kinvoo.
-Si tienes alguna duda, escríbenos: hola@kinvoo.com
+Si tienes alguna duda, escríbenos: hola@gokinvoo.com
 TXT,
 
             // Mensaje de bienvenida — Estudio / Cliente (copy exacto del cliente, docx WEB KINVOO).
@@ -145,7 +145,7 @@ Completa tu perfil para comenzar a explorar la bolsa de talento y conectar con q
 Una vez que completes el perfil de tu estudio, nuestro equipo lo revisará y lo activará en un máximo de 24 horas.
 
 Cualquier duda, aquí estamos. — El equipo de Kinvoo.
-Si tienes alguna duda, escríbenos: hola@kinvoo.com
+Si tienes alguna duda, escríbenos: hola@gokinvoo.com
 TXT,
 
             // ================================================================
@@ -260,7 +260,7 @@ Fill in your profile so we can start connecting opportunities with you. Before p
 Your contact information is always private: when a studio wants to connect, the contact goes through Kinvoo. Once you complete your profile, we'll review it and, once validated by Kinvoo, it'll be published within 24 hours.
 
 Anything you need, we're here. — The Kinvoo team.
-Any questions? Write to us: hola@kinvoo.com
+Any questions? Write to us: hola@gokinvoo.com
 TXT,
             'welcome_studio_title_en' => 'Registration successful!',
             'welcome_studio_body_en' => <<<'TXT'
@@ -276,7 +276,7 @@ Complete your profile to start exploring the talent pool and connect with those 
 Once you complete your studio profile, our team will review and activate it within 24 hours.
 
 Any questions, we're here. — The Kinvoo team.
-Write to us: hola@kinvoo.com
+Write to us: hola@gokinvoo.com
 TXT,
 
             // Membresías (página pública de planes)

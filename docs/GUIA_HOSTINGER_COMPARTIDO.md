@@ -101,12 +101,12 @@ QUEUE_CONNECTION=database
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.hostinger.com            # o smtp.namecheap.com / smtp.resend.com
 MAIL_PORT=587
-MAIL_USERNAME=hola@kinvoo.com
+MAIL_USERNAME=hola@gokinvoo.com
 MAIL_PASSWORD=**********
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=hola@kinvoo.com
+MAIL_FROM_ADDRESS=hola@gokinvoo.com
 MAIL_FROM_NAME="Kinvoo"
-MAIL_OWNER_ADDRESS=hola@kinvoo.com
+MAIL_OWNER_ADDRESS=hola@gokinvoo.com
 ```
 
 **Nunca subir `.env` a git**. `.gitignore` ya lo excluye.
@@ -127,7 +127,7 @@ Desde el panel de Hostinger → MySQL Databases:
 4. Crear el owner:
    ```bash
    php artisan tinker
-   >>> $u = App\Models\User::create(['name'=>'Kinvoo Admin','email'=>'hola@kinvoo.com','password'=>bcrypt('CAMBIAR-ESTA')]);
+   >>> $u = App\Models\User::create(['name'=>'Kinvoo Admin','email'=>'hola@gokinvoo.com','password'=>bcrypt('CAMBIAR-ESTA')]);
    >>> $u->forceFill(['nivel'=>App\Enums\RolUsuario::Admin, 'estado'=>App\Enums\EstadoUsuario::Activo])->save();
    ```
 

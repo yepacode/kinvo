@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
  * Se dispara cuando un profesional pulsa "Me interesa, conéctame con el estudio"
  * en su bandeja. Va al owner de Kinvoo por dos canales:
  *  - database  → campanita en el panel + resource "Contactos"
- *  - mail      → aviso a hola@kinvoo.com para gestionar la conexión
+ *  - mail      → aviso a hola@gokinvoo.com para gestionar la conexión
  * El correo va en cola (ShouldQueue) para no bloquear el request; si el mailer
  * está caído la notificación database sigue quedando registrada.
  */

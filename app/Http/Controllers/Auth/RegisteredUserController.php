@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -59,11 +60,17 @@ class RegisteredUserController extends Controller
         // nivel/estado/locale no son mass-assignable: se setean explícitamente.
         // locale se toma del idioma activo en la sesión de registro para que el correo
         // de bienvenida se envíe en el idioma que el usuario estaba usando.
-        $user->forceFill([
+        // Guarda defensivo: si prod aún no corre `php artisan migrate` tras un
+        // deploy con la nueva columna `locale`, el registro sigue funcionando
+        // sin romper el flujo del cliente (el locale queda en 'es' por default).
+        $atributos = [
             'nivel' => $rol,
-            'estado' => EstadoUsuario::Pendiente, // aprobación activada
-            'locale' => in_array(app()->getLocale(), ['es', 'en'], true) ? app()->getLocale() : 'es',
-        ])->save();
+            'estado' => EstadoUsuario::Pendiente,
+        ];
+        if (Schema::hasColumn('users', 'locale')) {
+            $atributos['locale'] = in_array(app()->getLocale(), ['es', 'en'], true) ? app()->getLocale() : 'es';
+        }
+        $user->forceFill($atributos)->save();
 
         // Perfil vacío según el rol, listo para autoeditar.
         if ($rol === RolUsuario::Contractor) {

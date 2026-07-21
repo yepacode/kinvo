@@ -23,7 +23,7 @@ class CuentaRechazadaNotification extends Notification
             'tipo' => 'cuenta_rechazada',
             'icono' => '🚫',
             'titulo' => 'Tu solicitud no fue aprobada',
-            'mensaje' => 'Escríbenos a hola@kinvoo.com si crees que fue un error o para conocer los siguientes pasos.',
+            'mensaje' => 'Escríbenos a hola@gokinvoo.com si crees que fue un error o para conocer los siguientes pasos.',
             'url' => null,
         ];
     }

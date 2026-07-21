@@ -20,7 +20,7 @@
             <p class="mt-3 rounded-xl bg-beige px-4 py-3 text-xs text-warmgray">
                 <strong class="text-ink">{{ __('¿Ibas a registrarte como estudio o marca?') }}</strong>
                 {{ __('Escríbenos a') }}
-                <a href="mailto:hola@kinvoo.com" class="text-sage underline hover:text-ink">hola@kinvoo.com</a>
+                <a href="mailto:hola@gokinvoo.com" class="text-sage underline hover:text-ink">hola@gokinvoo.com</a>
                 {{ __('y te cambiamos el tipo de cuenta sin perder tu correo ni tu contraseña.') }}
             </p>
 
