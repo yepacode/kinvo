@@ -385,5 +385,24 @@
     "Nuevo contacto de :nombre": "New contact from :nombre",
     ":extracto": ":extracto",
 
-    "Debes aceptar los Términos y Condiciones y el Aviso de Privacidad.": "You must accept the Terms and Conditions and the Privacy Notice."
+    "Debes aceptar los Términos y Condiciones y el Aviso de Privacidad.": "You must accept the Terms and Conditions and the Privacy Notice.",
+
+    "Restablece tu contraseña de Kinvoo": "Reset your Kinvoo password",
+    "Hola": "Hello",
+    "Recibiste este correo porque solicitaste restablecer la contraseña de tu cuenta.": "You are receiving this email because we received a password reset request for your account.",
+    "Restablecer contraseña": "Reset password",
+    "Este enlace expirará en :count minutos.": "This link will expire in :count minutes.",
+    "Si no solicitaste este cambio, puedes ignorar este correo — no se hará ningún cambio en tu cuenta.": "If you did not request a password reset, you can ignore this email — no changes will be made to your account.",
+    "hasta el :date": "until :date",
+    "Aceptado": "Accepted",
+    "En gestión": "In progress",
+    "Mis contactos enviados": "My sent contacts",
+    "Aquí ves los talentos a los que has contactado. Kinvoo hace el puente: cuando el profesional acepte, te avisamos por correo y aparecerá aquí como \"Aceptado\".": "Here you can see the talent you contacted. Kinvoo builds the bridge: when the professional accepts, we'll email you and it'll show up as \"Accepted\".",
+    "Aún no has contactado a ningún talento": "You haven't contacted any talent yet",
+    "Cuando encuentres un perfil que te interese, usa el botón \"Contactar\" desde el buscador.": "When you find a profile you like, use the \"Contact\" button from the search.",
+    "Enviado a": "Sent to",
+    "Talento": "Talent",
+    ":name aceptó tu contacto.": ":name accepted your contact.",
+    "Kinvoo te contactará por correo para hacer el puente.": "Kinvoo will email you to build the bridge.",
+    "Kinvoo ya lo sabe. Nos comunicamos con el estudio y en breve haremos el puente contigo.": "Kinvoo knows. We're reaching out to the studio and will build the bridge shortly."
 }

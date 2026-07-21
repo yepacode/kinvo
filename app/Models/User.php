@@ -112,6 +112,17 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     }
 
     /**
+     * Sobreescribe la Notification de reset por defecto de Laravel — la del
+     * framework usa strings inglés que no están en nuestros JSON, así que
+     * los usuarios ES recibían el correo en inglés. La nuestra pasa todo
+     * por `__()` y respeta `preferredLocale`.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordEnEspanol($token));
+    }
+
+    /**
      * Marca al usuario como Suspendido y oculta/desverifica su perfil profesional
      * si tiene uno. Fuente única de verdad para las acciones "Suspender" (sobre
      * activos) y "Rechazar" (sobre pendientes) del panel del owner.

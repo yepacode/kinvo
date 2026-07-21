@@ -11,7 +11,7 @@
         @if (session('status') === 'interesado-registrado')
             <div class="mb-6 rounded-2xl border border-sage/30 bg-sage/10 px-5 py-4 text-sm text-ink">
                 <span aria-hidden="true">🤝</span>
-                <strong>{{ __('Listo.') }}</strong> {{ __('Listo. Kinvoo ya lo sabe. Nos comunicamos con el estudio y en breve haremos el puente contigo.') }}
+                <strong>{{ __('Listo.') }}</strong> {{ __('Kinvoo ya lo sabe. Nos comunicamos con el estudio y en breve haremos el puente contigo.') }}
             </div>
         @elseif (session('status') === 'ya-interesado')
             <div class="mb-6 rounded-2xl border border-line bg-white px-5 py-4 text-sm text-warmgray">
@@ -32,7 +32,7 @@
                         <div class="flex flex-wrap items-start justify-between gap-2">
                             <div>
                                 <p class="font-serif text-lg font-medium text-ink">{{ $c->contact_name }}</p>
-                                <p class="text-sm text-warmgray">{{ $c->created_at->format('d/m/Y H:i') }}</p>
+                                <p class="text-sm text-warmgray">{{ $c->created_at->translatedFormat(app()->getLocale() === 'en' ? 'M j, Y H:i' : 'd/m/Y H:i') }}</p>
                             </div>
                             @if ($c->estado === \App\Enums\EstadoContacto::NoLeido)
                                 <span class="rounded-full bg-lime/20 px-3 py-1 text-xs font-medium text-ink">{{ __('Nuevo') }}</span>
@@ -47,7 +47,7 @@
                                     <span aria-hidden="true">🤝</span>
                                     <span>
                                         <strong>{{ __('Kinvoo está gestionando el puente con :name.', ['name' => $c->contact_name]) }}</strong>
-                                        {{ __('Marcado el :date.', ['date' => $c->professional_interesado_at->format('d/m/Y H:i')]) }}
+                                        {{ __('Marcado el :date.', ['date' => $c->professional_interesado_at->translatedFormat(app()->getLocale() === 'en' ? 'M j, Y H:i' : 'd/m/Y H:i')]) }}
                                         {{ __('Te avisaremos cuando el estudio esté listo para conectarse.') }}
                                     </span>
                                 </div>

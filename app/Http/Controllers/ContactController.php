@@ -17,10 +17,24 @@ use Illuminate\View\View;
 
 class ContactController extends Controller
 {
-    /** Bandeja del profesional: contactos que le han enviado (los marca como leídos). */
+    /**
+     * `/mis-contactos` — ramifica por rol:
+     *  - profesional: contactos que le han enviado los estudios (los marca leídos).
+     *  - contratante (estudio): contactos que ÉL envió a talentos, con estado.
+     */
     public function recibidos(Request $request): View
     {
         $user = $request->user();
+
+        if ($user->esContratante()) {
+            $contactos = Contact::with(['professionalProfile.user'])
+                ->where('contractor_user_id', $user->id)
+                ->latest()
+                ->paginate(15);
+
+            return view('contractor.contactos', ['contactos' => $contactos]);
+        }
+
         abort_unless($user->esProfesional(), 403);
 
         $profile = $user->professionalProfile()->firstOrCreate([]);

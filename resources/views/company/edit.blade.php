@@ -19,7 +19,7 @@
 
         @if (auth()->user()->tieneMembresiaActiva())
             <div class="mb-6 rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm text-sage">
-                ✓ {{ __('Tu membresía está activa') }}{{ auth()->user()->membership_expires_at ? ' '.__('hasta el :date', ['date' => auth()->user()->membership_expires_at->format('d/m/Y')]) : '' }}. {{ __('Tienes acceso al directorio de talento.') }}
+                ✓ {{ __('Tu membresía está activa') }}{{ auth()->user()->membership_expires_at ? ' '.__('hasta el :date', ['date' => auth()->user()->membership_expires_at->translatedFormat(app()->getLocale() === 'en' ? 'M j, Y' : 'd/m/Y')]) : '' }}. {{ __('Tienes acceso al directorio de talento.') }}
             </div>
         @else
             <div class="mb-6 rounded-xl border border-lime/40 bg-lime/10 px-4 py-3 text-sm text-ink">

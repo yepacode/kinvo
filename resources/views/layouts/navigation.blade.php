@@ -29,6 +29,9 @@
                         <x-nav-link :href="route('saves.index')" :active="request()->routeIs('saves.*')">
                             {{ __('Guardados') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('professional.contactos')" :active="request()->routeIs('professional.contactos')">
+                            {{ __('Contactos') }}
+                        </x-nav-link>
                     @endif
                 </div>
             </div>
@@ -114,6 +117,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('saves.index')" :active="request()->routeIs('saves.*')">
                     {{ __('Guardados') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('professional.contactos')" :active="request()->routeIs('professional.contactos')">
+                    {{ __('Contactos') }}
                 </x-responsive-nav-link>
             @endif
         </div>
