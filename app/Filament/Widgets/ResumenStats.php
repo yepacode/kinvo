@@ -24,49 +24,73 @@ class ResumenStats extends BaseWidget
         // Miembros (excluye admins). Son totales de toda la plataforma.
         $miembros = User::where('nivel', '!=', RolUsuario::Admin->value);
 
-        $profesionales = User::where('nivel', RolUsuario::Professional->value)->count();
-        $contratantes = User::where('nivel', RolUsuario::Contractor->value)->count();
-        $publicados = ProfessionalProfile::where('is_published', true)->count();
-        $pendientes = (clone $miembros)->where('estado', EstadoUsuario::Pendiente->value)->count();
+        // Totales por rol
+        $profTotal = User::where('nivel', RolUsuario::Professional->value)->count();
+        $profMes = User::where('nivel', RolUsuario::Professional->value)
+            ->where('created_at', '>=', $inicioMes)->count();
+        $profSemana = User::where('nivel', RolUsuario::Professional->value)
+            ->where('created_at', '>=', $inicioSemana)->count();
 
+        $contrTotal = User::where('nivel', RolUsuario::Contractor->value)->count();
+        $contrMes = User::where('nivel', RolUsuario::Contractor->value)
+            ->where('created_at', '>=', $inicioMes)->count();
+        $contrSemana = User::where('nivel', RolUsuario::Contractor->value)
+            ->where('created_at', '>=', $inicioSemana)->count();
+
+        $publicados = ProfessionalProfile::where('is_published', true)->count();
+
+        // Aprobaciones pendientes: 1ª (Pendiente) y 2ª (PerfilPendiente).
+        $pendientes = (clone $miembros)->where('estado', EstadoUsuario::Pendiente->value)->count();
+        $perfilesEnRevision = User::where('nivel', RolUsuario::Contractor->value)
+            ->where('estado', EstadoUsuario::PerfilPendiente->value)->count();
+
+        // Contactos
         $contactosTotal = Contact::count();
         $contactosMes = Contact::where('created_at', '>=', $inicioMes)->count();
         $contactosSemana = Contact::where('created_at', '>=', $inicioSemana)->count();
-
-        $registrosTotal = (clone $miembros)->count();
-        $registrosMes = (clone $miembros)->where('created_at', '>=', $inicioMes)->count();
-        $registrosSemana = (clone $miembros)->where('created_at', '>=', $inicioSemana)->count();
+        // Aceptados: talento marcó "Me interesa, conéctame".
+        $contactosAceptadosTotal = Contact::whereNotNull('professional_interesado_at')->count();
+        $contactosAceptadosMes = Contact::whereNotNull('professional_interesado_at')
+            ->where('professional_interesado_at', '>=', $inicioMes)->count();
 
         return [
-            Stat::make('Profesionales', $profesionales)
-                ->description($publicados.' con perfil publicado · total en la plataforma')
+            Stat::make('Profesionales', $profTotal)
+                ->description("+{$profMes} este mes · +{$profSemana} esta semana · {$publicados} publicados")
                 ->descriptionIcon('heroicon-m-user')
                 ->color('success')
                 ->url($this->urlUsuarios(['nivel' => RolUsuario::Professional->value])),
 
-            Stat::make('Contratantes', $contratantes)
-                ->description('Estudios y marcas · total en la plataforma')
+            Stat::make('Contratantes (estudios)', $contrTotal)
+                ->description("+{$contrMes} este mes · +{$contrSemana} esta semana")
                 ->descriptionIcon('heroicon-m-building-storefront')
                 ->color('info')
                 ->url($this->urlUsuarios(['nivel' => RolUsuario::Contractor->value])),
 
-            Stat::make('Pendientes de aprobación', $pendientes)
-                ->description($pendientes > 0 ? 'Requieren revisión — clic para verlos' : 'Todo al día')
+            Stat::make('Aprobaciones pendientes (1ª)', $pendientes)
+                ->description($pendientes > 0 ? 'Cuentas recién registradas — clic para revisar' : 'Todo al día')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($pendientes > 0 ? 'warning' : 'gray')
                 ->url($this->urlUsuarios(['estado' => EstadoUsuario::Pendiente->value])),
 
-            Stat::make('Contactos', $contactosMes)
+            Stat::make('Perfiles en revisión (2ª)', $perfilesEnRevision)
+                ->description($perfilesEnRevision > 0
+                    ? 'Contratistas que ya llenaron su perfil — revísalos y aprueba'
+                    : 'Todo al día')
+                ->descriptionIcon('heroicon-m-clipboard-document-check')
+                ->color($perfilesEnRevision > 0 ? 'warning' : 'gray')
+                ->url($this->urlUsuarios(['estado' => EstadoUsuario::PerfilPendiente->value])),
+
+            Stat::make('Contactos enviados', $contactosMes)
                 ->description("Este mes (clic) · esta semana: {$contactosSemana} · total: {$contactosTotal}")
                 ->descriptionIcon('heroicon-m-envelope')
                 ->color('success')
                 ->url(ContactResource::getUrl('index', ['tableFilters' => ['rango' => ['desde' => $inicioMes->toDateString()]]])),
 
-            Stat::make('Registros nuevos', $registrosMes)
-                ->description("Este mes (clic) · esta semana: {$registrosSemana} · total: {$registrosTotal}")
-                ->descriptionIcon('heroicon-m-user-plus')
-                ->color('info')
-                ->url(UserResource::getUrl('index', ['tableFilters' => ['rango' => ['desde' => $inicioMes->toDateString()]]])),
+            Stat::make('Contactos aceptados', $contactosAceptadosMes)
+                ->description("Este mes · total: {$contactosAceptadosTotal} (talentos que dijeron 'Me interesa')")
+                ->descriptionIcon('heroicon-m-hand-thumb-up')
+                ->color('success')
+                ->url(ContactResource::getUrl('index')),
         ];
     }
 

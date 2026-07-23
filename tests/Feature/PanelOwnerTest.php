@@ -292,8 +292,8 @@ class PanelOwnerTest extends TestCase
         $this->actingAs($owner);
 
         Livewire::test(ResumenStats::class)
-            ->assertSee('Pendientes de aprobación')
-            ->assertSee('Contactos')
-            ->assertSee('total en la plataforma');
+            ->assertSee('Aprobaciones pendientes')
+            ->assertSee('Perfiles en revisión')
+            ->assertSee('Contactos');
     }
 }
