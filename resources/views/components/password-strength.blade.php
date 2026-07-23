@@ -51,13 +51,14 @@
         return {
             value: '',
             typed: false,
-            rules: {
-                length: '{{ __('Mínimo 8 caracteres') }}',
-                upper: '{{ __('Una letra mayúscula (A–Z)') }}',
-                lower: '{{ __('Una letra minúscula (a–z)') }}',
-                number: '{{ __('Un número (0–9)') }}',
-                symbol: '{{ __('Un símbolo (! @ # $ % & *)') }}',
-            },
+            {{-- json_encode evita el doble-escape de Blade (que convertía "&" en "&amp;amp;") --}}
+            rules: {!! json_encode([
+                'length' => __('Mínimo 8 caracteres'),
+                'upper'  => __('Una letra mayúscula (A–Z)'),
+                'lower'  => __('Una letra minúscula (a–z)'),
+                'number' => __('Un número (0–9)'),
+                'symbol' => __('Un símbolo (! @ # $ % & *)'),
+            ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!},
             checks: { length: false, upper: false, lower: false, number: false, symbol: false },
             init() {
                 const input = document.getElementById('{{ $for }}');
@@ -81,14 +82,14 @@
                 return Object.values(this.checks).filter(Boolean).length;
             },
             get label() {
-                return [
-                    '{{ __('Vacía') }}',
-                    '{{ __('Muy débil') }}',
-                    '{{ __('Débil') }}',
-                    '{{ __('Media') }}',
-                    '{{ __('Fuerte') }}',
-                    '{{ __('Excelente') }}',
-                ][this.score];
+                return {!! json_encode([
+                    __('Vacía'),
+                    __('Muy débil'),
+                    __('Débil'),
+                    __('Media'),
+                    __('Fuerte'),
+                    __('Excelente'),
+                ], JSON_UNESCAPED_UNICODE) !!}[this.score];
             },
             get labelHex() {
                 return {

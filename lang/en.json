@@ -387,6 +387,20 @@
 
     "Debes aceptar los Términos y Condiciones y el Aviso de Privacidad.": "You must accept the Terms and Conditions and the Privacy Notice.",
 
+    "Fuerza de la contraseña": "Password strength",
+    "Mínimo 8 caracteres": "At least 8 characters",
+    "Una letra mayúscula (A–Z)": "One uppercase letter (A–Z)",
+    "Una letra minúscula (a–z)": "One lowercase letter (a–z)",
+    "Un número (0–9)": "One number (0–9)",
+    "Un símbolo (! @ # $ % & *)": "One symbol (! @ # $ % & *)",
+    "Vacía": "Empty",
+    "Muy débil": "Very weak",
+    "Débil": "Weak",
+    "Media": "Medium",
+    "Fuerte": "Strong",
+    "Excelente": "Excellent",
+
+
     "Restablece tu contraseña de Kinvoo": "Reset your Kinvoo password",
     "Hola": "Hello",
     "Recibiste este correo porque solicitaste restablecer la contraseña de tu cuenta.": "You are receiving this email because we received a password reset request for your account.",
