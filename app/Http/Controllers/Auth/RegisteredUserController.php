@@ -85,18 +85,26 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        // Correo de bienvenida (queued por ShouldQueue). Un fallo aquí NO debe romper
-        // el registro: se registra en el log y el usuario sigue al wizard.
+        // Correo de bienvenida. Cambios importantes vs. la implementación anterior:
+        //
+        //  - Antes se usaba ->send($mailable) sobre un ShouldQueue. En la práctica
+        //    se comporta como ->queue(), pero cuando el mailable implementa
+        //    SerializesModels y el worker corre ANTES de que la transacción del
+        //    registro haya sido committeada, el job intenta cargar el user y
+        //    falla con ModelNotFoundException. El correo nunca llega.
+        //  - ->afterCommit() difiere la publicación del job hasta que TODAS las
+        //    transacciones abiertas se commiten. Así el worker siempre encuentra
+        //    al usuario.
+        //  - report($e) manda el error al canal de log configurado en vez de
+        //    tragarlo con Log::warning, para que se vea en producción.
         try {
-            $mailable = $rol === RolUsuario::Contractor
+            $mailable = ($rol === RolUsuario::Contractor
                 ? new BienvenidaEstudio($user)
-                : new BienvenidaTalento($user);
-            Mail::to($user->email)->send($mailable);
+                : new BienvenidaTalento($user))->afterCommit();
+
+            Mail::to($user->email)->queue($mailable);
         } catch (\Throwable $e) {
-            Log::warning('No se pudo enviar el correo de bienvenida', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
+            report($e);
         }
 
         Auth::login($user);
