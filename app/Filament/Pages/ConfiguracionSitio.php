@@ -175,6 +175,106 @@ class ConfiguracionSitio extends Page implements HasForms
                             ->helperText('Opcional. Se muestra solo cuando el estudio navega en inglés.'),
                     ]),
 
+                    Tabs\Tab::make('Idioma inglés')->icon('heroicon-o-language')->schema([
+                        Placeholder::make('en_help')
+                            ->label('')
+                            ->content(new HtmlString(
+                                '<p style="font-size:0.875rem;color:#6E6E5F;">'
+                                .'Traducciones al inglés de la landing. Se muestran cuando el usuario '
+                                .'cambia el selector a EN. Si dejas un campo vacío, se muestra la versión '
+                                .'en español como respaldo.'
+                                .'</p>'
+                            )),
+
+                        // SEO
+                        TextInput::make('seo_title_en')->label('SEO · Título')->maxLength(70),
+                        Textarea::make('seo_description_en')->label('SEO · Meta descripción')->rows(3)->maxLength(180),
+
+                        // Marca
+                        TextInput::make('brand_tagline_en')->label('Marca · Tagline'),
+
+                        // Hero
+                        TextInput::make('hero_eyebrow_en')->label('Hero · Antetítulo'),
+                        Textarea::make('hero_title_en')->label('Hero · Título principal')->rows(3)->helperText($this->enfasisHint()),
+                        Textarea::make('hero_body_en')->label('Hero · Texto')->rows(3),
+                        TextInput::make('hero_cta1_en')->label('Hero · Botón principal'),
+                        TextInput::make('hero_cta2_en')->label('Hero · Botón secundario'),
+                        TextInput::make('hero_pill_en')->label('Hero · Etiqueta sobre la foto'),
+
+                        // Misión
+                        TextInput::make('mission_label_en')->label('Misión · Etiqueta'),
+                        Textarea::make('mission_text_en')->label('Misión · Texto')->rows(3)->helperText($this->enfasisHint()),
+
+                        // Pilares
+                        TextInput::make('pillars_label_en')->label('Pilares · Etiqueta'),
+                        TextInput::make('pillars_heading_en')->label('Pilares · Encabezado'),
+                        TextInput::make('pillar1_title_en')->label('Pilar 1 · Título'),
+                        Textarea::make('pillar1_body_en')->label('Pilar 1 · Texto')->rows(2),
+                        TextInput::make('pillar2_title_en')->label('Pilar 2 · Título'),
+                        Textarea::make('pillar2_body_en')->label('Pilar 2 · Texto')->rows(2),
+                        TextInput::make('pillar3_title_en')->label('Pilar 3 · Título'),
+                        Textarea::make('pillar3_body_en')->label('Pilar 3 · Texto')->rows(2),
+                        TextInput::make('pillar4_title_en')->label('Pilar 4 · Título'),
+                        Textarea::make('pillar4_body_en')->label('Pilar 4 · Texto')->rows(2),
+
+                        // Sessions
+                        TextInput::make('sessions_label_en')->label('Sessions · Etiqueta'),
+                        Textarea::make('sessions_heading_en')->label('Sessions · Encabezado')->rows(2)->helperText($this->enfasisHint()),
+                        Textarea::make('sessions_body_en')->label('Sessions · Texto')->rows(3),
+                        TextInput::make('sessions_cta_en')->label('Sessions · Botón'),
+                        TextInput::make('session_topic_1_en')->label('Sessions · Tema 1'),
+                        TextInput::make('session_topic_2_en')->label('Sessions · Tema 2'),
+                        TextInput::make('session_topic_3_en')->label('Sessions · Tema 3'),
+                        TextInput::make('session_topic_4_en')->label('Sessions · Tema 4'),
+                        TextInput::make('session_topic_5_en')->label('Sessions · Tema 5'),
+
+                        // Para quién
+                        TextInput::make('forwho_label_en')->label('Para quién · Etiqueta'),
+                        Textarea::make('forwho_heading_en')->label('Para quién · Encabezado')->rows(2)->helperText($this->enfasisHint()),
+                        Textarea::make('forwho_body_en')->label('Para quién · Texto')->rows(3),
+                        TextInput::make('card1_label_en')->label('Tarjeta 1 · Etiqueta'),
+                        TextInput::make('card1_title_en')->label('Tarjeta 1 · Título'),
+                        Textarea::make('card1_body_en')->label('Tarjeta 1 · Texto')->rows(2),
+                        TextInput::make('card2_label_en')->label('Tarjeta 2 · Etiqueta'),
+                        TextInput::make('card2_title_en')->label('Tarjeta 2 · Título'),
+                        Textarea::make('card2_body_en')->label('Tarjeta 2 · Texto')->rows(2),
+                        TextInput::make('card3_label_en')->label('Tarjeta 3 · Etiqueta'),
+                        TextInput::make('card3_title_en')->label('Tarjeta 3 · Título'),
+                        Textarea::make('card3_body_en')->label('Tarjeta 3 · Texto')->rows(2),
+
+                        // Cita
+                        Textarea::make('quote_text_en')->label('Cita · Texto')->rows(3)->helperText($this->enfasisHint()),
+                        TextInput::make('quote_attr_en')->label('Cita · Autor'),
+
+                        // Únete
+                        TextInput::make('join_label_en')->label('Únete · Etiqueta'),
+                        Textarea::make('join_heading_en')->label('Únete · Encabezado')->rows(2)->helperText($this->enfasisHint()),
+                        Textarea::make('join_body_en')->label('Únete · Texto')->rows(3),
+                        TextInput::make('join_cta_en')->label('Únete · Botón principal'),
+                        TextInput::make('join_note_en')->label('Únete · Nota'),
+                        TextInput::make('join_tog1_en')->label('Únete · Opción 1'),
+                        TextInput::make('join_tog2_en')->label('Únete · Opción 2'),
+                        TextInput::make('join_tog3_en')->label('Únete · Opción 3'),
+
+                        // Pie
+                        TextInput::make('footer_tag_en')->label('Pie · Tagline'),
+                        TextInput::make('footer_copy_en')->label('Pie · Copyright'),
+
+                        // Membresías
+                        TextInput::make('membership_eyebrow_en')->label('Membresías · Antetítulo'),
+                        TextInput::make('membership_title_en')->label('Membresías · Título'),
+                        Textarea::make('membership_body_en')->label('Membresías · Introducción')->rows(3),
+                        TextInput::make('membership_individual_title_en')->label('Membresías · Título grupo · Talento'),
+                        TextInput::make('membership_studio_title_en')->label('Membresías · Título grupo · Estudios'),
+                        TextInput::make('membership_note_en')->label('Membresías · Nota al pie'),
+
+                        // Legales EN (título y updated; cuerpo se mantiene en ES por jurisdicción mexicana)
+                        TextInput::make('legal_privacy_title_en')->label('Aviso de Privacidad · Título (EN)'),
+                        TextInput::make('legal_privacy_updated_en')->label('Aviso de Privacidad · Fecha/nota (EN)'),
+                        TextInput::make('legal_terms_title_en')->label('Términos y Condiciones · Título (EN)'),
+                        TextInput::make('legal_terms_updated_en')->label('Términos y Condiciones · Fecha/nota (EN)'),
+                    ]),
+
                     Tabs\Tab::make('Legales')->icon('heroicon-o-scale')->schema([
                         TextInput::make('legal_privacy_title')->label('Aviso de Privacidad · Título'),
                         TextInput::make('legal_privacy_updated')->label('Aviso de Privacidad · Fecha/nota'),
