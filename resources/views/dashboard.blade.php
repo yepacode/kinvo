@@ -1,6 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Hola, :name', ['name' => \Illuminate\Support\Str::before(auth()->user()->name, ' ')]) }}</h2>
+        @php
+            // Si el usuario capturó su nombre con salutación (Sr., Sra., Ing., Dr., Mtra.),
+            // saltamos esa primera palabra para saludar por su nombre real.
+            $palabras = preg_split('/\s+/', trim(auth()->user()->name));
+            $primera = $palabras[0] ?? '';
+            $saltar = ['Sr.', 'Sra.', 'Srta.', 'Ing.', 'Dr.', 'Dra.', 'Lic.', 'Mtro.', 'Mtra.', 'Mr.', 'Mrs.', 'Ms.'];
+            $primerNombre = (in_array($primera, $saltar, true) && count($palabras) > 1) ? $palabras[1] : $primera;
+        @endphp
+        <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Hola, :name', ['name' => $primerNombre]) }}</h2>
     </x-slot>
 
     <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
