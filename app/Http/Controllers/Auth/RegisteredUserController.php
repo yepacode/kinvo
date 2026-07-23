@@ -85,24 +85,18 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        // Correo de bienvenida. Cambios importantes vs. la implementación anterior:
-        //
-        //  - Antes se usaba ->send($mailable) sobre un ShouldQueue. En la práctica
-        //    se comporta como ->queue(), pero cuando el mailable implementa
-        //    SerializesModels y el worker corre ANTES de que la transacción del
-        //    registro haya sido committeada, el job intenta cargar el user y
-        //    falla con ModelNotFoundException. El correo nunca llega.
-        //  - ->afterCommit() difiere la publicación del job hasta que TODAS las
-        //    transacciones abiertas se commiten. Así el worker siempre encuentra
-        //    al usuario.
-        //  - report($e) manda el error al canal de log configurado en vez de
-        //    tragarlo con Log::warning, para que se vea en producción.
+        // Correo de bienvenida: SÍNCRONO (Mail::send, no queue).
+        // En Hostinger compartido la cola requiere un cron cada minuto y
+        // 'queue:work --stop-when-empty'. Cuando ese cron falla o no está,
+        // los correos encolados nunca salen. El SMTP responde en <2 s, así
+        // que enviar en el mismo request no afecta la UX del registro.
+        // report($e) manda el error real al log (canal STACK) si SMTP falla.
         try {
-            $mailable = ($rol === RolUsuario::Contractor
+            $mailable = $rol === RolUsuario::Contractor
                 ? new BienvenidaEstudio($user)
-                : new BienvenidaTalento($user))->afterCommit();
+                : new BienvenidaTalento($user);
 
-            Mail::to($user->email)->queue($mailable);
+            Mail::to($user->email)->send($mailable);
         } catch (\Throwable $e) {
             report($e);
         }

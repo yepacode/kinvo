@@ -5,13 +5,18 @@ namespace App\Mail;
 use App\Models\Contact;
 use App\Models\ProfessionalProfile;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class NuevoContacto extends Mailable implements ShouldQueue
+/**
+ * Envío SÍNCRONO (no ShouldQueue). En Hostinger compartido la cola
+ * depende de un cron + queue:work --stop-when-empty, que a veces falla
+ * o no está bien configurado. Enviamos directo en el request para que
+ * el correo llegue seguro; SMTP responde en ~1-2 s.
+ */
+class NuevoContacto extends Mailable
 {
     use Queueable, SerializesModels;
 

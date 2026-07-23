@@ -115,10 +115,10 @@ class RegistrationTest extends TestCase
             'acepta_legales' => '1',
         ]);
 
-        Mail::assertQueued(BienvenidaTalento::class, function ($mail) {
+        Mail::assertSent(BienvenidaTalento::class, function ($mail) {
             return $mail->hasTo('coach.mail@example.com');
         });
-        Mail::assertNotQueued(BienvenidaEstudio::class);
+        Mail::assertNotSent(BienvenidaEstudio::class);
     }
 
     public function test_registro_de_estudio_envia_correo_de_bienvenida(): void
@@ -134,10 +134,10 @@ class RegistrationTest extends TestCase
             'acepta_legales' => '1',
         ]);
 
-        Mail::assertQueued(BienvenidaEstudio::class, function ($mail) {
+        Mail::assertSent(BienvenidaEstudio::class, function ($mail) {
             return $mail->hasTo('gym.mail@example.com');
         });
-        Mail::assertNotQueued(BienvenidaTalento::class);
+        Mail::assertNotSent(BienvenidaTalento::class);
     }
 
     public function test_fallo_del_correo_no_rompe_el_registro(): void

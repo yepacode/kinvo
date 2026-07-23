@@ -77,7 +77,7 @@ class ContactoTest extends TestCase
             'estado' => EstadoContacto::NoLeido->value,
         ]);
 
-        Mail::assertQueued(NuevoContacto::class); // el correo va en cola, no síncrono
+        Mail::assertSent(NuevoContacto::class); // envío síncrono
     }
 
     public function test_contacto_se_guarda_aunque_el_correo_falle(): void
@@ -180,7 +180,7 @@ class ContactoTest extends TestCase
         }
 
         $this->assertSame(1, $profile->contacts()->count());
-        Mail::assertQueued(NuevoContacto::class, 1);
+        Mail::assertSent(NuevoContacto::class, 1);
     }
 
     public function test_bandeja_del_profesional_no_expone_email_ni_telefono(): void

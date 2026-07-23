@@ -151,14 +151,14 @@ class ContactController extends Controller
 
         $professionalProfile->loadMissing('user');
 
-        // Aviso por correo al profesional y al owner. El mailable está en cola
-        // (ShouldQueue), así que NO se conecta al SMTP durante la petición.
-        // Además va en try/catch: si el correo/cola falla, el contacto YA quedó
-        // guardado y el usuario ve el "enviado" — nunca un 500.
+        // Aviso por correo al profesional y al owner. Envío SÍNCRONO — en
+        // Hostinger compartido la cola no es confiable. try/catch garantiza
+        // que si SMTP falla, el contacto YA quedó guardado y el usuario ve
+        // el "enviado" — nunca un 500.
         try {
             Mail::to($professionalProfile->user->email)
                 ->cc(config('mail.owner_address', 'hola@gokinvoo.com'))
-                ->queue(new NuevoContacto($contact, $professionalProfile));
+                ->send(new NuevoContacto($contact, $professionalProfile));
         } catch (\Throwable $e) {
             report($e);
         }

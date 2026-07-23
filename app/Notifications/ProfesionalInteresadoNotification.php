@@ -3,8 +3,6 @@
 namespace App\Notifications;
 
 use App\Models\Contact;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
@@ -14,13 +12,12 @@ use Illuminate\Support\Str;
  * en su bandeja. Va al owner de Kinvoo por dos canales:
  *  - database  → campanita en el panel + resource "Contactos"
  *  - mail      → aviso a hola@gokinvoo.com para gestionar la conexión
- * El correo va en cola (ShouldQueue) para no bloquear el request; si el mailer
- * está caído la notificación database sigue quedando registrada.
+ * Envío SÍNCRONO (sin ShouldQueue). En Hostinger compartido la cola no
+ * es confiable; enviamos directo en el request. El sender ya envuelve
+ * la llamada en try/catch, así que un fallo SMTP no rompe el flujo.
  */
-class ProfesionalInteresadoNotification extends Notification implements ShouldQueue
+class ProfesionalInteresadoNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(public Contact $contact) {}
 
     public function via(object $notifiable): array
