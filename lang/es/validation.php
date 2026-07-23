@@ -127,7 +127,7 @@ return [
         'mixed' => 'La contraseña debe contener al menos una mayúscula y una minúscula.',
         'numbers' => 'La contraseña debe contener al menos un número.',
         'symbols' => 'La contraseña debe contener al menos un símbolo.',
-        'uncompromised' => 'La contraseña ingresada apareció en una filtración de datos. Elige una contraseña distinta.',
+        'uncompromised' => 'Esa contraseña apareció en filtraciones públicas de otros sitios web (no es tu culpa). Elige otra distinta — puedes combinar palabras, números y símbolos, por ejemplo: Kinv00_2026!',
     ],
     'present' => 'El campo :attribute debe estar presente.',
     'present_if' => 'El campo :attribute debe estar presente cuando :other es :value.',
