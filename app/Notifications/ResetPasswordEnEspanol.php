@@ -10,18 +10,17 @@ use Illuminate\Notifications\Messages\MailMessage;
  * que respete el locale del usuario. La versión base usa strings inglés
  * pasados por `Lang::get()`, pero no están en nuestros JSON de idioma,
  * así que caían al inglés incluso para usuarios ES.
+ *
+ * El locale NO se aplica en el MailMessage (que en Laravel 12 no expone
+ * `->locale()`), sino que la Notification honra automáticamente el
+ * `preferredLocale()` del notifiable — User implementa HasLocalePreference
+ * y devuelve 'es' o 'en' según la preferencia persistida.
  */
 class ResetPasswordEnEspanol extends BaseResetPassword
 {
     public function toMail($notifiable): MailMessage
     {
-        // Locale del usuario si implementa HasLocalePreference, si no, cae al app locale.
-        $locale = method_exists($notifiable, 'preferredLocale')
-            ? $notifiable->preferredLocale()
-            : app()->getLocale();
-
         return (new MailMessage())
-            ->locale($locale)
             ->subject(__('Restablece tu contraseña de Kinvoo'))
             ->greeting(__('Hola'))
             ->line(__('Recibiste este correo porque solicitaste restablecer la contraseña de tu cuenta.'))
