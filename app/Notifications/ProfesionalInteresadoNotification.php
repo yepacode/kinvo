@@ -44,8 +44,11 @@ class ProfesionalInteresadoNotification extends Notification
     {
         $this->contact->loadMissing(['professionalProfile.user']);
 
-        $profesional = $this->contact->professionalProfile->user->name ?? 'Un profesional';
-        $estudio = $this->contact->contact_name;
+        // Null-safe en toda la cadena: si el profesional o su perfil fueron
+        // eliminados entre la creación del contacto y este render, el correo
+        // aún sale — sólo se pierde el nombre.
+        $profesional = $this->contact->professionalProfile?->user?->name ?? 'Un profesional';
+        $estudio = $this->contact->contact_name ?: 'Un estudio';
 
         return (new MailMessage)
             ->subject('Conexión pendiente en Kinvoo · '.$profesional.' quiere conectar con '.$estudio)
@@ -53,7 +56,7 @@ class ProfesionalInteresadoNotification extends Notification
             ->line($profesional.' marcó "Me interesa, conéctame" en la bandeja de contactos.')
             ->line('Quiere que hagamos el puente con **'.$estudio.'**.')
             ->line('Mensaje original del estudio:')
-            ->line('> '.Str::limit($this->contact->message, 300))
+            ->line('> '.Str::limit((string) $this->contact->message, 300))
             ->action('Ver en el panel', url(route('filament.admin.resources.contacts.index', absolute: false)))
             ->line('Recuerda cerrar la conexión y avisar a ambas partes por su canal habitual.');
     }
