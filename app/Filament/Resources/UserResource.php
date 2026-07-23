@@ -161,6 +161,7 @@ class UserResource extends Resource
                     ->formatStateUsing(fn (EstadoUsuario $state) => $state->label())
                     ->color(fn (EstadoUsuario $state) => match ($state) {
                         EstadoUsuario::Pendiente => 'warning',
+                        EstadoUsuario::PerfilPendiente => 'warning',
                         EstadoUsuario::Activo => 'success',
                         EstadoUsuario::Suspendido => 'danger',
                     }),
@@ -188,6 +189,7 @@ class UserResource extends Resource
                     ->label('Estado')
                     ->options([
                         EstadoUsuario::Pendiente->value => 'Pendiente',
+                        EstadoUsuario::PerfilPendiente->value => 'Perfil en revisión',
                         EstadoUsuario::Activo->value => 'Activo',
                         EstadoUsuario::Suspendido->value => 'Suspendido',
                     ]),
@@ -214,20 +216,48 @@ class UserResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()->label('Ver'),
+                // Primera aprobación — solo aparece sobre cuentas recién registradas.
+                // Profesional: activa la cuenta y publica su perfil (única aprobación).
+                // Contratista: activa la cuenta pero deja el perfil de empresa
+                // en revisión pendiente (2ª aprobación necesaria; ver acción de abajo).
                 Tables\Actions\Action::make('aprobar')
-                    ->label('Aprobar')
+                    ->label(fn (User $u) => $u->esContratante() ? 'Aprobar cuenta' : 'Aprobar')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->modalHeading('Aprobar cuenta')
-                    ->modalDescription('El usuario podrá iniciar sesión y su perfil se publicará para que aparezca en el buscador. Esta acción envía una notificación de bienvenida.')
+                    ->modalHeading(fn (User $u) => $u->esContratante() ? 'Aprobar cuenta del contratista' : 'Aprobar cuenta')
+                    ->modalDescription(fn (User $u) => $u->esContratante()
+                        ? 'Revisa que su membresía esté vigente. El contratista podrá iniciar sesión y llenar su perfil de empresa. Cuando lo termine y lo envíe, deberás aprobar el perfil por segunda vez para publicarlo.'
+                        : 'El usuario podrá iniciar sesión y su perfil se publicará para que aparezca en el buscador. Esta acción envía una notificación de bienvenida.')
                     ->modalSubmitActionLabel('Aprobar')
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Pendiente)
                     ->action(function (User $u) {
+                        if ($u->esContratante()) {
+                            $u->forceFill(['estado' => EstadoUsuario::PerfilPendiente])->save();
+                            $u->notify(new \App\Notifications\CuentaAprobadaContratanteNotification());
+                            return;
+                        }
+
+                        // Profesional: aprobación única — activa y publica perfil.
                         $u->forceFill(['estado' => EstadoUsuario::Activo])->save();
-                        // Aprobación única: aprobar la cuenta también publica el perfil profesional.
                         $u->professionalProfile?->update(['is_published' => true]);
                         $u->notify(new \App\Notifications\CuentaAprobadaNotification());
+                    }),
+                // Segunda aprobación — solo aparece sobre contratistas con estado
+                // PerfilPendiente: ya llenaron su perfil de empresa y esperan
+                // la revisión final para que sea visible en /estudio/{slug}.
+                Tables\Actions\Action::make('aprobar_perfil_empresa')
+                    ->label('Aprobar perfil de empresa')
+                    ->icon('heroicon-o-shield-check')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Aprobar perfil de empresa')
+                    ->modalDescription('Revisa que los datos del perfil (nombre del estudio, contacto, dirección, multimedia) estén correctos. Al aprobar, el perfil quedará visible en el directorio y el contratista podrá usar el buscador de talento.')
+                    ->modalSubmitActionLabel('Aprobar perfil')
+                    ->visible(fn (User $u) => $u->esContratante() && $u->estado === EstadoUsuario::PerfilPendiente)
+                    ->action(function (User $u) {
+                        $u->forceFill(['estado' => EstadoUsuario::Activo])->save();
+                        $u->notify(new \App\Notifications\PerfilEmpresaAprobadoNotification());
                     }),
                 Tables\Actions\Action::make('rechazar')
                     ->label('Rechazar')

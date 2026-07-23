@@ -43,8 +43,10 @@ Route::middleware(['auth', 'cuenta.activa', 'acceso.directorio', 'nocache'])->gr
 });
 
 // Perfil del estudio — privado: solo usuarios autenticados (no público general).
+// El perfil de estudio también es privado: solo contratantes con membresía y
+// admin lo ven. Cliente pidió que "los perfiles no sean públicos para nadie".
 Route::get('/estudio/{companyProfile:slug}', [CompanyProfileController::class, 'show'])
-    ->middleware(['auth', 'cuenta.activa', 'nocache'])->name('estudio.show');
+    ->middleware(['auth', 'cuenta.activa', 'acceso.directorio', 'nocache'])->name('estudio.show');
 
 // Aviso de cuenta pendiente/suspendida (no pasa por el gate de estado).
 Route::get('/cuenta/pendiente', function () {

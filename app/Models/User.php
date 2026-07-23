@@ -102,6 +102,16 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     }
 
     /**
+     * Contratistas: cuenta aprobada pero perfil de empresa aún NO revisado
+     * por Kinvoo. Puede llenar/editar su perfil, pero no ver el directorio.
+     * Ver EstadoUsuario para el flujo completo.
+     */
+    public function tienePerfilPendiente(): bool
+    {
+        return $this->estado === EstadoUsuario::PerfilPendiente;
+    }
+
+    /**
      * Idioma preferido — usado por Laravel Mail y Notifications para procesar
      * correos en el idioma del receptor aunque la cola se ejecute más tarde
      * (después de que la sesión web / cookie del usuario ya no exista).
@@ -215,12 +225,17 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             return route('filament.admin.pages.dashboard', absolute: $absolute);
         }
 
+        // Contratista en PerfilPendiente: cuenta OK pero perfil aún en revisión.
+        // Su siguiente paso natural es llenar el perfil de empresa.
+        if ($this->esContratante() && $this->tienePerfilPendiente()) {
+            return route('company.profile.edit', absolute: $absolute);
+        }
+
         // Aprobación activada: mientras no esté activo, va al aviso de cuenta pendiente.
         if (! $this->estaActivo()) {
             return route('account.pending', absolute: $absolute);
         }
 
-        // Áreas por rol (buscador del contratante y panel del profesional llegan en F3/F4).
         return route('dashboard', absolute: $absolute);
     }
 }

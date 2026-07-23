@@ -66,12 +66,12 @@ class LocaleSwitchTest extends TestCase
     public function test_password_uncompromised_usa_genero_femenino_correcto(): void
     {
         // Regresión reportada por el cliente: salía "El contraseña ingresado
-        // apareció... Elige un contraseña distinto." La regla `uncompromised`
-        // sólo aplica a contraseñas, así que hardcodeamos el género femenino.
+        // apareció... Elige un contraseña distinto." Además pidió mensaje
+        // amable (14-jul): el texto ahora explica que la contraseña salió en
+        // filtraciones públicas ("no es tu culpa") y sugiere un ejemplo.
         $mensaje = trans('validation.password.uncompromised');
 
-        $this->assertStringContainsString('La contraseña', $mensaje);
-        $this->assertStringContainsString('ingresada', $mensaje);
+        $this->assertStringContainsString('contraseña', $mensaje);
         $this->assertStringContainsString('distinta', $mensaje);
         $this->assertStringNotContainsString('El :attribute', $mensaje);
         $this->assertStringNotContainsString('un :attribute', $mensaje);

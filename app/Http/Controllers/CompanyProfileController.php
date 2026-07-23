@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EstadoUsuario;
+use App\Enums\RolUsuario;
 use App\Models\CompanyProfile;
+use App\Models\User;
+use App\Notifications\PerfilEmpresaEnviadoNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -138,6 +142,24 @@ class CompanyProfileController extends Controller
         }
 
         $profile->save();
+
+        // Doble aprobación del contratista (Flujo 22-jul del cliente): si el
+        // usuario aún está en PerfilPendiente, avisamos a los admins de la 2ª
+        // revisión. El correo es opcional (queued dentro de la Notification);
+        // envolvemos en try/catch para que un fallo NO rompa el flujo del usuario.
+        if ($user->tienePerfilPendiente()) {
+            try {
+                $admins = User::query()
+                    ->where('nivel', RolUsuario::Admin)
+                    ->where('estado', EstadoUsuario::Activo)
+                    ->get();
+                foreach ($admins as $admin) {
+                    $admin->notify(new PerfilEmpresaEnviadoNotification($user));
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
 
         // Paso 3: avanza a la confirmación (arregla la "página estática" al guardar).
         return redirect()->route('company.enviado');
