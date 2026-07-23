@@ -364,8 +364,13 @@ footer {
   .float-data { left: 1.5rem; bottom: 1.5rem; }
   .nav-mobile { display: flex; gap: 1.3rem; align-items: center; }
 }
+/* x-cloak evita el "flash" del menú abierto antes de que Alpine hidrate. */
+[x-cloak] { display: none !important; }
 @endverbatim
 </style>
+
+{{-- Alpine.js — necesario para el dropdown del selector de idioma. --}}
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
 </head>
 <body>
 
