@@ -34,7 +34,15 @@ class UserResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getEloquentQuery()->where('estado', EstadoUsuario::Pendiente->value)->count() ?: null;
+        // Cuenta las dos revisiones pendientes: cuentas recién registradas
+        // (Pendiente) y perfiles de contratista listos para 2ª revisión
+        // (PerfilPendiente). Ver EstadoUsuario para el flujo completo.
+        return static::getEloquentQuery()
+            ->whereIn('estado', [
+                EstadoUsuario::Pendiente->value,
+                EstadoUsuario::PerfilPendiente->value,
+            ])
+            ->count() ?: null;
     }
 
     public static function getNavigationBadgeColor(): ?string
