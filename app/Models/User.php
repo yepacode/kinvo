@@ -211,6 +211,56 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             ->exists();
     }
 
+    // ============================================================
+    // Fase 2 · Relaciones nuevas (pagos, ofertas, expediente, equipo)
+    // ============================================================
+
+    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /** Ofertas publicadas por el contratante. */
+    public function offers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Offer::class, 'contractor_user_id');
+    }
+
+    /** Postulaciones del profesional. */
+    public function applications(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Application::class, 'professional_user_id');
+    }
+
+    /** Entradas del expediente del coach. */
+    public function wellnessEntries(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WellnessEntry::class, 'professional_user_id');
+    }
+
+    /** Miembros del equipo (del contratante). */
+    public function teamMembers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TeamMember::class, 'contractor_user_id');
+    }
+
+    /** Membresías donde el profesional es parte del equipo de un estudio. */
+    public function membershipsInTeams(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TeamMember::class, 'professional_user_id');
+    }
+
+    /** ¿Es cuenta de demostración (Fase 2)? Emails con prefijo demo.f2.* */
+    public function esDemoFase2(): bool
+    {
+        return str_starts_with((string) $this->email, 'demo.f2.');
+    }
+
     public function companyProfile(): HasOne
     {
         return $this->hasOne(CompanyProfile::class);
