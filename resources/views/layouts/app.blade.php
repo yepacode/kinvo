@@ -10,6 +10,7 @@
         @include('partials.head-assets')
     </head>
     <body class="font-sans text-ink antialiased">
+        @include('partials.demo-banner')
         <div class="min-h-screen">
             @include('layouts.navigation')
 
