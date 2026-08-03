@@ -4,15 +4,19 @@ use App\Http\Controllers\Billing\CheckoutController;
 use App\Http\Controllers\Billing\WebhookController;
 use App\Http\Controllers\CompanyProfileController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ContentController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MembresiaController;
+use App\Http\Controllers\OfferController;
 use App\Http\Controllers\ProfessionalProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SaveController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\TalentoController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\WellnessController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -134,5 +138,35 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
 // Webhook público (sin auth, la firma HMAC lo protege).
 Route::post('/webhooks/billing', [WebhookController::class, 'handle'])
     ->name('billing.webhook');
+
+// ============================================================
+// Fase 2 · Hito 3 — Producto y bolsa de trabajo
+// ============================================================
+Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
+    // Bolsa de trabajo (2.10)
+    Route::get('/ofertas', [OfferController::class, 'index'])->name('ofertas.index');
+    Route::get('/ofertas/{offer:slug}', [OfferController::class, 'show'])->name('ofertas.show');
+    Route::post('/ofertas/{offer:slug}/postular', [OfferController::class, 'postular'])
+        ->middleware('throttle:6,1')->name('ofertas.postular');
+    Route::get('/mis-postulaciones', [OfferController::class, 'misPostulaciones'])->name('ofertas.mis-postulaciones');
+    Route::get('/mis-ofertas', [OfferController::class, 'misOfertas'])->name('ofertas.mis-ofertas');
+    Route::post('/postulaciones/{application}/estado', [OfferController::class, 'cambiarEstado'])
+        ->name('ofertas.postulacion.estado');
+
+    // Contenido (2.9)
+    Route::get('/contenido', [ContentController::class, 'index'])->name('contenido.index');
+    Route::get('/contenido/{content:slug}', [ContentController::class, 'show'])->name('contenido.show');
+
+    // Expediente coach (2.11)
+    Route::get('/mi-expediente', [WellnessController::class, 'index'])->name('expediente.index');
+
+    // Equipo estudio (2.12) + Panel impacto (2.13)
+    Route::get('/mi-equipo', [TeamController::class, 'index'])->name('equipo.index');
+    Route::post('/mi-equipo/invitar', [TeamController::class, 'invitar'])
+        ->middleware('throttle:10,1')->name('equipo.invitar');
+    Route::post('/mi-equipo/{miembro}/remover', [TeamController::class, 'remover'])->name('equipo.remover');
+    Route::post('/invitaciones/{miembro}/aceptar', [TeamController::class, 'aceptar'])->name('equipo.aceptar');
+    Route::post('/invitaciones/{miembro}/rechazar', [TeamController::class, 'rechazar'])->name('equipo.rechazar');
+});
 
 require __DIR__.'/auth.php';
