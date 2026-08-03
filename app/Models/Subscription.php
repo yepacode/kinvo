@@ -8,6 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subscription extends Model
 {
+    use \App\Models\Concerns\Auditable;
+
+    /** Solo rastreamos cambios de estado y cancelación en AuditLog. */
+    protected function auditableAttributes(): array
+    {
+        return ['status', 'canceled_at', 'plan_id', 'current_period_end'];
+    }
+
     /** Estados alineados con Stripe: mismo vocabulario para no confundir al integrar. */
     public const STATUS_INCOMPLETE = 'incomplete';
     public const STATUS_TRIALING   = 'trialing';

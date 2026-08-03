@@ -62,10 +62,29 @@
                                 </p>
                             @endif
 
-                            <a href="{{ route('register') }}"
-                               class="mt-6 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition {{ $plan->destacado ? 'bg-sage text-cream hover:bg-ink' : 'border border-line text-ink hover:border-sage hover:text-sage' }}">
-                                {{ __('Únete') }}
-                            </a>
+                            @php
+                                $user = auth()->user();
+                                $planIndividual = $plan->audiencia === 'individual';
+                                $planEstudio = $plan->audiencia === 'estudio';
+                                $puedeSuscribirse = $user
+                                    && (($planIndividual && $user->esProfesional())
+                                     || ($planEstudio && $user->esContratante()));
+                            @endphp
+
+                            @if ($puedeSuscribirse)
+                                <form method="POST" action="{{ route('billing.start', $plan) }}" class="mt-6">
+                                    @csrf
+                                    <button type="submit"
+                                            class="w-full inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition {{ $plan->destacado ? 'bg-sage text-cream hover:bg-ink' : 'border border-line text-ink hover:border-sage hover:text-sage' }}">
+                                        {{ __('Suscribirme') }}
+                                    </button>
+                                </form>
+                            @else
+                                <a href="{{ $user ? route('dashboard') : route('register') }}"
+                                   class="mt-6 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition {{ $plan->destacado ? 'bg-sage text-cream hover:bg-ink' : 'border border-line text-ink hover:border-sage hover:text-sage' }}">
+                                    {{ $user ? __('Este plan no es para tu tipo de cuenta') : __('Únete') }}
+                                </a>
+                            @endif
                         </div>
                     @endforeach
                 </div>

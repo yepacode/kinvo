@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Billing\CheckoutController;
+use App\Http\Controllers\Billing\WebhookController;
 use App\Http\Controllers\CompanyProfileController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\LegalController;
@@ -109,5 +111,28 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
     Route::post('/talento/{professionalProfile:slug}/guardar', [SaveController::class, 'toggleProfile'])
         ->middleware('acceso.directorio')->name('saves.toggleProfile');
 });
+
+// ============================================================
+// Fase 2 · Billing (checkout, webhook, fake sandbox)
+// ============================================================
+Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
+    Route::post('/suscripcion/{plan}', [CheckoutController::class, 'start'])
+        ->middleware('throttle:6,1')
+        ->name('billing.start');
+    Route::get('/suscripcion/exitosa', [CheckoutController::class, 'exitosa'])
+        ->name('billing.exitosa');
+    Route::get('/suscripcion/fallida', [CheckoutController::class, 'fallida'])
+        ->name('billing.fallida');
+
+    // Fake gateway solo — pantalla de simulación de pago.
+    Route::get('/billing/fake-checkout/{token}', [CheckoutController::class, 'fakeCheckout'])
+        ->name('billing.fake.checkout');
+    Route::post('/billing/fake-checkout/{token}/confirmar', [CheckoutController::class, 'fakeConfirm'])
+        ->name('billing.fake.confirm');
+});
+
+// Webhook público (sin auth, la firma HMAC lo protege).
+Route::post('/webhooks/billing', [WebhookController::class, 'handle'])
+    ->name('billing.webhook');
 
 require __DIR__.'/auth.php';
