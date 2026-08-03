@@ -75,6 +75,12 @@ class TeamController extends Controller
         );
 
         AuditLog::record($user, $tm, 'invited');
+
+        // Notif al profesional invitado (campana).
+        try {
+            $profesional->notify(new \App\Notifications\InvitacionEquipoNotification($tm));
+        } catch (\Throwable $e) { report($e); }
+
         return back()->with('status', 'invitacion-enviada');
     }
 

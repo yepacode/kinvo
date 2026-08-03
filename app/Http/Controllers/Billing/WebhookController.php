@@ -112,6 +112,14 @@ class WebhookController extends Controller
 
         AuditLog::record(null, $user, 'payment_succeeded', new: ['provider_payment_id' => $providerPaymentId]);
 
+        // Notif in-app (campana) al user.
+        $payment = Payment::where('provider_payment_id', $providerPaymentId)->first();
+        if ($payment) {
+            try {
+                $user->notify(new \App\Notifications\CobroExitosoNotification($payment));
+            } catch (\Throwable $e) { report($e); }
+        }
+
         try {
             Mail::to($user->email)->send(new AvisoCobroExitoso($user, $sub));
         } catch (\Throwable $e) { report($e); }

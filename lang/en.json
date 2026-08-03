@@ -424,5 +424,48 @@
     "Talento": "Talent",
     ":name aceptó tu contacto.": ":name accepted your contact.",
     "Kinvoo te contactará por correo para hacer el puente.": "Kinvoo will email you to build the bridge.",
-    "Kinvoo ya lo sabe. Nos comunicamos con el estudio y en breve haremos el puente contigo.": "Kinvoo knows. We're reaching out to the studio and will build the bridge shortly."
+    "Kinvoo ya lo sabe. Nos comunicamos con el estudio y en breve haremos el puente contigo.": "Kinvoo knows. We're reaching out to the studio and will build the bridge shortly.",
+
+    "Recibimos tu pago — Kinvoo": "We received your payment — Kinvoo",
+    "Tu cobro no se pudo completar — Kinvoo": "Your payment could not be processed — Kinvoo",
+    "Tu renovación de Kinvoo se acerca": "Your Kinvoo renewal is coming up",
+    "Tu membresía Kinvoo venció": "Your Kinvoo membership has ended",
+    "Confirmación de baja — Kinvoo": "Cancellation confirmation — Kinvoo",
+
+    "¡Recibimos tu pago!": "We received your payment!",
+    "Hola :name,": "Hi :name,",
+    "Tu suscripción a Kinvoo quedó activa.": "Your Kinvoo subscription is now active.",
+    "Plan": "Plan",
+    "Próxima renovación": "Next renewal",
+    "Puedes revisar tu historial de pagos y suscripciones en tu panel:": "You can review your payment history and subscriptions in your dashboard:",
+    "Ir a mi panel": "Go to my dashboard",
+    "Gracias por seguir con Kinvoo.": "Thanks for staying with Kinvoo.",
+
+    "Tu cobro no se pudo completar": "Your payment could not be processed",
+    "Intentamos cobrar tu suscripción a Kinvoo pero la pasarela rechazó el pago. Esto suele deberse a fondos insuficientes, tarjeta vencida o un bloqueo temporal del banco.": "We tried to charge your Kinvoo subscription but the payment gateway rejected it. This is usually due to insufficient funds, an expired card, or a temporary bank block.",
+    "Vamos a reintentar el cobro automáticamente en las próximas 24-72 horas. Si prefieres actualizar tu tarjeta ahora, puedes hacerlo en tu panel:": "We'll automatically retry the charge over the next 24-72 hours. If you'd rather update your card now, you can do it in your dashboard:",
+    "Actualizar mi método de pago": "Update my payment method",
+    "Cualquier duda, escríbenos.": "Any questions, write to us.",
+
+    "Tu renovación se acerca": "Your renewal is coming up",
+    "Tu suscripción a Kinvoo se renueva el :date. El cobro se hará automáticamente con tu método de pago registrado.": "Your Kinvoo subscription renews on :date. The charge will be made automatically with your registered payment method.",
+    "Si quieres pausar o cancelar antes de la renovación, puedes hacerlo desde tu panel:": "If you'd like to pause or cancel before the renewal, you can do it from your dashboard:",
+
+    "Tu membresía venció": "Your membership has ended",
+    "Tu membresía de Kinvoo llegó a su fecha de vencimiento y no pudimos cobrar la renovación después de varios intentos.": "Your Kinvoo membership has reached its expiration date and we couldn't charge the renewal after several attempts.",
+    "Puedes reactivarla en cualquier momento eligiendo un plan:": "You can reactivate it any time by choosing a plan:",
+    "Ver planes disponibles": "View available plans",
+    "Nos alegra tenerte y estamos aquí cuando quieras volver.": "We're glad to have had you and we're here whenever you want to come back.",
+
+    "Cancelaste tu membresía": "You canceled your membership",
+    "Recibimos tu solicitud de baja. Tu acceso a Kinvoo se mantiene hasta el final del periodo que ya pagaste.": "We received your cancellation request. Your Kinvoo access remains until the end of the period you already paid for.",
+    "Si fue un error o quieres volver, puedes reactivar tu suscripción cuando gustes:": "If it was a mistake or you'd like to come back, you can reactivate your subscription any time:",
+    "Reactivar mi suscripción": "Reactivate my subscription",
+    "Gracias por haber sido parte de Kinvoo.": "Thanks for being part of Kinvoo.",
+
+    "Nueva postulación recibida": "New application received",
+    "Postulación aceptada": "Application accepted",
+    "Postulación rechazada": "Application declined",
+    "Te invitaron a un equipo": "You've been invited to a team",
+    "Alguien aceptó tu invitación": "Someone accepted your invitation"
 }

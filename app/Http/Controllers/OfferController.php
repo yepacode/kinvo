@@ -87,6 +87,10 @@ class OfferController extends Controller
 
         if ($app->wasRecentlyCreated) {
             AuditLog::record($user, $app, 'submitted');
+            // Notif in-app al estudio (campana). El correo lo maneja el flujo aparte.
+            try {
+                $offer->contractor?->notify(new \App\Notifications\NuevaPostulacionNotification($app));
+            } catch (\Throwable $e) { report($e); }
         }
 
         return back()->with('status', $app->wasRecentlyCreated ? 'postulacion-enviada' : 'ya-postulaste');
@@ -143,6 +147,11 @@ class OfferController extends Controller
             'notes' => $data['notes'] ?? $application->notes,
         ]);
         AuditLog::record($user, $application, 'status_changed', new: ['status' => $data['status']]);
+
+        // Notif al profesional sobre el cambio de estado.
+        try {
+            $application->professional?->notify(new \App\Notifications\PostulacionActualizadaNotification($application));
+        } catch (\Throwable $e) { report($e); }
 
         return back()->with('status', 'estado-actualizado');
     }
