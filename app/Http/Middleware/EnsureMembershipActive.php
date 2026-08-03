@@ -29,18 +29,32 @@ class EnsureMembershipActive
             return $next($request);
         }
 
-        // ¿Tiene alguna suscripción vigente? (active, trialing, past_due o
-        // canceled dentro del periodo pagado)
+        // ¿Tiene alguna suscripción vigente?
+        // - active/trialing: SÍ (independiente del period_end, que puede estar
+        //   sin llenarse durante el trial).
+        // - past_due/canceled: solo si `current_period_end` NO es null y aún
+        //   no venció. Sin este guard, una sub past_due sin period_end da
+        //   acceso permanente (Seguridad MED-2).
         $vigente = Subscription::where('user_id', $user->id)
-            ->whereIn('status', [
-                Subscription::STATUS_ACTIVE,
-                Subscription::STATUS_TRIALING,
-                Subscription::STATUS_PAST_DUE,
-                Subscription::STATUS_CANCELED,
-            ])
             ->where(function ($q) {
-                $q->whereNull('current_period_end')
-                  ->orWhere('current_period_end', '>=', now());
+                $q->where(function ($q1) {
+                    $q1->whereIn('status', [
+                        Subscription::STATUS_ACTIVE,
+                        Subscription::STATUS_TRIALING,
+                    ])
+                    ->where(function ($qq) {
+                        $qq->whereNull('current_period_end')
+                           ->orWhere('current_period_end', '>=', now());
+                    });
+                })
+                ->orWhere(function ($q2) {
+                    $q2->whereIn('status', [
+                        Subscription::STATUS_PAST_DUE,
+                        Subscription::STATUS_CANCELED,
+                    ])
+                    ->whereNotNull('current_period_end')
+                    ->where('current_period_end', '>=', now());
+                });
             })
             ->exists();
 

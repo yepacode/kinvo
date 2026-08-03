@@ -20,6 +20,12 @@ class Fase2CheckoutTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Firma un payload como lo haría la pasarela real. */
+    private function firma(string $payload): string
+    {
+        return 'sha256='.hash_hmac('sha256', $payload, (string) config('billing.webhook_secret'));
+    }
+
     private function contratante(): User
     {
         $u = User::factory()->create(['email' => 'coach.estudio@test.com']);
@@ -137,24 +143,31 @@ class Fase2CheckoutTest extends TestCase
             ],
         ]);
 
+        $headers = [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_SIGNATURE' => $this->firma($payload),
+        ];
+
         // Primera llamada al webhook: crea el pago.
         $r1 = $this->call('POST', route('billing.webhook'),
-            [], [], [], ['CONTENT_TYPE' => 'application/json'], $payload);
+            [], [], [], $headers, $payload);
         $r1->assertOk();
         $this->assertSame(1, Payment::where('provider_payment_id', 'pay_wh_test_1')->count());
 
         // Segunda llamada con el MISMO payment id: NO duplica.
         $r2 = $this->call('POST', route('billing.webhook'),
-            [], [], [], ['CONTENT_TYPE' => 'application/json'], $payload);
+            [], [], [], $headers, $payload);
         $r2->assertOk();
         $this->assertSame(1, Payment::where('provider_payment_id', 'pay_wh_test_1')->count());
     }
 
     public function test_webhook_con_firma_invalida_devuelve_400(): void
     {
-        // FakeGateway solo valida que sea JSON parseable; enviamos texto plano.
+        // Payload JSON válido pero SIN firma HMAC correcta → rechazado.
         $r = $this->call('POST', route('billing.webhook'),
-            [], [], [], ['CONTENT_TYPE' => 'application/json'], 'no es json valido {');
+            [], [], [],
+            ['CONTENT_TYPE' => 'application/json', 'HTTP_X_SIGNATURE' => 'sha256=firmafalsa'],
+            '{"type":"payment_succeeded"}');
         $r->assertStatus(400);
     }
 

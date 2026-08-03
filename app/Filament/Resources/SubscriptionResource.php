@@ -3,15 +3,14 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SubscriptionResource\Pages;
-use App\Filament\Resources\SubscriptionResource\RelationManagers;
 use App\Models\Subscription;
-use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class SubscriptionResource extends Resource
 {
@@ -29,93 +28,96 @@ class SubscriptionResource extends Resource
     public static function canEdit($record): bool { return false; }
     public static function canDelete($record): bool { return false; }
 
-    public static function form(Form $form): Form
+    public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
     {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
-                    ->required(),
-                Forms\Components\Select::make('plan_id')
-                    ->relationship('plan', 'id'),
-                Forms\Components\TextInput::make('provider')
-                    ->required(),
-                Forms\Components\TextInput::make('provider_subscription_id'),
-                Forms\Components\TextInput::make('provider_customer_id'),
-                Forms\Components\TextInput::make('status')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('current_period_start'),
-                Forms\Components\DateTimePicker::make('current_period_end'),
-                Forms\Components\DateTimePicker::make('canceled_at'),
-                Forms\Components\DateTimePicker::make('ends_at'),
-            ]);
+        return $form->schema([]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('plan.id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('provider')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('provider_subscription_id')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('provider_customer_id')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('current_period_start')
-                    ->dateTime()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('current_period_end')
-                    ->dateTime()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('canceled_at')
-                    ->dateTime()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('ends_at')
-                    ->dateTime()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Alta')
+                    ->dateTime('d/m/Y')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Cliente')
+                    ->description(fn ($record) => $record?->user?->email)
+                    ->searchable(['users.name', 'users.email'])
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('plan.nombre')
+                    ->label('Plan')
+                    ->placeholder('—'),
+                Tables\Columns\TextColumn::make('provider')
+                    ->label('Pasarela')
+                    ->badge()
+                    ->color(fn ($state) => match ($state) {
+                        'stripe' => 'info', 'mercadopago' => 'warning',
+                        'fake', 'demo' => 'gray',
+                        default => 'gray',
+                    }),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Estado')
+                    ->badge()
+                    ->color(fn ($state) => match ($state) {
+                        Subscription::STATUS_ACTIVE => 'success',
+                        Subscription::STATUS_TRIALING => 'info',
+                        Subscription::STATUS_PAST_DUE => 'warning',
+                        Subscription::STATUS_INCOMPLETE => 'gray',
+                        Subscription::STATUS_CANCELED, Subscription::STATUS_UNPAID => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        Subscription::STATUS_ACTIVE => 'Activa',
+                        Subscription::STATUS_TRIALING => 'En prueba',
+                        Subscription::STATUS_PAST_DUE => 'Morosa',
+                        Subscription::STATUS_INCOMPLETE => 'Incompleta',
+                        Subscription::STATUS_CANCELED => 'Cancelada',
+                        Subscription::STATUS_UNPAID => 'Sin pagar',
+                        default => $state ?? '—',
+                    }),
+                Tables\Columns\TextColumn::make('current_period_end')
+                    ->label('Vigente hasta')
+                    ->dateTime('d/m/Y')
                     ->sortable()
+                    ->placeholder('—'),
+                Tables\Columns\TextColumn::make('canceled_at')
+                    ->label('Cancelada el')
+                    ->dateTime('d/m/Y')
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
+                Tables\Columns\TextColumn::make('provider_subscription_id')
+                    ->label('Ref. pasarela')
+                    ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                SelectFilter::make('status')->label('Estado')->options([
+                    Subscription::STATUS_ACTIVE => 'Activa',
+                    Subscription::STATUS_TRIALING => 'En prueba',
+                    Subscription::STATUS_PAST_DUE => 'Morosa',
+                    Subscription::STATUS_INCOMPLETE => 'Incompleta',
+                    Subscription::STATUS_CANCELED => 'Cancelada',
+                    Subscription::STATUS_UNPAID => 'Sin pagar',
                 ]),
-            ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
+                SelectFilter::make('provider')->label('Pasarela')
+                    ->options(['stripe' => 'Stripe', 'mercadopago' => 'MercadoPago', 'fake' => 'Fake (dev)', 'demo' => 'Demo']),
+                Filter::make('vence')
+                    ->form([
+                        DatePicker::make('desde')->label('Vence desde'),
+                        DatePicker::make('hasta')->label('Vence hasta'),
+                    ])
+                    ->query(fn (Builder $query, array $data) => $query
+                        ->when($data['desde'] ?? null, fn ($q, $d) => $q->whereDate('current_period_end', '>=', $d))
+                        ->when($data['hasta'] ?? null, fn ($q, $d) => $q->whereDate('current_period_end', '<=', $d))),
+            ])
+            ->actions([])         // read-only: sin EditAction
+            ->bulkActions([]);    // read-only: sin DeleteBulkAction
     }
 
     public static function getPages(): array
     {
-        return [
-            'index' => Pages\ListSubscriptions::route('/'),
-            'create' => Pages\CreateSubscription::route('/create'),
-            'edit' => Pages\EditSubscription::route('/{record}/edit'),
-        ];
+        return ['index' => Pages\ListSubscriptions::route('/')];
     }
 }

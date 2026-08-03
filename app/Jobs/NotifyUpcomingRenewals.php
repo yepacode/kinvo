@@ -45,7 +45,7 @@ class NotifyUpcomingRenewals implements ShouldQueue
                 if ($yaAvisado) return;
 
                 try {
-                    Mail::to($sub->user->email)->send(new AvisoCobroProximo($sub->user, $sub));
+                    Mail::to($sub->user)->send(new AvisoCobroProximo($sub->user, $sub));
                     \App\Models\AuditLog::record(null, $sub, 'renewal_reminder_sent');
                     $enviados++;
                 } catch (\Throwable $e) { report($e); }

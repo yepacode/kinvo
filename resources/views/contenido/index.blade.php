@@ -13,7 +13,7 @@
                 @foreach ($categorias as $cat)
                     <a href="{{ route('contenido.index', ['categoria' => $cat]) }}"
                        class="rounded-full border border-line bg-white px-4 py-1.5 text-sm text-ink {{ request('categoria') === $cat ? 'border-sage text-sage' : '' }}">
-                        {{ $cat }}
+                        {{ __($cat) }}
                     </a>
                 @endforeach
             </div>
@@ -29,10 +29,10 @@
                     <a href="{{ route('contenido.show', $item->slug) }}"
                        class="block rounded-2xl border border-line bg-white p-5 transition hover:border-sage">
                         <span class="rounded-full bg-beige px-3 py-1 text-xs font-medium text-ink">
-                            {{ __(ucfirst($item->type)) }}
+                            {{ enum_label('content_type', $item->type) }}
                         </span>
                         @if ($item->category)
-                            <span class="ml-1 text-xs text-warmgray">· {{ $item->category }}</span>
+                            <span class="ml-1 text-xs text-warmgray">· {{ __($item->category) }}</span>
                         @endif
                         <h3 class="mt-3 font-serif text-lg font-medium text-ink">{{ $item->title }}</h3>
                         @if ($item->description)

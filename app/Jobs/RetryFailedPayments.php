@@ -42,7 +42,7 @@ class RetryFailedPayments implements ShouldQueue
                 if ($sub->user) {
                     $sub->user->forceFill(['membership_expires_at' => now()])->save();
                     try {
-                        Mail::to($sub->user->email)->send(new AvisoVencimientoMembresia($sub->user));
+                        Mail::to($sub->user)->send(new AvisoVencimientoMembresia($sub->user));
                     } catch (\Throwable $e) { report($e); }
                 }
                 $expiradas++;

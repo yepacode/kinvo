@@ -27,6 +27,7 @@ class InvitacionEquipoNotification extends Notification
         return [
             'tipo' => 'invitacion_equipo',
             'icono' => '🤝',
+            'team_member_id' => $this->teamMember->id,
             'titulo_key' => 'Te invitaron a un equipo',
             'titulo_params' => [],
             'mensaje_key' => ':estudio quiere sumarte a su equipo. Acéptalo o recházalo desde tus notificaciones.',

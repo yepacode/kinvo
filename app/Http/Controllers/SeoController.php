@@ -33,6 +33,18 @@ class SeoController extends Controller
             'Disallow: /login',
             'Disallow: /register',
             'Disallow: /profile',
+            // Fase 2 · áreas privadas o técnicas (no indexables)
+            'Disallow: /ofertas',
+            'Disallow: /contenido',
+            'Disallow: /mi-expediente',
+            'Disallow: /mi-equipo',
+            'Disallow: /mis-postulaciones',
+            'Disallow: /mis-ofertas',
+            'Disallow: /notificaciones',
+            'Disallow: /guardados',
+            'Disallow: /suscripcion',
+            'Disallow: /billing',
+            'Disallow: /webhooks',
             '',
             'Sitemap: '.url('/sitemap.xml'),
         ];

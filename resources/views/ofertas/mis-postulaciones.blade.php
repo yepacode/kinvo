@@ -22,7 +22,7 @@
                                     'seen' => 'bg-beige text-ink',
                                     default => 'bg-cream text-warmgray',
                                  } }}">
-                        {{ __(ucfirst(str_replace('_', ' ', $p->status))) }}
+                        {{ enum_label('application_status', $p->status) }}
                     </span>
                 </div>
                 <p class="mt-2 text-xs text-warmgray">

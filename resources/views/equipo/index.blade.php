@@ -8,7 +8,7 @@
         <section class="rounded-2xl border border-line bg-white p-6">
             <h3 class="font-serif text-lg font-medium text-ink">{{ __('Panel de impacto') }}</h3>
             <p class="mt-1 text-sm text-warmgray">{{ __('Cuidado facilitado a los miembros activos de tu equipo.') }}</p>
-            <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
                 <div class="rounded-xl border border-line/60 bg-cream/50 p-4 text-center">
                     <div class="text-2xl">🩺</div>
                     <div class="mt-2 text-2xl font-semibold text-ink">{{ $impacto['telemedicine'] }}</div>
@@ -37,14 +37,14 @@
             <h3 class="font-serif text-lg font-medium text-ink">{{ __('Agregar a alguien al equipo') }}</h3>
             @if (session('status') === 'invitacion-enviada')
                 <div class="mt-2 rounded-lg border border-sage/40 bg-sage/10 px-3 py-2 text-sm text-ink">{{ __('Invitación enviada. El profesional la verá en su panel.') }}</div>
-            @elseif (session('status') === 'profesional-no-existe')
+            @elseif (session('status') === 'profesional-no-invitable' || session('status') === 'profesional-no-existe')
                 <div class="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{{ __('No encontramos un profesional con ese correo en Kinvoo.') }}</div>
             @endif
             <form method="POST" action="{{ route('equipo.invitar') }}" class="mt-3 flex flex-wrap gap-2">
                 @csrf
                 <input type="email" name="email" required placeholder="{{ __('correo@ejemplo.com') }}"
-                       class="flex-1 min-w-64 rounded-full border border-line px-4 py-2 text-sm">
-                <button type="submit" class="rounded-full bg-sage px-5 py-2 text-sm font-semibold text-cream">{{ __('Invitar') }}</button>
+                       class="min-h-[44px] basis-full sm:basis-64 sm:flex-1 rounded-full border border-line px-4 py-2 text-sm">
+                <button type="submit" class="min-h-[44px] basis-full sm:basis-auto rounded-full bg-sage px-5 py-2 text-sm font-semibold text-cream">{{ __('Invitar') }}</button>
             </form>
         </section>
 
@@ -71,12 +71,16 @@
                                                 'declined' => 'bg-red-100 text-red-700',
                                                 default => 'bg-cream text-warmgray',
                                              } }}">
-                                    {{ __(ucfirst($tm->status)) }}
+                                    {{ enum_label('team_status', $tm->status) }}
                                 </span>
                                 @if ($tm->status !== 'removed')
-                                    <form method="POST" action="{{ route('equipo.remover', $tm) }}">
+                                    <form method="POST" action="{{ route('equipo.remover', $tm) }}"
+                                          onsubmit="return confirm('{{ __('¿Seguro que quieres quitar a este miembro?') }}');">
                                         @csrf
-                                        <button type="submit" class="text-xs text-red-600 hover:underline">{{ __('Quitar') }}</button>
+                                        <button type="submit"
+                                                class="inline-flex min-h-[44px] items-center rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+                                            {{ __('Quitar') }}
+                                        </button>
                                     </form>
                                 @endif
                             </div>

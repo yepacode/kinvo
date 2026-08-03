@@ -51,3 +51,59 @@ if (! function_exists('landing_image')) {
         return $path ? Storage::disk('public')->url($path) : asset($defaultAsset);
     }
 }
+
+if (! function_exists('enum_label')) {
+    /**
+     * Traduce un valor de enum (BD, en inglés técnico como 'in_contact', 'hibrido',
+     * 'full_time', 'month') a la etiqueta ES legible que sí existe en lang/en.json.
+     * Después la corre por __() para el switch ES/EN.
+     *
+     * Uso: {{ enum_label('modality', $offer->modality) }}
+     *      {{ enum_label('application_status', $app->status) }}
+     */
+    function enum_label(string $group, ?string $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        $mapa = [
+            'modality' => [
+                'presencial' => 'Presencial', 'online' => 'Online',
+                'remoto' => 'Online', 'hibrido' => 'Híbrido',
+            ],
+            'salary_period' => [
+                'hour' => 'Hora', 'month' => 'Mes', 'year' => 'Año', 'project' => 'Proyecto',
+            ],
+            'contract_type' => [
+                'full_time' => 'Tiempo completo', 'part_time' => 'Medio tiempo',
+                'freelance' => 'Freelance',
+            ],
+            'application_status' => [
+                'submitted' => 'Enviada', 'seen' => 'Vista',
+                'in_contact' => 'En contacto', 'accepted' => 'Aceptada',
+                'rejected' => 'Rechazada', 'withdrawn' => 'Retirada',
+            ],
+            'offer_status' => [
+                'draft' => 'Borrador', 'published' => 'Publicada',
+                'paused' => 'Pausada', 'closed' => 'Cerrada', 'expired' => 'Vencida',
+            ],
+            'content_type' => [
+                'video' => 'Video', 'document' => 'Documento',
+                'audio' => 'Audio', 'link' => 'Enlace',
+            ],
+            'team_status' => [
+                'active' => 'Activo', 'invited' => 'Invitado',
+                'declined' => 'Rechazado', 'removed' => 'Removido',
+            ],
+            'wellness_type' => [
+                'telemedicine' => 'Telemedicina', 'physio' => 'Fisioterapia',
+                'talk' => 'Charla', 'insurance' => 'Seguro', 'other' => 'Otro',
+            ],
+        ];
+
+        $etiquetaEs = $mapa[$group][$value] ?? ucfirst(str_replace('_', ' ', $value));
+
+        return __($etiquetaEs);
+    }
+}

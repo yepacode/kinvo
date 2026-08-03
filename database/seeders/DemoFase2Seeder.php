@@ -313,30 +313,29 @@ class DemoFase2Seeder extends Seeder
         // ==================================================
         // 8. Expediente de cuidado demo (8 entradas para Ana)
         // ==================================================
+        // Fechas FIJAS (no relativas a now()): la llave `occurred_on` es parte
+        // del updateOrCreate; si usara now()->subDays(N) las fechas cambiarían
+        // cada día y el seeder duplicaría entradas al re-correr.
         $expediente = [
-            [WellnessEntry::TYPE_TELEMEDICINE, now()->subMonths(2), 'Dr. Salinas', 'Consulta de rutina, todo bien.'],
-            [WellnessEntry::TYPE_PHYSIO,       now()->subMonths(1)->subDays(15), 'Fisio Roldán', 'Sesión de recuperación de hombro.'],
-            [WellnessEntry::TYPE_TALK,         now()->subMonths(1), 'Kinvoo Sessions', 'Charla: manejo del estrés en coaches.'],
-            [WellnessEntry::TYPE_INSURANCE,    now()->subMonths(6), 'GNP Salud', 'Renovación de póliza anual.'],
-            [WellnessEntry::TYPE_TELEMEDICINE, now()->subDays(20), 'Dra. Ortiz', 'Consulta nutricional.'],
-            [WellnessEntry::TYPE_PHYSIO,       now()->subDays(15), 'Fisio Roldán', 'Segunda sesión de hombro.'],
-            [WellnessEntry::TYPE_TALK,         now()->subDays(10), 'Kinvoo Sessions', 'Charla: comunidad y pertenencia.'],
-            [WellnessEntry::TYPE_TELEMEDICINE, now()->subDays(3),  'Dr. Salinas', 'Control mensual.'],
+            [WellnessEntry::TYPE_TELEMEDICINE, '2026-05-30', 'Dr. Salinas',    'Consulta de rutina, todo bien.'],
+            [WellnessEntry::TYPE_PHYSIO,       '2026-06-15', 'Fisio Roldán',   'Sesión de recuperación de hombro.'],
+            [WellnessEntry::TYPE_TALK,         '2026-06-30', 'Kinvoo Sessions','Charla: manejo del estrés en coaches.'],
+            [WellnessEntry::TYPE_INSURANCE,    '2026-01-30', 'GNP Salud',      'Renovación de póliza anual.'],
+            [WellnessEntry::TYPE_TELEMEDICINE, '2026-07-10', 'Dra. Ortiz',     'Consulta nutricional.'],
+            [WellnessEntry::TYPE_PHYSIO,       '2026-07-15', 'Fisio Roldán',   'Segunda sesión de hombro.'],
+            [WellnessEntry::TYPE_TALK,         '2026-07-20', 'Kinvoo Sessions','Charla: comunidad y pertenencia.'],
+            [WellnessEntry::TYPE_TELEMEDICINE, '2026-07-27', 'Dr. Salinas',    'Control mensual.'],
         ];
-        // Idempotencia: usamos (professional, type, occurred_on) como llave.
-        // OJO: SQLite/Postgres guardan `date` como datetime; hay que comparar
-        // con el mismo formato que hay en BD para que updateOrCreate matchee.
-        // Normalizamos a startOfDay Carbon para evitar "2026-05-30" ≠ "2026-05-30 00:00:00".
-        foreach ($expediente as [$type, $on, $provider, $notes]) {
-            $fechaNormalizada = $on->copy()->startOfDay();
+        foreach ($expediente as [$type, $fecha, $provider, $notes]) {
+            $fechaCarbon = \Illuminate\Support\Carbon::parse($fecha)->startOfDay();
             $extra = ($type === WellnessEntry::TYPE_INSURANCE)
-                ? ['valid_until' => $fechaNormalizada->copy()->addYear()]
+                ? ['valid_until' => $fechaCarbon->copy()->addYear()]
                 : [];
             WellnessEntry::updateOrCreate(
                 [
                     'professional_user_id' => $coachModels['ana']->id,
                     'type' => $type,
-                    'occurred_on' => $fechaNormalizada,
+                    'occurred_on' => $fechaCarbon,
                 ],
                 array_merge([
                     'created_by_admin_id' => $admin->id,
@@ -362,7 +361,7 @@ class DemoFase2Seeder extends Seeder
                 'joined_at' => now()->subMonths(2)->addDays(1),
             ]
         );
-        TeamMember::updateOrCreate(
+        $invitacionPedro = TeamMember::updateOrCreate(
             [
                 'contractor_user_id' => $estudioModels['aurea']->id,
                 'professional_user_id' => $coachModels['pedro']->id,
@@ -372,6 +371,18 @@ class DemoFase2Seeder extends Seeder
                 'invited_at' => now()->subDays(3),
             ]
         );
+        // Notif in-app para el demo — Pedro tiene la campanita con la invitación.
+        // Idempotente: si ya tiene una notif del mismo tipo para este mismo team
+        // member no la duplicamos.
+        $yaNotificado = $coachModels['pedro']->notifications()
+            ->where('type', \App\Notifications\InvitacionEquipoNotification::class)
+            ->get()
+            ->contains(fn ($n) => ($n->data['team_member_id'] ?? null) === $invitacionPedro->id);
+        if (! $yaNotificado) {
+            try {
+                $coachModels['pedro']->notify(new \App\Notifications\InvitacionEquipoNotification($invitacionPedro));
+            } catch (\Throwable $e) { report($e); }
+        }
         TeamMember::updateOrCreate(
             [
                 'contractor_user_id' => $estudioModels['norte']->id,

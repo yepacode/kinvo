@@ -80,8 +80,13 @@ class WebhookController extends Controller
             return;
         }
 
+        // Seguridad HIGH-3 bis: NUNCA confiar en `user_id` del payload —
+        // se debe resolver estrictamente vía la subscription conocida.
+        // Sin sub asociada, ignoramos el evento (evita crear Payments
+        // huérfanos o vincular pagos a users arbitrarios).
         $sub = Subscription::where('provider_subscription_id', $data['subscription'] ?? '')->first();
-        $user = $sub?->user ?? \App\Models\User::find($data['user_id'] ?? 0);
+        if (! $sub) return;
+        $user = $sub->user;
         if (! $user) return;
 
         Payment::create([
@@ -121,7 +126,9 @@ class WebhookController extends Controller
         }
 
         try {
-            Mail::to($user->email)->send(new AvisoCobroExitoso($user, $sub));
+            // Pasamos el modelo (no el string) para que Laravel llame preferredLocale()
+            // y el correo salga en el idioma del user aun cuando App::getLocale()='es'.
+            Mail::to($user)->send(new AvisoCobroExitoso($user, $sub));
         } catch (\Throwable $e) { report($e); }
     }
 
@@ -130,13 +137,21 @@ class WebhookController extends Controller
         $sub = Subscription::where('provider_subscription_id', $data['subscription'] ?? '')->first();
         if (! $sub) return;
 
+        // Idempotencia: si ya registramos este intento fallido, no repetimos
+        // (evita spam de correos y filas duplicadas al reintentar el webhook).
+        $providerPaymentId = $data['id'] ?? null;
+        if ($providerPaymentId
+            && Payment::where('provider_payment_id', $providerPaymentId)->exists()) {
+            return;
+        }
+
         $sub->update(['status' => Subscription::STATUS_PAST_DUE]);
 
         Payment::create([
             'user_id' => $sub->user_id,
             'subscription_id' => $sub->id,
             'provider' => $this->gateway->name(),
-            'provider_payment_id' => $data['id'] ?? null,
+            'provider_payment_id' => $providerPaymentId,
             'amount_cents' => (int) ($data['amount'] ?? 0),
             'currency' => strtoupper($data['currency'] ?? config('billing.currency', 'MXN')),
             'status' => Payment::STATUS_FAILED,
@@ -147,7 +162,7 @@ class WebhookController extends Controller
         AuditLog::record(null, $sub, 'payment_failed', new: ['status' => 'past_due']);
 
         try {
-            Mail::to($sub->user->email)->send(new AvisoCobroFallido($sub->user, $sub));
+            Mail::to($sub->user)->send(new AvisoCobroFallido($sub->user, $sub));
         } catch (\Throwable $e) { report($e); }
     }
 
@@ -169,6 +184,12 @@ class WebhookController extends Controller
     {
         $payment = Payment::where('provider_payment_id', $data['payment_id'] ?? $data['id'] ?? '')->first();
         if (! $payment) return;
+
+        // Idempotencia: si ya lo marcamos reembolsado, no re-machacamos el
+        // refunded_at ni duplicamos el AuditLog.
+        if ($payment->status === Payment::STATUS_REFUNDED) {
+            return;
+        }
 
         $payment->update([
             'status' => Payment::STATUS_REFUNDED,

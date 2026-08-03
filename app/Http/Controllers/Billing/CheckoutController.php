@@ -4,13 +4,18 @@ namespace App\Http\Controllers\Billing;
 
 use App\Enums\RolUsuario;
 use App\Http\Controllers\Controller;
+use App\Mail\AvisoCobroExitoso;
 use App\Models\AuditLog;
 use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Notifications\CobroExitosoNotification;
 use App\Services\Billing\SubscriptionGateway;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -51,7 +56,12 @@ class CheckoutController extends Controller
             cancelUrl: route('billing.fallida'),
         );
 
-        AuditLog::record($user, $user, 'checkout_started', new: ['plan_id' => $plan->id]);
+        AuditLog::record($user, $user, 'checkout_started', new: [
+            'plan_id'    => $plan->id,
+            'plan_nombre'=> $plan->nombre,
+            'plan_precio'=> $plan->precio,
+            'gateway'    => $this->gateway->name(),
+        ]);
 
         return redirect()->away($url);
     }
@@ -75,10 +85,14 @@ class CheckoutController extends Controller
 
         $sub = Subscription::where('provider_subscription_id', 'fake_sub_'.$token)->firstOrFail();
 
+        // Seguridad: solo el dueño de la sub puede ver su checkout.
+        $user = $request->user();
+        abort_unless($user && $user->id === $sub->user_id, 403);
+
         return view('billing.fake-checkout', [
             'subscription' => $sub,
-            'successUrl' => $request->query('success', route('billing.exitosa')),
-            'cancelUrl' => $request->query('cancel', route('billing.fallida')),
+            'successUrl' => $this->sanitizarRetorno($request->query('success'), route('billing.exitosa')),
+            'cancelUrl'  => $this->sanitizarRetorno($request->query('cancel'),  route('billing.fallida')),
         ]);
     }
 
@@ -88,34 +102,116 @@ class CheckoutController extends Controller
         abort_unless($this->gateway->name() === 'fake', 404);
 
         $sub = Subscription::where('provider_subscription_id', 'fake_sub_'.$token)->firstOrFail();
-        $sub->update([
-            'status' => Subscription::STATUS_ACTIVE,
-            'current_period_start' => now(),
-            'current_period_end' => now()->addMonth(),
-        ]);
 
-        Payment::create([
-            'user_id' => $sub->user_id,
-            'subscription_id' => $sub->id,
-            'provider' => 'fake',
-            'provider_payment_id' => 'fake_pay_'.$token,
-            'amount_cents' => (int) round(($sub->plan?->precio ?? 199) * 100),
-            'currency' => config('billing.currency', 'MXN'),
-            'status' => Payment::STATUS_SUCCEEDED,
-            'paid_at' => now(),
-        ]);
+        // Seguridad HIGH-1: solo el dueño de la sub puede confirmar su propio checkout.
+        // Sin este guard, cualquier user autenticado que conozca un token puede
+        // activar la sub de otro y hasta grabarle un Payment ajeno.
+        $user = $request->user();
+        abort_unless($user && $user->id === $sub->user_id, 403);
 
-        // Activar la membresía del user (aún la Fase 1 gate se apoya en esto)
-        if ($sub->plan_id) {
-            $sub->user->forceFill([
-                'membership_plan_id' => $sub->plan_id,
-                'membership_expires_at' => now()->addMonth(),
-            ])->save();
+        // Todo en una transacción: si ya existe un Payment para este token
+        // (reintento), no extendemos la sub ni la membresía otra vez.
+        $pago = DB::transaction(function () use ($sub, $token, $user) {
+            $pagoPrevio = Payment::where('provider_payment_id', 'fake_pay_'.$token)->first();
+            if ($pagoPrevio) {
+                return null; // idempotente — no re-notificar tampoco
+            }
+
+            $sub->update([
+                'status' => Subscription::STATUS_ACTIVE,
+                'current_period_start' => now(),
+                'current_period_end'   => now()->addMonth(),
+            ]);
+
+            $nuevoPago = Payment::create([
+                'user_id'             => $sub->user_id,
+                'subscription_id'     => $sub->id,
+                'provider'            => 'fake',
+                'provider_payment_id' => 'fake_pay_'.$token,
+                'amount_cents'        => (int) round(($sub->plan?->precio ?? 199) * 100),
+                'currency'            => config('billing.currency', 'MXN'),
+                'status'              => Payment::STATUS_SUCCEEDED,
+                'paid_at'             => now(),
+            ]);
+
+            if ($sub->plan_id) {
+                $sub->user->forceFill([
+                    'membership_plan_id'    => $sub->plan_id,
+                    'membership_expires_at' => now()->addMonth(),
+                ])->save();
+            }
+
+            // Seguridad MED-1: actor = ejecutante real (no dueño de la sub).
+            AuditLog::record($user, $sub, 'subscription_activated',
+                new: ['status' => 'active', 'via' => 'fake_checkout']);
+
+            return $nuevoPago;
+        });
+
+        // Fuera de la transacción, notif in-app + correo. Solo si REALMENTE se
+        // creó el pago (no en reintento idempotente). Igual comportamiento que
+        // el webhook real, para que el modo Fake reproduzca la experiencia.
+        if ($pago) {
+            try { $sub->user->notify(new CobroExitosoNotification($pago)); } catch (\Throwable $e) { report($e); }
+            try { Mail::to($sub->user)->send(new AvisoCobroExitoso($sub->user, $sub)); } catch (\Throwable $e) { report($e); }
         }
 
-        AuditLog::record($sub->user, $sub, 'subscription_activated',
-            new: ['status' => 'active', 'via' => 'fake_checkout']);
+        return redirect()->to($this->sanitizarRetorno($request->input('success'), route('billing.exitosa')));
+    }
 
-        return redirect($request->input('success', route('billing.exitosa')));
+    /** POST /suscripcion/cancelar — el propio user cancela su suscripción. */
+    public function cancelarPropia(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user, 403);
+
+        $sub = Subscription::where('user_id', $user->id)
+            ->whereIn('status', [Subscription::STATUS_ACTIVE, Subscription::STATUS_TRIALING, Subscription::STATUS_PAST_DUE])
+            ->latest()
+            ->first();
+
+        if (! $sub) {
+            return back()->with('status', 'sin-suscripcion-activa');
+        }
+
+        // En modo fake, cortamos localmente. En prod, la pasarela hace la
+        // cancelación y devuelve un webhook subscription_canceled.
+        try {
+            $this->gateway->cancelSubscription($sub->provider_subscription_id ?? '');
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        // Marcamos ends_at con el periodo pagado — el user mantiene acceso
+        // hasta que termine el periodo por el que ya pagó.
+        $sub->update([
+            'status'      => Subscription::STATUS_CANCELED,
+            'canceled_at' => now(),
+            'ends_at'     => $sub->current_period_end ?? now()->addMonth(),
+        ]);
+
+        AuditLog::record($user, $sub, 'subscription_canceled_by_user',
+            new: ['status' => 'canceled', 'via' => 'self_service']);
+
+        return back()->with('status', 'suscripcion-cancelada');
+    }
+
+    /**
+     * Seguridad HIGH-2: acepta SOLO URLs internas (same-host).
+     * Cualquier redirect externo o esquema raro cae al default.
+     */
+    private function sanitizarRetorno(?string $candidato, string $fallback): string
+    {
+        if (! $candidato) {
+            return $fallback;
+        }
+        $parsed = parse_url($candidato);
+        $host = $parsed['host'] ?? null;
+        $ourHost = parse_url(url('/'), PHP_URL_HOST);
+        // relativa (sin host) OK; absoluta con nuestro host OK; el resto no.
+        if ($host === null || $host === $ourHost) {
+            return $candidato;
+        }
+        return $fallback;
     }
 }

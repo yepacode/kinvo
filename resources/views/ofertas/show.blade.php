@@ -19,13 +19,13 @@
             <p class="text-sm text-warmgray">
                 {{ $offer->contractor?->companyProfile?->company_name ?? $offer->contractor?->name }}
                 @if ($offer->location) · {{ $offer->location->ciudad }} @endif
-                · {{ __(ucfirst($offer->modality)) }}
-                @if ($offer->contract_type) · {{ __(ucfirst(str_replace('_', ' ', $offer->contract_type))) }} @endif
+                · {{ enum_label('modality', $offer->modality) }}
+                @if ($offer->contract_type) · {{ enum_label('contract_type', $offer->contract_type) }} @endif
             </p>
 
             @if ($offer->salary_min_cents || $offer->salary_max_cents)
                 <p class="mt-2 font-medium text-sage">
-                    ${{ number_format(($offer->salary_min_cents ?? 0) / 100, 0) }} – ${{ number_format(($offer->salary_max_cents ?? 0) / 100, 0) }} {{ $offer->salary_currency }} / {{ __(ucfirst($offer->salary_period)) }}
+                    ${{ number_format(($offer->salary_min_cents ?? 0) / 100, 0) }} – ${{ number_format(($offer->salary_max_cents ?? 0) / 100, 0) }} {{ $offer->salary_currency }} / {{ enum_label('salary_period', $offer->salary_period) }}
                 </p>
             @endif
 
@@ -49,7 +49,7 @@
                     @if ($miPostulacion)
                         <p class="mt-2 text-sm text-warmgray">
                             {{ __('Ya postulaste el :fecha. Estado actual:', ['fecha' => $miPostulacion->created_at->translatedFormat('d M Y')]) }}
-                            <span class="ml-1 rounded-full bg-sage/10 px-3 py-1 text-xs font-medium text-sage">{{ __(ucfirst(str_replace('_', ' ', $miPostulacion->status))) }}</span>
+                            <span class="ml-1 rounded-full bg-sage/10 px-3 py-1 text-xs font-medium text-sage">{{ enum_label('application_status', $miPostulacion->status) }}</span>
                         </p>
                     @else
                         <form method="POST" action="{{ route('ofertas.postular', $offer->slug) }}" class="mt-3">

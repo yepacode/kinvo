@@ -61,8 +61,25 @@ class FakeGateway implements SubscriptionGateway
 
     public function verifyWebhook(string $payload, string $signatureHeader): array
     {
-        // En modo Fake, cualquier payload JSON válido pasa (útil para tests).
-        // En producción con Stripe, aquí va la verificación HMAC real.
+        // FakeGateway sigue exigiendo firma HMAC para blindar el endpoint
+        // aunque la app corra en modo demo. Sin este check cualquiera puede
+        // POSTear a /webhooks/billing y disparar payment_succeeded/refund
+        // sobre subs ajenas (Seguridad HIGH-3).
+        $secret = (string) config('billing.webhook_secret', '');
+        if ($secret === '') {
+            throw new \RuntimeException('Webhook secret no configurado (BILLING_WEBHOOK_SECRET).');
+        }
+
+        // Formato esperado del header: "sha256=<hex>"
+        $recibida = $signatureHeader;
+        if (str_starts_with($recibida, 'sha256=')) {
+            $recibida = substr($recibida, 7);
+        }
+        $esperada = hash_hmac('sha256', $payload, $secret);
+        if (! hash_equals($esperada, $recibida)) {
+            throw new \RuntimeException('Firma HMAC inválida.');
+        }
+
         $data = json_decode($payload, true);
         if (! is_array($data)) {
             throw new \RuntimeException('Webhook payload no es JSON válido.');

@@ -12,6 +12,7 @@ use App\Http\Controllers\OfferController;
 use App\Http\Controllers\ProfessionalProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RsvpController;
 use App\Http\Controllers\SaveController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\TalentoController;
@@ -127,6 +128,10 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
         ->name('billing.exitosa');
     Route::get('/suscripcion/fallida', [CheckoutController::class, 'fallida'])
         ->name('billing.fallida');
+    // El propio user cancela su suscripción (Fase 2 · UX + Seguridad MED-2 agente 8).
+    Route::post('/suscripcion/cancelar', [CheckoutController::class, 'cancelarPropia'])
+        ->middleware('throttle:6,1')
+        ->name('billing.cancelar');
 
     // Fake gateway solo — pantalla de simulación de pago.
     Route::get('/billing/fake-checkout/{token}', [CheckoutController::class, 'fakeCheckout'])
@@ -138,6 +143,10 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
 // Webhook público (sin auth, la firma HMAC lo protege).
 Route::post('/webhooks/billing', [WebhookController::class, 'handle'])
     ->name('billing.webhook');
+
+// RSVP público (link firmado por invitado en el correo de invitación a sesiones).
+Route::get('/rsvp/{token}', [RsvpController::class, 'responder'])
+    ->name('rsvp.responder');
 
 // ============================================================
 // Fase 2 · Hito 3 — Producto y bolsa de trabajo

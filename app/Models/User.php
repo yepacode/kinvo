@@ -55,7 +55,9 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             'password' => 'hashed',
             'nivel' => RolUsuario::class,
             'estado' => EstadoUsuario::class,
-            'membership_expires_at' => 'date',
+            // Datetime (no date) para que un refund a las 14:26 revoque acceso
+            // inmediato en vez de darlo hasta el 23:59 (LOW agente 8).
+            'membership_expires_at' => 'datetime',
         ];
     }
 
@@ -185,11 +187,11 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
         return $this->belongsTo(Plan::class, 'membership_plan_id');
     }
 
-    /** ¿Tiene una membresía vigente (vence hoy o en el futuro)? */
+    /** ¿Tiene una membresía vigente (comparación con timestamp exacto)? */
     public function tieneMembresiaActiva(): bool
     {
         return $this->membership_expires_at !== null
-            && $this->membership_expires_at->gte(today());
+            && $this->membership_expires_at->gte(now());
     }
 
     public function professionalProfile(): HasOne

@@ -53,12 +53,17 @@ class TeamController extends Controller
 
         $data = $request->validate(['email' => ['required', 'email']]);
 
+        // Seguridad LOW-1: no distinguimos "no existe" vs "sí existe pero no
+        // es profesional" para evitar enumeración de emails. Ambos caen a
+        // 'profesional-no-invitable'. También filtramos por rol profesional
+        // (no basta con tener professionalProfile: podría ser un contractor
+        // con un registro histórico).
         $profesional = User::where('email', $data['email'])
             ->whereHas('professionalProfile')
             ->first();
 
         if (! $profesional || ! $profesional->esProfesional()) {
-            return back()->with('status', 'profesional-no-existe');
+            return back()->with('status', 'profesional-no-invitable');
         }
 
         $tm = TeamMember::updateOrCreate(

@@ -10,6 +10,14 @@ return [
      */
     'gateway' => env('BILLING_GATEWAY', 'fake'),
 
+    /**
+     * Secret compartido con el que se verifica la firma HMAC de los webhooks
+     * en modo FakeGateway. Sirve para que /webhooks/billing esté firmado
+     * incluso antes de conectar Stripe. En producción real usar los secrets
+     * de la sección `stripe` o `mercadopago`.
+     */
+    'webhook_secret' => env('BILLING_WEBHOOK_SECRET', 'kinvoo-fake-dev-secret-cambiar-en-prod'),
+
     'stripe' => [
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),

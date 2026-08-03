@@ -15,7 +15,7 @@
                         <h3 class="font-serif text-lg font-medium text-ink hover:text-sage">{{ $o->title }}</h3>
                     </a>
                     <div class="flex items-center gap-2 text-xs">
-                        <span class="rounded-full bg-beige px-3 py-1 font-medium text-ink">{{ __(ucfirst($o->status)) }}</span>
+                        <span class="rounded-full bg-beige px-3 py-1 font-medium text-ink">{{ enum_label('offer_status', $o->status) }}</span>
                         <span class="rounded-full bg-cream px-3 py-1 font-medium text-warmgray">
                             {{ $o->applications_count }} {{ __('postulaciones') }}
                         </span>
@@ -35,13 +35,13 @@
                                     <span>{{ $app->professional?->name }} — <em class="text-warmgray">{{ $app->created_at->translatedFormat('d M') }}</em></span>
                                     <form method="POST" action="{{ route('ofertas.postulacion.estado', $app) }}" class="flex items-center gap-2">
                                         @csrf
-                                        <select name="status" class="rounded-full border border-line px-2 py-1 text-xs">
+                                        <select name="status" class="min-h-[44px] rounded-full border border-line px-3 py-2 text-sm">
                                             <option value="seen" @selected($app->status==='seen')>{{ __('Vista') }}</option>
                                             <option value="in_contact" @selected($app->status==='in_contact')>{{ __('En contacto') }}</option>
                                             <option value="accepted" @selected($app->status==='accepted')>{{ __('Aceptada') }}</option>
                                             <option value="rejected" @selected($app->status==='rejected')>{{ __('Rechazada') }}</option>
                                         </select>
-                                        <button type="submit" class="rounded-full bg-sage px-3 py-1 text-xs font-medium text-cream">{{ __('Guardar') }}</button>
+                                        <button type="submit" class="min-h-[44px] rounded-full bg-sage px-4 py-2 text-sm font-medium text-cream">{{ __('Guardar') }}</button>
                                     </form>
                                 </li>
                             @endforeach
