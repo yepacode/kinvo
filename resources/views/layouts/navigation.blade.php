@@ -19,6 +19,15 @@
                         <x-nav-link :href="route('professional.contactos')" :active="request()->routeIs('professional.contactos')">
                             {{ __('Contactos') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('ofertas.index')" :active="request()->routeIs('ofertas.*')">
+                            {{ __('Ofertas') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.*')">
+                            {{ __('Contenido') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('expediente.index')" :active="request()->routeIs('expediente.*')">
+                            {{ __('Expediente') }}
+                        </x-nav-link>
                     @elseif (auth()->user()->esContratante())
                         <x-nav-link :href="route('company.profile.edit')" :active="request()->routeIs('company.profile.*')">
                             {{ __('Mi empresa') }}
@@ -31,6 +40,15 @@
                         </x-nav-link>
                         <x-nav-link :href="route('professional.contactos')" :active="request()->routeIs('professional.contactos')">
                             {{ __('Contactos') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('ofertas.mis-ofertas')" :active="request()->routeIs('ofertas.*')">
+                            {{ __('Ofertas') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.*')">
+                            {{ __('Contenido') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('equipo.index')" :active="request()->routeIs('equipo.*')">
+                            {{ __('Mi equipo') }}
                         </x-nav-link>
                     @endif
                 </div>
@@ -108,6 +126,19 @@
                 <x-responsive-nav-link :href="route('professional.contactos')" :active="request()->routeIs('professional.contactos')">
                     {{ __('Contactos') }}
                 </x-responsive-nav-link>
+                {{-- Fase 2 · accesos móviles del coach --}}
+                <x-responsive-nav-link :href="route('ofertas.index')" :active="request()->routeIs('ofertas.index','ofertas.show')">
+                    {{ __('Ofertas de trabajo') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('ofertas.mis-postulaciones')" :active="request()->routeIs('ofertas.mis-postulaciones')">
+                    {{ __('Mis postulaciones') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.*')">
+                    {{ __('Contenido y capacitaciones') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('expediente.index')" :active="request()->routeIs('expediente.*')">
+                    {{ __('Mi expediente de cuidado') }}
+                </x-responsive-nav-link>
             @elseif (auth()->user()->esContratante())
                 <x-responsive-nav-link :href="route('company.profile.edit')" :active="request()->routeIs('company.profile.*')">
                     {{ __('Mi empresa') }}
@@ -120,6 +151,16 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('professional.contactos')" :active="request()->routeIs('professional.contactos')">
                     {{ __('Contactos') }}
+                </x-responsive-nav-link>
+                {{-- Fase 2 · accesos móviles del estudio --}}
+                <x-responsive-nav-link :href="route('ofertas.mis-ofertas')" :active="request()->routeIs('ofertas.mis-ofertas')">
+                    {{ __('Mis ofertas') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.*')">
+                    {{ __('Contenido y capacitaciones') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('equipo.index')" :active="request()->routeIs('equipo.*')">
+                    {{ __('Mi equipo') }}
                 </x-responsive-nav-link>
             @endif
         </div>

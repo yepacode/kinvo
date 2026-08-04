@@ -55,7 +55,9 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             'password' => 'hashed',
             'nivel' => RolUsuario::class,
             'estado' => EstadoUsuario::class,
-            'membership_expires_at' => 'date',
+            // Datetime (no date) para que un refund a las 14:26 revoque acceso
+            // inmediato en vez de darlo hasta el 23:59 (LOW agente 8).
+            'membership_expires_at' => 'datetime',
         ];
     }
 
@@ -185,11 +187,11 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
         return $this->belongsTo(Plan::class, 'membership_plan_id');
     }
 
-    /** ¿Tiene una membresía vigente (vence hoy o en el futuro)? */
+    /** ¿Tiene una membresía vigente (comparación con timestamp exacto)? */
     public function tieneMembresiaActiva(): bool
     {
         return $this->membership_expires_at !== null
-            && $this->membership_expires_at->gte(today());
+            && $this->membership_expires_at->gte(now());
     }
 
     public function professionalProfile(): HasOne
@@ -209,6 +211,56 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             ->where('saveable_type', $model->getMorphClass())
             ->where('saveable_id', $model->getKey())
             ->exists();
+    }
+
+    // ============================================================
+    // Fase 2 · Relaciones nuevas (pagos, ofertas, expediente, equipo)
+    // ============================================================
+
+    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /** Ofertas publicadas por el contratante. */
+    public function offers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Offer::class, 'contractor_user_id');
+    }
+
+    /** Postulaciones del profesional. */
+    public function applications(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Application::class, 'professional_user_id');
+    }
+
+    /** Entradas del expediente del coach. */
+    public function wellnessEntries(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WellnessEntry::class, 'professional_user_id');
+    }
+
+    /** Miembros del equipo (del contratante). */
+    public function teamMembers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TeamMember::class, 'contractor_user_id');
+    }
+
+    /** Membresías donde el profesional es parte del equipo de un estudio. */
+    public function membershipsInTeams(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TeamMember::class, 'professional_user_id');
+    }
+
+    /** ¿Es cuenta de demostración (Fase 2)? Emails con prefijo demo.f2.* */
+    public function esDemoFase2(): bool
+    {
+        return str_starts_with((string) $this->email, 'demo.f2.');
     }
 
     public function companyProfile(): HasOne

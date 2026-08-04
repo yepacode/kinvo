@@ -16,41 +16,47 @@ class ResumenStats extends BaseWidget
 {
     protected static ?int $sort = -3;
 
+    /** Excluye emails de demostración (Fase 2) para no ensuciar reportes contables. */
+    private const DEMO_PREFIX = 'demo.f2.';
+
     protected function getStats(): array
     {
         $inicioMes = now()->startOfMonth();
         $inicioSemana = now()->startOfWeek();
 
-        // Miembros (excluye admins). Son totales de toda la plataforma.
-        $miembros = User::where('nivel', '!=', RolUsuario::Admin->value);
+        // Base: excluye admins Y cuentas demo (que no cuentan como negocio real).
+        $noDemos = fn ($q) => $q->where('email', 'not like', self::DEMO_PREFIX.'%');
+        $miembros = User::where('nivel', '!=', RolUsuario::Admin->value)->tap($noDemos);
 
-        // Totales por rol
-        $profTotal = User::where('nivel', RolUsuario::Professional->value)->count();
-        $profMes = User::where('nivel', RolUsuario::Professional->value)
-            ->where('created_at', '>=', $inicioMes)->count();
-        $profSemana = User::where('nivel', RolUsuario::Professional->value)
-            ->where('created_at', '>=', $inicioSemana)->count();
+        // Totales por rol (excluyendo demos)
+        $profQ  = fn () => User::where('nivel', RolUsuario::Professional->value)->tap($noDemos);
+        $contrQ = fn () => User::where('nivel', RolUsuario::Contractor->value)->tap($noDemos);
 
-        $contrTotal = User::where('nivel', RolUsuario::Contractor->value)->count();
-        $contrMes = User::where('nivel', RolUsuario::Contractor->value)
-            ->where('created_at', '>=', $inicioMes)->count();
-        $contrSemana = User::where('nivel', RolUsuario::Contractor->value)
-            ->where('created_at', '>=', $inicioSemana)->count();
+        $profTotal   = $profQ()->count();
+        $profMes     = $profQ()->where('created_at', '>=', $inicioMes)->count();
+        $profSemana  = $profQ()->where('created_at', '>=', $inicioSemana)->count();
 
-        $publicados = ProfessionalProfile::where('is_published', true)->count();
+        $contrTotal  = $contrQ()->count();
+        $contrMes    = $contrQ()->where('created_at', '>=', $inicioMes)->count();
+        $contrSemana = $contrQ()->where('created_at', '>=', $inicioSemana)->count();
 
-        // Aprobaciones pendientes: 1ª (Pendiente) y 2ª (PerfilPendiente).
+        // Perfiles publicados (excluyendo dueños demo)
+        $publicados = ProfessionalProfile::where('is_published', true)
+            ->whereHas('user', $noDemos)
+            ->count();
+
+        // Aprobaciones pendientes: los dueños demo también quedan fuera aquí.
         $pendientes = (clone $miembros)->where('estado', EstadoUsuario::Pendiente->value)->count();
-        $perfilesEnRevision = User::where('nivel', RolUsuario::Contractor->value)
+        $perfilesEnRevision = $contrQ()
             ->where('estado', EstadoUsuario::PerfilPendiente->value)->count();
 
-        // Contactos
-        $contactosTotal = Contact::count();
-        $contactosMes = Contact::where('created_at', '>=', $inicioMes)->count();
-        $contactosSemana = Contact::where('created_at', '>=', $inicioSemana)->count();
-        // Aceptados: talento marcó "Me interesa, conéctame".
-        $contactosAceptadosTotal = Contact::whereNotNull('professional_interesado_at')->count();
-        $contactosAceptadosMes = Contact::whereNotNull('professional_interesado_at')
+        // Contactos (excluir los enviados desde cuentas demo)
+        $contactBase = fn () => Contact::whereHas('contractor', $noDemos);
+        $contactosTotal   = $contactBase()->count();
+        $contactosMes     = $contactBase()->where('created_at', '>=', $inicioMes)->count();
+        $contactosSemana  = $contactBase()->where('created_at', '>=', $inicioSemana)->count();
+        $contactosAceptadosTotal = $contactBase()->whereNotNull('professional_interesado_at')->count();
+        $contactosAceptadosMes   = $contactBase()->whereNotNull('professional_interesado_at')
             ->where('professional_interesado_at', '>=', $inicioMes)->count();
 
         return [

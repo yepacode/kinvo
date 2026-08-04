@@ -16,7 +16,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'cuenta.activa' => \App\Http\Middleware\EnsureCuentaActiva::class,
             'nocache' => \App\Http\Middleware\NoCacheAutenticado::class,
             'membresia' => \App\Http\Middleware\EnsureContractorMembership::class,
+            'membresia.activa' => \App\Http\Middleware\EnsureMembershipActive::class,
             'acceso.directorio' => \App\Http\Middleware\AccesoDirectorioTalento::class,
+        ]);
+
+        // Webhooks de pasarelas (Stripe/MP) no pueden enviar X-XSRF-TOKEN.
+        // La firma HMAC en WebhookController es la verificación real; sin este
+        // exempt cualquier POST a /webhooks/* devuelve 419 (Page Expired) antes
+        // de llegar al controller y responder 400.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/*',
         ]);
 
         // Cabeceras de seguridad en todas las respuestas web (anti-clickjacking, nosniff).

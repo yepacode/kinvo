@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Services\Billing\FakeGateway;
+use App\Services\Billing\StripeGateway;
+use App\Services\Billing\SubscriptionGateway;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -12,7 +15,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Fase 2 · Bind del gateway de pagos según config('billing.gateway').
+        // Por default se usa FakeGateway (sin cobros reales) — se cambia a
+        // 'stripe' vía .env cuando la cliente comparta las claves del kick-off.
+        $this->app->singleton(SubscriptionGateway::class, function () {
+            return match (config('billing.gateway', 'fake')) {
+                'stripe' => new StripeGateway(),
+                default  => new FakeGateway(),
+            };
+        });
     }
 
     /**

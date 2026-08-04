@@ -10,6 +10,7 @@
         @include('partials.head-assets')
     </head>
     <body class="font-sans text-ink antialiased">
+        @include('partials.demo-banner')
         <div class="fixed right-4 top-4 z-20">
             <x-locale-switcher />
         </div>

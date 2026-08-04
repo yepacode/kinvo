@@ -19,3 +19,10 @@ Schedule::command('queue:work --stop-when-empty --tries=3 --timeout=55')
     ->everyMinute()
     ->withoutOverlapping()
     ->runInBackground();
+
+// Fase 2 · Reintentos de cobros fallidos: revisa suscripciones en past_due
+// y las expira si llevan más de N días sin recuperarse.
+Schedule::job(new \App\Jobs\RetryFailedPayments)->dailyAt('03:00');
+
+// Fase 2 · Aviso 7 días antes del vencimiento (idempotente por AuditLog).
+Schedule::job(new \App\Jobs\NotifyUpcomingRenewals)->dailyAt('09:00');
