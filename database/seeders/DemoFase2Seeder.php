@@ -395,7 +395,60 @@ class DemoFase2Seeder extends Seeder
             ]
         );
 
+        // ==================================================
+        // 10. Sesiones en vivo demo (2) — con invitados y RSVP
+        // ==================================================
+        $sesiones = [
+            [
+                'title'        => 'Webinar demo: Onboarding Kinvoo',
+                'tipo'         => \App\Models\Sesion::TIPO_WEBINAR,
+                'scheduled_at' => \Illuminate\Support\Carbon::parse('2026-09-15 18:00:00'),
+                'duration_min' => 60,
+                'link'         => 'https://zoom.us/j/demo-kinvoo-onboarding',
+                'audience'     => \App\Models\Sesion::AUDIENCE_ALL,
+                'description'  => 'Sesión demo para mostrar cómo funciona el módulo de sesiones en vivo.',
+            ],
+            [
+                'title'        => 'Taller demo: Marketing para coaches',
+                'tipo'         => \App\Models\Sesion::TIPO_TALLER,
+                'scheduled_at' => \Illuminate\Support\Carbon::parse('2026-09-22 17:00:00'),
+                'duration_min' => 90,
+                'link'         => 'https://zoom.us/j/demo-kinvoo-marketing',
+                'audience'     => \App\Models\Sesion::AUDIENCE_PROFESSIONAL,
+                'description'  => 'Sesión demo dirigida solo a coaches — cómo posicionar tu perfil.',
+            ],
+        ];
+        $sesionModels = [];
+        foreach ($sesiones as $data) {
+            $sesion = \App\Models\Sesion::updateOrCreate(
+                ['title' => $data['title']],
+                array_merge($data, ['created_by_admin_id' => $admin->id])
+            );
+            $sesionModels[] = $sesion;
+
+            // Invita a todos los users demo que apliquen a la audiencia.
+            $usersInvitables = match ($sesion->audience) {
+                \App\Models\Sesion::AUDIENCE_PROFESSIONAL => collect($coachModels),
+                \App\Models\Sesion::AUDIENCE_CONTRACTOR   => collect($estudioModels),
+                default => collect($coachModels)->merge(collect($estudioModels)),
+            };
+            foreach ($usersInvitables as $u) {
+                $inv = \App\Models\SesionInvitado::firstOrCreate(
+                    ['sesion_id' => $sesion->id, 'user_id' => $u->id],
+                    ['rsvp' => \App\Models\SesionInvitado::RSVP_PENDING, 'invited_at' => now()->subDays(3)]
+                );
+                // Ana acepta la del onboarding; Pedro rechaza la de marketing.
+                if ($sesion->title === $sesiones[0]['title'] && $u->id === $coachModels['ana']->id) {
+                    $inv->update(['rsvp' => \App\Models\SesionInvitado::RSVP_ACCEPTED, 'rsvp_at' => now()->subDay(), 'notified_at' => now()->subDays(2)]);
+                }
+                if ($sesion->title === $sesiones[1]['title'] && $u->id === $coachModels['pedro']->id) {
+                    $inv->update(['rsvp' => \App\Models\SesionInvitado::RSVP_DECLINED, 'rsvp_at' => now()->subDay(), 'notified_at' => now()->subDays(2)]);
+                }
+            }
+        }
+
         $this->command?->info('DemoFase2Seeder: OK (idempotente). Prefijo: '.self::EMAIL_PREFIX);
         $this->command?->info('Contraseña por default: password');
+        $this->command?->info('Sesiones demo agendadas: '.count($sesiones));
     }
 }
