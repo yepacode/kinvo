@@ -6,6 +6,34 @@
             </div>
         @endif
 
+        {{-- Flash de intentos de POST no válido (bypass UI o F5). --}}
+        @if (session('status') === 'plan-no-es-para-tu-rol')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-center text-sm text-red-700">
+                {{ __('Este plan no está disponible para tu tipo de cuenta. Elige uno de los planes de tu sección.') }}
+            </div>
+        @elseif (session('status') === 'ya-tienes-suscripcion')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-sage/40 bg-sage/10 px-5 py-4 text-center text-sm text-ink">
+                {{ __('Ya tienes una suscripción activa. Cancélala desde tu panel antes de contratar otra.') }}
+            </div>
+        @elseif (session('status') === 'plan-sin-precio')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-yellow-200 bg-yellow-50 px-5 py-4 text-center text-sm text-ink">
+                {{ __('Este plan aún no tiene precio configurado. Escríbenos y te ayudamos a contratarlo.') }}
+            </div>
+        @elseif (session('status') === 'admin-no-suscribe')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-sage/40 bg-sage/10 px-5 py-4 text-center text-sm text-ink">
+                {{ __('Como administradora gestionas los planes, no te suscribes a ellos.') }}
+            </div>
+        @endif
+
+        {{-- Aviso claro para administradores: no se suscriben, gestionan planes desde el panel. --}}
+        @auth
+            @if (auth()->user()->esAdmin())
+                <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-sage/40 bg-sage/10 px-5 py-4 text-center text-sm text-ink">
+                    {!! __('Como administradora ya no necesitas suscribirte. Gestiona precios y beneficios desde <a href=":url" class="font-semibold text-ink underline decoration-sage decoration-2 underline-offset-2">el panel de administración</a>.', ['url' => url('/admin')]) !!}
+                </div>
+            @endif
+        @endauth
+
         <header class="mx-auto max-w-2xl text-center">
             <p class="text-xs font-medium uppercase tracking-[0.24em] text-sage">{{ landing('membership_eyebrow') }}</p>
             <h1 class="mt-3 font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl">{{ landing('membership_title') }}</h1>
@@ -66,7 +94,8 @@
                                 $user = auth()->user();
                                 $planIndividual = $plan->audiencia === 'individual';
                                 $planEstudio = $plan->audiencia === 'estudio';
-                                $puedeSuscribirse = $user
+                                $tienePrecio = filled($plan->precio) && (float) $plan->precio > 0;
+                                $puedeSuscribirse = $user && $tienePrecio
                                     && (($planIndividual && $user->esProfesional())
                                      || ($planEstudio && $user->esContratante()));
                             @endphp
@@ -79,11 +108,30 @@
                                         {{ __('Suscribirme') }}
                                     </button>
                                 </form>
-                            @else
-                                <a href="{{ $user ? route('dashboard') : route('register') }}"
+                            @elseif (! $user)
+                                {{-- Sin sesión: invitar a registrarse. --}}
+                                <a href="{{ route('register') }}"
                                    class="mt-6 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition {{ $plan->destacado ? 'bg-sage text-cream hover:bg-ink' : 'border border-line text-ink hover:border-sage hover:text-sage' }}">
-                                    {{ $user ? __('Este plan no es para tu tipo de cuenta') : __('Únete') }}
+                                    {{ __('Únete') }}
                                 </a>
+                            @else
+                                {{-- Con sesión pero no puede suscribirse: rol incompatible, admin o plan sin precio. --}}
+                                @php
+                                    if ($user->esAdmin()) {
+                                        $mensajeDeshab = __('Los admins no se suscriben');
+                                    } elseif (! $tienePrecio) {
+                                        $mensajeDeshab = __('Plan sin precio — escríbenos');
+                                    } elseif ($planIndividual) {
+                                        $mensajeDeshab = __('Solo para perfiles de talento');
+                                    } else {
+                                        $mensajeDeshab = __('Solo para estudios y marcas');
+                                    }
+                                @endphp
+                                <button type="button" disabled aria-disabled="true"
+                                        class="mt-6 w-full inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold border border-line text-warmgray bg-cream cursor-not-allowed opacity-70">
+                                    <span aria-hidden="true" class="mr-1.5">🔒</span>
+                                    {{ $mensajeDeshab }}
+                                </button>
                             @endif
                         </div>
                     @endforeach

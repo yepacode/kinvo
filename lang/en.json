@@ -1,6 +1,15 @@
 {
     "Suscribirme": "Subscribe",
     "Este plan no es para tu tipo de cuenta": "This plan isn't for your account type",
+    "Los admins no se suscriben": "Admin accounts can't subscribe",
+    "Solo para perfiles de talento": "For talent profiles only",
+    "Solo para estudios y marcas": "For studios and brands only",
+    "Plan sin precio — escríbenos": "Price not set — contact us",
+    "Como administradora ya no necesitas suscribirte. Gestiona precios y beneficios desde <a href=\":url\" class=\"font-semibold text-ink underline decoration-sage decoration-2 underline-offset-2\">el panel de administración</a>.": "As an administrator you don't need to subscribe. Manage prices and benefits from <a href=\":url\" class=\"font-semibold text-ink underline decoration-sage decoration-2 underline-offset-2\">the admin panel</a>.",
+    "Este plan no está disponible para tu tipo de cuenta. Elige uno de los planes de tu sección.": "This plan isn't available for your account type. Pick one from your section.",
+    "Ya tienes una suscripción activa. Cancélala desde tu panel antes de contratar otra.": "You already have an active subscription. Cancel it from your dashboard before starting a new one.",
+    "Este plan aún no tiene precio configurado. Escríbenos y te ayudamos a contratarlo.": "This plan doesn't have a price set yet. Contact us and we'll help you sign up.",
+    "Como administradora gestionas los planes, no te suscribes a ellos.": "As an administrator you manage plans, not subscribe to them.",
 
     "/ mensual": "/ month",
     "Abrir recurso externo": "Open external resource",

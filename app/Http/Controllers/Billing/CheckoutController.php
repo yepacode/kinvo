@@ -40,6 +40,11 @@ class CheckoutController extends Controller
         $user = $request->user();
         abort_unless($user, 403);
 
+        // Blindaje explícito: los admins no se suscriben, gestionan planes.
+        if ($user->esAdmin()) {
+            return back()->with('status', 'admin-no-suscribe');
+        }
+
         // Validación de audiencia: los talentos solo ven planes 'individual',
         // los contratantes solo 'estudio'. Blindaje adicional al UI.
         if ($plan->audiencia === 'individual' && ! $user->esProfesional()) {
@@ -47,6 +52,25 @@ class CheckoutController extends Controller
         }
         if ($plan->audiencia === 'estudio' && ! $user->esContratante()) {
             return back()->with('status', 'plan-no-es-para-tu-rol');
+        }
+
+        // Blindaje: no permitir suscripción a plan sin precio real (mientras el
+        // cliente no cargue precios, `precio` es null → cobraría el fallback $199).
+        if (blank($plan->precio) || (float) $plan->precio <= 0) {
+            return back()->with('status', 'plan-sin-precio');
+        }
+
+        // Blindaje: si el user ya tiene una suscripción activa vigente, no
+        // creamos una nueva (evita duplicados por doble click / F5).
+        $subVigente = Subscription::where('user_id', $user->id)
+            ->whereIn('status', [Subscription::STATUS_ACTIVE, Subscription::STATUS_TRIALING])
+            ->where(function ($q) {
+                $q->whereNull('current_period_end')
+                  ->orWhere('current_period_end', '>=', now());
+            })
+            ->exists();
+        if ($subVigente) {
+            return back()->with('status', 'ya-tienes-suscripcion');
         }
 
         $url = $this->gateway->createCheckoutUrl(
