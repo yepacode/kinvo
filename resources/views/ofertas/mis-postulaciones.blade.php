@@ -3,7 +3,18 @@
         <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Mis postulaciones') }}</h2>
     </x-slot>
 
-    <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 space-y-6">
+        <x-guia-inline :titulo="__('¿Cómo funciona una postulación?')">
+            <p>{{ __('Cuando postulas a una oferta, el estudio la ve y decide. Aquí ves el estado actual de cada una.') }}</p>
+            <ul class="list-disc space-y-1 pl-5">
+                <li><strong>{{ __('Enviada') }}</strong>: {{ __('llegó al estudio, aún no la revisa.') }}</li>
+                <li><strong>{{ __('Vista') }}</strong>: {{ __('el estudio ya la vio.') }}</li>
+                <li><strong>{{ __('En contacto') }}</strong>: {{ __('el estudio te va a escribir.') }}</li>
+                <li><strong>{{ __('Aceptada') }}</strong>: {{ __('¡vas para adelante!') }}</li>
+                <li><strong>{{ __('Rechazada') }}</strong>: {{ __('no fue esta vez — sigue postulando.') }}</li>
+            </ul>
+        </x-guia-inline>
+
         @forelse ($postulaciones as $p)
             <div class="mb-4 rounded-2xl border border-line bg-white p-5">
                 <div class="flex flex-wrap items-start justify-between gap-2">

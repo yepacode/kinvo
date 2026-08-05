@@ -4,6 +4,19 @@
     </x-slot>
 
     <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <x-guia-inline :titulo="__('¿Qué encuentro aquí?')" tono="beige">
+            <p>{{ __('Grabaciones, guías y capacitaciones de Kinvoo y otros estudios de la comunidad. Cada ítem tiene tipo (video, PDF, audio, enlace) y algunas categorías para filtrar.') }}</p>
+            @auth
+                @if (auth()->user()->esContratante())
+                    <p class="mt-2 text-sm">
+                        {{ __('¿Tienes material propio? Compártelo en') }}
+                        <a href="{{ route('contenido.mis-contenidos') }}" class="font-semibold text-sage underline">{{ __('Mi contenido') }}</a>.
+                    </p>
+                @endif
+            @endauth
+        </x-guia-inline>
+
+        <div class="mt-6">
         @if ($categorias->isNotEmpty())
             <div class="mb-6 flex flex-wrap gap-2">
                 <a href="{{ route('contenido.index') }}"
@@ -44,5 +57,6 @@
         @endif
 
         <div class="mt-6">{{ $items->withQueryString()->links() }}</div>
+        </div>{{-- /grupo con margen tras la guía --}}
     </div>
 </x-app-layout>

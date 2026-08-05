@@ -4,7 +4,11 @@
     </x-slot>
 
     <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-        <p class="mb-6 text-sm text-warmgray">
+        <x-guia-inline :titulo="__('¿Qué es este expediente?')" tono="beige">
+            <p>{{ __('Es tu bitácora de bienestar dentro de Kinvoo. Aquí quedan registradas las consultas, sesiones de fisio, charlas y pólizas que Kinvoo facilita. Los registros los agrega el equipo de Kinvoo por ti.') }}</p>
+        </x-guia-inline>
+
+        <p class="mb-6 mt-6 text-sm text-warmgray">
             {{ __('Todo tu cuidado en un mismo lugar: consultas médicas, sesiones de fisio, charlas y tu póliza de seguro. Kinvoo lo mantiene actualizado por ti.') }}
         </p>
 

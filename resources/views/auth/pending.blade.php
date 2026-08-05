@@ -21,12 +21,18 @@
                 {{ __('¡Gracias por llenar tu perfil! Nuestro equipo lo está revisando y quedará activo en un máximo de 24 horas. Te avisaremos por correo cuando esté publicado.') }}
             </p>
             <p class="mt-3 text-sm text-warmgray">
-                {{ __('Mientras tanto puedes seguir ajustando tu perfil.') }}
+                {{ __('Mientras tanto puedes seguir ajustando tu perfil o revisar los planes de membresía.') }}
             </p>
-            <a href="{{ route('company.profile.edit') }}"
-               class="mt-6 inline-block rounded-full bg-sage px-5 py-2 text-sm font-semibold text-cream shadow-sm transition hover:bg-ink">
-                {{ __('Editar mi perfil') }}
-            </a>
+            <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <a href="{{ route('company.profile.edit') }}"
+                   class="inline-block rounded-full bg-sage px-5 py-2 text-sm font-semibold text-cream shadow-sm transition hover:bg-ink">
+                    {{ __('Editar mi perfil') }}
+                </a>
+                <a href="{{ route('membresias.index') }}"
+                   class="inline-block rounded-full border border-line px-5 py-2 text-sm font-medium text-ink transition hover:border-sage hover:text-sage">
+                    {{ __('Ver planes') }}
+                </a>
+            </div>
         @else
             <h1 class="font-serif text-2xl font-medium text-ink">{{ __('Cuenta en revisión') }}</h1>
             <p class="mt-3 text-sm text-warmgray">

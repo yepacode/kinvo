@@ -10,6 +10,16 @@
     </x-slot>
 
     <div class="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+        {{-- Aviso claro para estudios con cuenta aún no aprobada. --}}
+        @if (! auth()->user()->estaActivo())
+            <div class="mb-6 rounded-xl border border-yellow-200 bg-yellow-50 px-5 py-4 text-sm text-ink">
+                <p class="font-medium">⏳ {{ __('Tu cuenta está en revisión') }}</p>
+                <p class="mt-1 text-warmgray">
+                    {{ __('Completa el perfil de tu estudio y guárdalo. Cuando Kinvoo lo apruebe podrás publicar ofertas, buscar talento, gestionar tu equipo y suscribirte a un plan. Te avisaremos por correo.') }}
+                </p>
+            </div>
+        @endif
+
         @include('partials.wizard-steps', ['paso' => 2])
 
         <div class="mb-6 flex items-center justify-between">
