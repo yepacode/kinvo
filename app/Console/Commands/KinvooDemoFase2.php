@@ -81,6 +81,10 @@ class KinvooDemoFase2 extends Command
         Subscription::where('provider', 'demo')->delete();
         Payment::where('provider', 'demo')->delete();
 
+        // Sesiones demo (matcheadas por título con la palabra "demo").
+        // Los sesion_invitados caen por cascadeOnDelete.
+        \App\Models\Sesion::where('title', 'like', '%demo%')->delete();
+
         // Users con prefijo — al borrar caen sus relaciones por FK cascade.
         User::where('email', 'like', $prefix.'%')->get()->each(function (User $u) {
             $u->delete();
