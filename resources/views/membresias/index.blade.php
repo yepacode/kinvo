@@ -31,6 +31,14 @@
                 <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-sage/40 bg-sage/10 px-5 py-4 text-center text-sm text-ink">
                     {!! __('Como administradora ya no necesitas suscribirte. Gestiona precios y beneficios desde <a href=":url" class="font-semibold text-ink underline decoration-sage decoration-2 underline-offset-2">el panel de administración</a>.', ['url' => url('/admin')]) !!}
                 </div>
+            @elseif (! auth()->user()->estaActivo())
+                {{-- Cuenta pendiente: explicar por qué los botones están bloqueados. --}}
+                <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-yellow-200 bg-yellow-50 px-5 py-4 text-center text-sm text-ink">
+                    <p class="font-medium">{{ __('Tu cuenta está en revisión') }}</p>
+                    <p class="mt-1 text-warmgray">
+                        {{ __('Podrás suscribirte cuando Kinvoo apruebe tu perfil. Mientras tanto puedes explorar los planes.') }}
+                    </p>
+                </div>
             @endif
         @endauth
 
@@ -95,7 +103,8 @@
                                 $planIndividual = $plan->audiencia === 'individual';
                                 $planEstudio = $plan->audiencia === 'estudio';
                                 $tienePrecio = filled($plan->precio) && (float) $plan->precio > 0;
-                                $puedeSuscribirse = $user && $tienePrecio
+                                $cuentaLista = $user && ($user->esAdmin() || $user->estaActivo());
+                                $puedeSuscribirse = $user && $tienePrecio && $cuentaLista
                                     && (($planIndividual && $user->esProfesional())
                                      || ($planEstudio && $user->esContratante()));
                             @endphp
@@ -115,10 +124,12 @@
                                     {{ __('Únete') }}
                                 </a>
                             @else
-                                {{-- Con sesión pero no puede suscribirse: rol incompatible, admin o plan sin precio. --}}
+                                {{-- Con sesión pero no puede suscribirse: admin, cuenta pendiente, plan sin precio o rol incompatible. --}}
                                 @php
                                     if ($user->esAdmin()) {
                                         $mensajeDeshab = __('Los admins no se suscriben');
+                                    } elseif (! $cuentaLista) {
+                                        $mensajeDeshab = __('Tu cuenta está en revisión');
                                     } elseif (! $tienePrecio) {
                                         $mensajeDeshab = __('Plan sin precio — escríbenos');
                                     } elseif ($planIndividual) {
