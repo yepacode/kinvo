@@ -4,6 +4,16 @@
     </x-slot>
 
     <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 space-y-8">
+        <x-guia-inline :titulo="__('¿Cómo funciona Mi equipo?')">
+            <p>{{ __('Invitas a un coach por su correo, él recibe una notificación y decide si acepta o rechaza. Cuando acepta, aparece como Activo y suma al Panel de impacto.') }}</p>
+            <ol class="list-decimal space-y-1 pl-5">
+                <li>{{ __('Escribes su correo en “Agregar a alguien al equipo”.') }}</li>
+                <li>{{ __('El coach ve la invitación en su campanita.') }}</li>
+                <li>{{ __('Al aceptar queda listado como Activo y sus consultas/fisio/charlas suman al panel.') }}</li>
+                <li>{{ __('Puedes “Quitar” a alguien cuando ya no colabora.') }}</li>
+            </ol>
+        </x-guia-inline>
+
         {{-- Panel de impacto (2.13) --}}
         <section class="rounded-2xl border border-line bg-white p-6">
             <h3 class="font-serif text-lg font-medium text-ink">{{ __('Panel de impacto') }}</h3>

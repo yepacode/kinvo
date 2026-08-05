@@ -3,7 +3,12 @@
         <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Ofertas de trabajo') }}</h2>
     </x-slot>
 
-    <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 space-y-6">
+        <x-guia-inline :titulo="__('¿Cómo postulo a una oferta?')" tono="beige">
+            <p>{{ __('Abre la oferta que te interesa, escribe una carta breve (opcional) y presiona “Enviar postulación”. El estudio recibe tu candidatura y te contactará si le interesa.') }}</p>
+            <p>{{ __('El estado de tus postulaciones lo ves en Mis postulaciones.') }}</p>
+        </x-guia-inline>
+
         <form method="GET" class="mb-6 flex flex-wrap gap-3">
             <input type="text" name="q" value="{{ request('q') }}" placeholder="{{ __('Buscar por título o descripción...') }}"
                    class="min-h-[44px] basis-full sm:basis-64 sm:flex-1 rounded-full border border-line px-4 py-2 text-sm">

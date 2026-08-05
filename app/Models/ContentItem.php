@@ -16,6 +16,7 @@ class ContentItem extends Model
     protected $fillable = [
         'slug', 'title', 'description', 'category', 'type', 'url', 'file_path',
         'gate_role', 'gate_plan_id', 'is_published', 'published_at',
+        'uploader_user_id',
     ];
 
     protected $casts = [
@@ -41,6 +42,17 @@ class ContentItem extends Model
     public function gatePlan(): BelongsTo
     {
         return $this->belongsTo(Plan::class, 'gate_plan_id');
+    }
+
+    public function uploader(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'uploader_user_id');
+    }
+
+    /** ¿Este ítem lo subió Kinvoo (admin)? */
+    public function esOficial(): bool
+    {
+        return $this->uploader_user_id === null;
     }
 
     /**

@@ -162,9 +162,38 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
     Route::post('/postulaciones/{application}/estado', [OfferController::class, 'cambiarEstado'])
         ->name('ofertas.postulacion.estado');
 
+    // CRUD de ofertas del estudio (requiere suscripción activa).
+    // El middleware `membresia.activa` bloquea si el estudio no está al día.
+    Route::middleware(['membresia.activa'])->group(function () {
+        Route::get('/mis-ofertas/nueva', [OfferController::class, 'crear'])->name('ofertas.crear');
+        Route::post('/mis-ofertas', [OfferController::class, 'guardar'])
+            ->middleware('throttle:6,1')->name('ofertas.guardar');
+        Route::get('/mis-ofertas/{oferta}/editar', [OfferController::class, 'editar'])->name('ofertas.editar');
+        Route::put('/mis-ofertas/{oferta}', [OfferController::class, 'actualizar'])
+            ->middleware('throttle:6,1')->name('ofertas.actualizar');
+    });
+    // Cambio de estado y cierre no requieren membresía activa (permite al
+    // estudio administrar ofertas antiguas aunque haya vencido su plan).
+    Route::post('/mis-ofertas/{oferta}/estado', [OfferController::class, 'cambiarEstadoOferta'])
+        ->name('ofertas.cambiar-estado');
+    Route::delete('/mis-ofertas/{oferta}', [OfferController::class, 'eliminar'])
+        ->name('ofertas.eliminar');
+
     // Contenido (2.9)
     Route::get('/contenido', [ContentController::class, 'index'])->name('contenido.index');
     Route::get('/contenido/{content:slug}', [ContentController::class, 'show'])->name('contenido.show');
+
+    // CRUD del estudio: subir su propio contenido (visible a todos los usuarios activos).
+    Route::get('/mi-contenido', [ContentController::class, 'misContenidos'])->name('contenido.mis-contenidos');
+    Route::middleware(['membresia.activa'])->group(function () {
+        Route::get('/mi-contenido/nuevo', [ContentController::class, 'crear'])->name('contenido.crear');
+        Route::post('/mi-contenido', [ContentController::class, 'guardar'])
+            ->middleware('throttle:6,1')->name('contenido.guardar');
+        Route::get('/mi-contenido/{contenido}/editar', [ContentController::class, 'editar'])->name('contenido.editar');
+        Route::put('/mi-contenido/{contenido}', [ContentController::class, 'actualizar'])
+            ->middleware('throttle:6,1')->name('contenido.actualizar');
+    });
+    Route::delete('/mi-contenido/{contenido}', [ContentController::class, 'eliminar'])->name('contenido.eliminar');
 
     // Expediente coach (2.11)
     Route::get('/mi-expediente', [WellnessController::class, 'index'])->name('expediente.index');

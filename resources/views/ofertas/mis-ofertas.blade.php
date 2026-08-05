@@ -4,9 +4,25 @@
     </x-slot>
 
     <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-        <p class="mb-6 text-sm text-warmgray">
-            {{ __('Las ofertas se crean desde el panel de administración. Aquí ves tus ofertas activas y las postulaciones recibidas.') }}
-        </p>
+        {{-- Flashes de resultado de las acciones del CRUD. --}}
+        @foreach (['oferta-creada' => __('Oferta publicada. Ya la ven los coaches.'),
+                   'oferta-actualizada' => __('Cambios guardados.'),
+                   'oferta-cerrada' => __('Oferta cerrada. Ya no recibe postulaciones.'),
+                   'oferta-estado-actualizado' => __('Estado de la oferta actualizado.')] as $flag => $mensaje)
+            @if (session('status') === $flag)
+                <div class="mb-6 rounded-xl border border-sage/40 bg-sage/10 px-5 py-3 text-sm text-ink">{{ $mensaje }}</div>
+            @endif
+        @endforeach
+
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <p class="text-sm text-warmgray">
+                {{ __('Aquí publicas tus vacantes, gestionas las postulaciones y cambias el estado de cada candidato.') }}
+            </p>
+            <a href="{{ route('ofertas.crear') }}"
+               class="inline-flex min-h-[44px] items-center rounded-full bg-sage px-5 py-2.5 text-sm font-semibold text-cream hover:bg-ink">
+                + {{ __('Publicar oferta') }}
+            </a>
+        </div>
 
         @forelse ($ofertas as $o)
             <div class="mb-4 rounded-2xl border border-line bg-white p-5">
@@ -25,6 +41,24 @@
                     {{ __('Publicada:') }} {{ $o->published_at?->translatedFormat('d M Y') ?? '—' }}
                     · {{ __('Vence:') }} {{ $o->expires_on?->translatedFormat('d M Y') ?? __('sin fecha') }}
                 </p>
+
+                {{-- Acciones de la oferta: editar / cerrar. --}}
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <a href="{{ route('ofertas.editar', $o) }}"
+                       class="inline-flex min-h-[36px] items-center rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink hover:border-sage hover:text-sage">
+                        {{ __('Editar') }}
+                    </a>
+                    @if ($o->status !== \App\Models\Offer::STATUS_CLOSED)
+                        <form method="POST" action="{{ route('ofertas.eliminar', $o) }}"
+                              onsubmit="return confirm('{{ __('¿Cerrar esta oferta? Ya no recibirá nuevas postulaciones.') }}');">
+                            @csrf @method('DELETE')
+                            <button type="submit"
+                                    class="inline-flex min-h-[36px] items-center rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50">
+                                {{ __('Cerrar oferta') }}
+                            </button>
+                        </form>
+                    @endif
+                </div>
 
                 @if ($o->applications_count > 0)
                     <details class="mt-4">
@@ -51,7 +85,7 @@
             </div>
         @empty
             <div class="rounded-2xl border border-line bg-white px-6 py-12 text-center">
-                <p class="text-warmgray">{{ __('Aún no has publicado ofertas. Créalas desde el panel de administración de Kinvoo.') }}</p>
+                <p class="text-warmgray">{{ __('Aún no has publicado ofertas. Presiona “+ Publicar oferta” arriba para comenzar.') }}</p>
             </div>
         @endforelse
 

@@ -17,7 +17,10 @@
                     $cuentaActiva = $u->estaActivo() || $u->esAdmin();
                 @endphp
                 <div class="hidden space-x-8 lg:-my-px lg:ms-10 lg:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    {{-- Pendientes: "Inicio" apunta a /cuenta/pendiente en vez de /dashboard
+                         para que no rebote por el middleware cuenta.activa. --}}
+                    <x-nav-link :href="$cuentaActiva ? route('dashboard') : route('account.pending')"
+                                :active="request()->routeIs('dashboard','account.pending')">
                         {{ __('Inicio') }}
                     </x-nav-link>
                     @if ($u->esProfesional())
@@ -55,8 +58,11 @@
                             <x-nav-link :href="route('ofertas.mis-ofertas')" :active="request()->routeIs('ofertas.*')">
                                 {{ __('Ofertas') }}
                             </x-nav-link>
-                            <x-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.*')">
+                            <x-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.index','contenido.show')">
                                 {{ __('Contenido') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('contenido.mis-contenidos')" :active="request()->routeIs('contenido.mis-contenidos','contenido.crear','contenido.editar')">
+                                {{ __('Mi contenido') }}
                             </x-nav-link>
                             <x-nav-link :href="route('equipo.index')" :active="request()->routeIs('equipo.*')">
                                 {{ __('Mi equipo') }}
@@ -69,7 +75,9 @@
             <!-- Settings Dropdown -->
             <div class="hidden lg:flex lg:items-center lg:ms-6 lg:gap-2">
                 <x-locale-switcher class="mr-1" />
-                @include('partials.notification-bell')
+                @if ($cuentaActiva)
+                    @include('partials.notification-bell')
+                @endif
 
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
@@ -106,17 +114,19 @@
 
             <!-- Móvil/tablet: campana + hamburguesa (hasta lg, colapsamos el nav completo). -->
             <div class="flex items-center gap-1 lg:hidden">
-                @php $unreadNav = auth()->user()->unreadNotifications()->count(); @endphp
-                <a href="{{ route('notifications.index') }}"
-                   class="relative flex h-10 w-10 items-center justify-center rounded-md text-warmgray hover:bg-beige"
-                   aria-label="{{ $unreadNav > 0 ? __('Notifications, :n unread', ['n' => $unreadNav]) : __('Notifications') }}">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-                    </svg>
-                    @if ($unreadNav > 0)
-                        <span class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-lime px-1 text-[10px] font-semibold text-ink">{{ $unreadNav > 9 ? '9+' : $unreadNav }}</span>
-                    @endif
-                </a>
+                @if ($cuentaActiva)
+                    @php $unreadNav = auth()->user()->unreadNotifications()->count(); @endphp
+                    <a href="{{ route('notifications.index') }}"
+                       class="relative flex h-10 w-10 items-center justify-center rounded-md text-warmgray hover:bg-beige"
+                       aria-label="{{ $unreadNav > 0 ? __('Notifications, :n unread', ['n' => $unreadNav]) : __('Notifications') }}">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                        </svg>
+                        @if ($unreadNav > 0)
+                            <span class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-lime px-1 text-[10px] font-semibold text-ink">{{ $unreadNav > 9 ? '9+' : $unreadNav }}</span>
+                        @endif
+                    </a>
+                @endif
                 <button @click="open = ! open" type="button"
                         aria-controls="mobile-menu" :aria-expanded="open ? 'true' : 'false'"
                         :aria-label="open ? @js(__('Cerrar menú')) : @js(__('Abrir menú'))"
@@ -176,8 +186,11 @@
                     <x-responsive-nav-link :href="route('ofertas.mis-ofertas')" :active="request()->routeIs('ofertas.mis-ofertas')">
                         {{ __('Mis ofertas') }}
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.*')">
+                    <x-responsive-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.index','contenido.show')">
                         {{ __('Contenido y capacitaciones') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('contenido.mis-contenidos')" :active="request()->routeIs('contenido.mis-contenidos','contenido.crear','contenido.editar')">
+                        {{ __('Mi contenido') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('equipo.index')" :active="request()->routeIs('equipo.*')">
                         {{ __('Mi equipo') }}

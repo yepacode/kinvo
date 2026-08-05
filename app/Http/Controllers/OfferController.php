@@ -124,6 +124,131 @@ class OfferController extends Controller
         return view('ofertas.mis-ofertas', compact('ofertas'));
     }
 
+    /** Formulario para crear una nueva oferta (estudio autónomo). */
+    public function crear(Request $request): View
+    {
+        $user = $request->user();
+        abort_unless($user->esContratante(), 403);
+        $this->autorizarSuscripcionActiva($user);
+
+        return view('ofertas.form', ['oferta' => new Offer()]);
+    }
+
+    /** Guarda la nueva oferta del estudio. Queda publicada al instante. */
+    public function guardar(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user->esContratante(), 403);
+        $this->autorizarSuscripcionActiva($user);
+
+        $data = $this->validarOferta($request);
+        $data['contractor_user_id'] = $user->id;
+        $data['status'] = Offer::STATUS_PUBLISHED;
+        $data['published_at'] = now();
+
+        $oferta = Offer::create($data);
+        AuditLog::record($user, $oferta, 'oferta_publicada', new: ['title' => $oferta->title]);
+
+        return redirect()->route('ofertas.mis-ofertas')->with('status', 'oferta-creada');
+    }
+
+    /** Formulario para editar una oferta propia. */
+    public function editar(Request $request, Offer $oferta): View
+    {
+        $user = $request->user();
+        abort_unless($user->esContratante() && $oferta->contractor_user_id === $user->id, 403);
+        $this->autorizarSuscripcionActiva($user);
+
+        return view('ofertas.form', compact('oferta'));
+    }
+
+    /** Actualiza una oferta propia. */
+    public function actualizar(Request $request, Offer $oferta): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user->esContratante() && $oferta->contractor_user_id === $user->id, 403);
+        $this->autorizarSuscripcionActiva($user);
+
+        $data = $this->validarOferta($request);
+        // Permitimos editar todo excepto el dueño; el estatus se maneja aparte.
+        $oferta->update($data);
+        AuditLog::record($user, $oferta, 'oferta_editada');
+
+        return redirect()->route('ofertas.mis-ofertas')->with('status', 'oferta-actualizada');
+    }
+
+    /** Cambia el estatus de una oferta propia (cerrar / reabrir). */
+    public function cambiarEstadoOferta(Request $request, Offer $oferta): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user->esContratante() && $oferta->contractor_user_id === $user->id, 403);
+
+        $data = $request->validate([
+            'status' => ['required', Rule::in([
+                Offer::STATUS_DRAFT,
+                Offer::STATUS_PUBLISHED,
+                Offer::STATUS_CLOSED,
+            ])],
+        ]);
+
+        $oferta->update([
+            'status' => $data['status'],
+            'published_at' => $data['status'] === Offer::STATUS_PUBLISHED && ! $oferta->published_at ? now() : $oferta->published_at,
+        ]);
+        AuditLog::record($user, $oferta, 'oferta_estado_'.$data['status']);
+
+        return back()->with('status', 'oferta-estado-actualizado');
+    }
+
+    /** Elimina una oferta propia (soft — la marca como closed). */
+    public function eliminar(Request $request, Offer $oferta): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user->esContratante() && $oferta->contractor_user_id === $user->id, 403);
+
+        $oferta->update(['status' => Offer::STATUS_CLOSED]);
+        AuditLog::record($user, $oferta, 'oferta_cerrada');
+
+        return redirect()->route('ofertas.mis-ofertas')->with('status', 'oferta-cerrada');
+    }
+
+    /** Reglas de validación compartidas entre crear/actualizar. */
+    private function validarOferta(Request $request): array
+    {
+        return $request->validate([
+            'title'            => ['required', 'string', 'max:180'],
+            'description'      => ['required', 'string', 'max:5000'],
+            'requirements'     => ['nullable', 'string', 'max:3000'],
+            'discipline_id'    => ['nullable', 'integer', 'exists:disciplines,id'],
+            'location_id'      => ['nullable', 'integer', 'exists:locations,id'],
+            'modality'         => ['required', Rule::in(['presencial', 'online', 'hibrido'])],
+            'contract_type'    => ['nullable', Rule::in(['full_time', 'part_time', 'freelance'])],
+            'salary_min_cents' => ['nullable', 'integer', 'min:0'],
+            'salary_max_cents' => ['nullable', 'integer', 'min:0', 'gte:salary_min_cents'],
+            'salary_currency'  => ['required', 'string', 'size:3'],
+            'salary_period'    => ['required', Rule::in(['hour', 'month', 'year', 'project'])],
+            'expires_on'       => ['nullable', 'date', 'after_or_equal:today'],
+        ]);
+    }
+
+    /** Bloqueo: solo estudios con suscripción activa pueden publicar/editar ofertas. */
+    private function autorizarSuscripcionActiva(\App\Models\User $user): void
+    {
+        // El middleware `membresia.activa` en la ruta ya lo bloquea, pero el
+        // controller lo reafirma por si alguien llama al método vía API.
+        $vigente = \App\Models\Subscription::where('user_id', $user->id)
+            ->whereIn('status', [\App\Models\Subscription::STATUS_ACTIVE, \App\Models\Subscription::STATUS_TRIALING])
+            ->where(function ($q) {
+                $q->whereNull('current_period_end')
+                  ->orWhere('current_period_end', '>=', now());
+            })
+            ->exists();
+
+        if (! $vigente && ! $user->tieneMembresiaActiva()) {
+            abort(redirect()->route('membresias.index')->with('status', 'membresia-requerida'));
+        }
+    }
+
     /** Estudio cambia el estado de una postulación (seen, in_contact, accepted, rejected). */
     public function cambiarEstado(Request $request, Application $application): RedirectResponse
     {
