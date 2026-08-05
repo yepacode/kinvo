@@ -75,6 +75,11 @@
                         <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Mi cuenta') }}
                         </x-dropdown-link>
+                        @if (! auth()->user()->esAdmin())
+                            <x-dropdown-link :href="route('membresias.index')">
+                                {{ __('Mi membresía') }}
+                            </x-dropdown-link>
+                        @endif
 
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -175,6 +180,11 @@
                 <x-responsive-nav-link :href="route('profile.edit')">
                     {{ __('Mi cuenta') }}
                 </x-responsive-nav-link>
+                @if (! auth()->user()->esAdmin())
+                    <x-responsive-nav-link :href="route('membresias.index')" :active="request()->routeIs('membresias.*')">
+                        {{ __('Mi membresía') }}
+                    </x-responsive-nav-link>
+                @endif
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
