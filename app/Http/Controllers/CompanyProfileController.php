@@ -72,27 +72,39 @@ class CompanyProfileController extends Controller
             'company_name' => $user->name,
         ]);
 
+        // 2026-08-06 · Petición de la clienta (Marian):
+        // "Todos los campos obligatorios EXCEPTO contenido multimedia y web".
+        // Los estudios que solo dejan su correo bloquean el flujo.
+        // Excepciones opcionales: media_url, media_file, website (redes/web).
+        // El logo es opcional solo si ya existe en el perfil.
+        $logoRequerido = $profile->logo_path ? 'nullable' : 'required';
+
         $data = $request->validate([
             'company_name' => ['required', 'string', 'max:150'],
-            'disciplines_text' => ['nullable', 'string', 'max:300'],
-            'description' => ['nullable', 'string', 'max:2000'],
+            'disciplines_text' => ['required', 'string', 'max:300'],
+            'description' => ['required', 'string', 'min:20', 'max:2000'],
+            // OPCIONAL por decisión de negocio (redes/web):
             'website' => ['nullable', 'url:http,https', 'max:200'],
-            'estado' => ['nullable', Rule::in(CompanyProfile::ESTADOS_MX)],
-            'address' => ['nullable', 'string', 'max:255'],
-            'postal_code' => ['nullable', 'digits_between:4,5'],
-            'colonia' => ['nullable', 'string', 'max:120'],
+            'estado' => ['required', Rule::in(CompanyProfile::ESTADOS_MX)],
+            'address' => ['required', 'string', 'max:255'],
+            'postal_code' => ['required', 'digits_between:4,5'],
+            'colonia' => ['required', 'string', 'max:120'],
             'show_address' => ['nullable', 'boolean'],
-            'contact_name' => ['nullable', 'string', 'max:150'],
-            'contact_phone' => ['nullable', 'string', 'max:40', 'regex:/^[\d\s()+.\-]{6,40}$/'],
-            'contact_email' => ['nullable', 'email', 'max:150'],
+            'contact_name' => ['required', 'string', 'max:150'],
+            'contact_phone' => ['required', 'string', 'max:40', 'regex:/^[\d\s()+.\-]{6,40}$/'],
+            'contact_email' => ['required', 'email', 'max:150'],
+            // OPCIONAL por decisión de negocio (multimedia):
             'media_url' => ['nullable', 'url:http,https', 'max:300'],
             'media_file' => ['nullable', 'file', 'mimes:mp4,webm,mov,m4v,jpg,jpeg,png,webp,gif', 'max:25600'],
             'remove_media_file' => ['nullable', 'boolean'],
             // Mismo criterio que la foto de perfil: hasta 5 MB y bloqueo de imágenes absurdas (100 MP).
-            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=10000,max_height=10000'],
+            'logo' => [$logoRequerido, 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=10000,max_height=10000'],
         ], [
             'contact_phone.regex' => 'El teléfono solo puede tener números, espacios y los signos + ( ) - .',
             'postal_code.digits_between' => 'El código postal debe tener 4 o 5 dígitos.',
+            'logo.required' => 'El logo del estudio es obligatorio — súbelo para completar tu perfil.',
+            'description.min' => 'Cuéntanos un poco más sobre tu estudio (mínimo 20 caracteres).',
+            'disciplines_text.required' => 'Indica al menos una disciplina que se practica en tu estudio.',
         ]);
 
         if ($request->hasFile('logo')) {

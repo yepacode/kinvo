@@ -74,35 +74,49 @@ class ProfessionalProfileController extends Controller
 
         $mayoriaEdad = now()->subYears(18)->toDateString();
 
+        // 2026-08-06 · Petición de la clienta (Marian):
+        // "Todos los campos obligatorios EXCEPTO contenido multimedia y
+        // redes sociales/web". Motivo: se estaban creando cuentas sin
+        // llenar el perfil (solo correo).
+        // Excepciones opcionales: media_url, media_file, instagram, tiktok, web,
+        // + los toggles `remove_*` que son helpers de UI.
+        // Foto y archivo de certificación: opcionales solo si YA existen en el
+        // perfil actual (así el usuario no tiene que re-subirlos cada vez que
+        // edita); si es un perfil nuevo, son requeridos.
+        $fotoRequerida = $profile->photo_path ? 'nullable' : 'required';
+        $certRequerida = ($profile->certification_file_path || filled($profile->certifications_text))
+            ? 'nullable' : 'required_without:certifications_text';
+
         $data = $request->validate([
-            'full_name' => ['nullable', 'string', 'max:150'],
-            'headline' => ['nullable', 'string', 'max:120'],
-            'birthdate' => ['nullable', 'date', 'after:1920-01-01', 'before_or_equal:'.$mayoriaEdad],
-            'bio' => ['nullable', 'string', 'max:2000'],
-            'years_experience' => ['nullable', 'integer', 'min:0', 'max:70'],
-            'modalidad' => ['nullable', Rule::in(array_column(ModalidadTrabajo::cases(), 'value'))],
-            'availability' => ['array'],
+            'full_name' => ['required', 'string', 'max:150'],
+            'headline' => ['required', 'string', 'max:120'],
+            'birthdate' => ['required', 'date', 'after:1920-01-01', 'before_or_equal:'.$mayoriaEdad],
+            'bio' => ['required', 'string', 'min:20', 'max:2000'],
+            'years_experience' => ['required', 'integer', 'min:0', 'max:70'],
+            'modalidad' => ['required', Rule::in(array_column(ModalidadTrabajo::cases(), 'value'))],
+            'availability' => ['required', 'array', 'min:1'],
             'availability.*' => [Rule::in(ProfessionalProfile::slotsDisponibilidad())],
-            'languages' => ['array'],
+            'languages' => ['required', 'array', 'min:1'],
             'languages.*' => [Rule::in(array_keys(ProfessionalProfile::IDIOMAS))],
-            'location_id' => ['nullable', Rule::exists('locations', 'id')->where('activo', true)],
-            'colonia' => ['nullable', 'string', 'max:120'],
-            'phone' => ['nullable', 'string', 'max:40', 'regex:/^[\d\s()+.\-]{6,40}$/'],
+            'location_id' => ['required', Rule::exists('locations', 'id')->where('activo', true)],
+            'colonia' => ['required', 'string', 'max:120'],
+            'phone' => ['required', 'string', 'max:40', 'regex:/^[\d\s()+.\-]{6,40}$/'],
             'certifications_text' => ['nullable', 'string', 'max:2000'],
-            'certification_file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
+            'certification_file' => [$certRequerida, 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
+            // OPCIONALES por decisión de negocio:
             'media_url' => ['nullable', 'url:http,https', 'max:300'],
             'media_file' => ['nullable', 'file', 'mimes:mp4,webm,mov,m4v,jpg,jpeg,png,webp,gif', 'max:25600'],
             'remove_media_file' => ['nullable', 'boolean'],
             'instagram' => ['nullable', 'string', 'max:120', 'regex:/^[@\w.\-\/:?=&%~#]+$/u'],
             'tiktok' => ['nullable', 'string', 'max:120', 'regex:/^[@\w.\-\/:?=&%~#]+$/u'],
             'web' => ['nullable', 'url:http,https', 'max:200'],
-            'disciplines' => ['array'],
+            'disciplines' => ['required', 'array', 'min:1'],
             'disciplines.*' => [Rule::exists('disciplines', 'id')->where('activo', true)],
             // Las fotos de móvil pueden superar 2 MB. 5 MB es holgado para HEIC/JPG
             // recientes y sigue siendo razonable de subir en LTE. Las dimensiones
             // (10000×10000 ~ 100 MP) están para bloquear archivos absurdos, no las
             // fotos reales de iPhone/Samsung actuales.
-            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=10000,max_height=10000'],
+            'photo' => [$fotoRequerida, 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=10000,max_height=10000'],
             'remove_photo' => ['nullable', 'boolean'],
             'remove_certification_file' => ['nullable', 'boolean'],
         ], [
@@ -110,6 +124,12 @@ class ProfessionalProfileController extends Controller
             'phone.regex' => 'El teléfono solo puede tener números, espacios y los signos + ( ) - .',
             'instagram.regex' => 'Usuario o enlace de Instagram no válido.',
             'tiktok.regex' => 'Usuario o enlace de TikTok no válido.',
+            'photo.required' => 'La foto de perfil es obligatoria — súbela para completar tu perfil.',
+            'certification_file.required_without' => 'Sube al menos una certificación (archivo o descripción).',
+            'availability.required' => 'Selecciona al menos un horario de disponibilidad.',
+            'languages.required' => 'Selecciona al menos un idioma que hables.',
+            'disciplines.required' => 'Selecciona al menos una disciplina que enseñes.',
+            'bio.min' => 'Cuéntanos un poco más sobre ti (mínimo 20 caracteres).',
         ]);
 
         if ($request->hasFile('photo')) {

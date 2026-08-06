@@ -75,7 +75,7 @@
                     </template>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <x-input-label for="logo" :value="__('Logo')" />
+                    <x-input-label for="logo" :value="__('Logo')" :required="true" />
                     <input id="logo" name="logo" type="file" accept="image/*"
                            @change="onSelect($event)"
                            class="mt-1 block w-full max-w-full text-sm text-warmgray file:mr-3 file:rounded-full file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-cream hover:file:bg-ink">
@@ -87,14 +87,14 @@
             </div>
 
             <div>
-                <x-input-label for="company_name" :value="__('Nombre del estudio / gym')" />
+                <x-input-label for="company_name" :value="__('Nombre del estudio / gym')" :required="true" />
                 <x-text-input id="company_name" name="company_name" type="text" class="mt-1 block w-full"
                               :value="old('company_name', $profile->company_name)" required maxlength="150" />
                 <x-input-error :messages="$errors->get('company_name')" class="mt-1" />
             </div>
 
             <div>
-                <x-input-label for="disciplines_text" :value="__('Disciplina')" />
+                <x-input-label for="disciplines_text" :value="__('Disciplina')" :required="true" />
                 <x-text-input id="disciplines_text" name="disciplines_text" type="text" class="mt-1 block w-full"
                               :value="old('disciplines_text', $profile->disciplines_text)" maxlength="300"
                               placeholder="{{ __('Ej. Yoga, Spinning, Crossfit, Pilates...') }}" />
@@ -104,7 +104,7 @@
             {{-- Ubicación: estado de México + dirección con CP --}}
             <div class="grid gap-5 sm:grid-cols-2">
                 <div>
-                    <x-input-label for="estado" :value="__('Estado (México)')" />
+                    <x-input-label for="estado" :value="__('Estado (México)')" :required="true" />
                     <select id="estado" name="estado"
                             class="mt-1 block w-full rounded-md border-line shadow-sm focus:border-sage focus:ring-sage">
                         <option value="">— {{ __('Selecciona') }} —</option>
@@ -115,7 +115,7 @@
                     <x-input-error :messages="$errors->get('estado')" class="mt-1" />
                 </div>
                 <div>
-                    <x-input-label for="postal_code" :value="__('Código Postal (CP)')" />
+                    <x-input-label for="postal_code" :value="__('Código Postal (CP)')" :required="true" />
                     <x-text-input id="postal_code" name="postal_code" type="text" inputmode="numeric" class="mt-1 block w-full"
                                   :value="old('postal_code', $profile->postal_code)" maxlength="10" placeholder="11560" />
                     <p class="mt-1 text-xs text-warmgray">{{ __('Nos ayuda a ubicar la colonia exacta.') }}</p>
@@ -124,7 +124,7 @@
             </div>
 
             <div>
-                <x-input-label for="address" :value="__('Dirección del estudio')" />
+                <x-input-label for="address" :value="__('Dirección del estudio')" :required="true" />
                 <x-text-input id="address" name="address" type="text" class="mt-1 block w-full"
                               :value="old('address', $profile->address)" maxlength="255"
                               placeholder="{{ __('Calle y número') }}" />
@@ -139,7 +139,7 @@
             </div>
 
             <div>
-                <x-input-label for="colonia" :value="__('Colonia')" />
+                <x-input-label for="colonia" :value="__('Colonia')" :required="true" />
                 <x-text-input id="colonia" name="colonia" type="text" class="mt-1 block w-full"
                               :value="old('colonia', $profile->colonia)" maxlength="120"
                               placeholder="{{ __('Ej. Roma Norte, Del Valle, Polanco…') }}" />
@@ -153,17 +153,17 @@
                 <p class="mb-3 text-xs text-warmgray"><span aria-hidden="true">🔒</span> {{ __('Son privados: solo los ve Kinvoo para coordinar cada conexión.') }}</p>
                 <div class="grid gap-4 sm:grid-cols-3">
                     <div>
-                        <x-input-label for="contact_name" :value="__('Nombre de contacto')" />
+                        <x-input-label for="contact_name" :value="__('Nombre de contacto')" :required="true" />
                         <x-text-input id="contact_name" name="contact_name" type="text" class="mt-1 block w-full"
                                       :value="old('contact_name', $profile->contact_name)" maxlength="150" />
                     </div>
                     <div>
-                        <x-input-label for="contact_phone" :value="__('Teléfono')" />
+                        <x-input-label for="contact_phone" :value="__('Teléfono')" :required="true" />
                         <x-text-input id="contact_phone" name="contact_phone" type="text" class="mt-1 block w-full"
                                       :value="old('contact_phone', $profile->contact_phone)" placeholder="+52 ..." />
                     </div>
                     <div>
-                        <x-input-label for="contact_email" :value="__('Email')" />
+                        <x-input-label for="contact_email" :value="__('Email')" :required="true" />
                         <x-text-input id="contact_email" name="contact_email" type="email" class="mt-1 block w-full"
                                       :value="old('contact_email', $profile->contact_email)" />
                         <x-input-error :messages="$errors->get('contact_email')" class="mt-1" />
@@ -224,7 +224,7 @@
             </div>
 
             <div>
-                <x-input-label for="description" :value="__('Descripción')" />
+                <x-input-label for="description" :value="__('Descripción')" :required="true" />
                 <textarea id="description" name="description" rows="4" maxlength="2000"
                           class="mt-1 block w-full rounded-md border-line shadow-sm focus:border-sage focus:ring-sage"
                           placeholder="{{ __('Cuenta qué hace tu estudio y qué tipo de talento buscas.') }}">{{ old('description', $profile->description) }}</textarea>
