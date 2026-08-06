@@ -49,7 +49,7 @@
                     </template>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <x-input-label for="photo" :value="__('Foto de perfil')" />
+                    <x-input-label for="photo" :value="__('Foto de perfil')" :required="true" />
                     <input id="photo" name="photo" type="file" accept="image/*"
                            @change="onSelect($event)"
                            class="mt-1 block w-full max-w-full text-sm text-warmgray file:mr-3 file:rounded-full file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-cream hover:file:bg-ink">
@@ -69,7 +69,7 @@
 
             {{-- Nombre completo --}}
             <div>
-                <x-input-label for="full_name" :value="__('Nombre completo')" />
+                <x-input-label for="full_name" :value="__('Nombre completo')" :required="true" />
                 <x-text-input id="full_name" name="full_name" type="text" class="mt-1 block w-full"
                               :value="old('full_name', $profile->full_name)" maxlength="150"
                               placeholder="{{ __('Nombre(s) y apellidos') }}" />
@@ -79,7 +79,7 @@
 
             {{-- Titular --}}
             <div>
-                <x-input-label for="headline" :value="__('Titular')" />
+                <x-input-label for="headline" :value="__('Titular')" :required="true" />
                 <x-text-input id="headline" name="headline" type="text" class="mt-1 block w-full"
                               :value="old('headline', $profile->headline)" maxlength="120"
                               placeholder="{{ __('Ej. Coach de fuerza y acondicionamiento') }}" />
@@ -88,7 +88,7 @@
 
             {{-- Fecha de nacimiento (18+) --}}
             <div>
-                <x-input-label for="birthdate" :value="__('Fecha de nacimiento')" />
+                <x-input-label for="birthdate" :value="__('Fecha de nacimiento')" :required="true" />
                 <x-text-input id="birthdate" name="birthdate" type="date" class="mt-1 block w-full sm:w-60"
                               :value="old('birthdate', optional($profile->birthdate)->format('Y-m-d'))"
                               max="{{ now()->subYears(18)->format('Y-m-d') }}" />
@@ -98,7 +98,7 @@
 
             {{-- Bio --}}
             <div>
-                <x-input-label for="bio" :value="__('Sobre ti')" />
+                <x-input-label for="bio" :value="__('Sobre ti')" :required="true" />
                 <textarea id="bio" name="bio" rows="4" maxlength="2000"
                           class="mt-1 block w-full rounded-md border-line shadow-sm focus:border-sage focus:ring-sage"
                           placeholder="{{ __('Cuenta tu experiencia, especialidad y estilo de trabajo.') }}">{{ old('bio', $profile->bio) }}</textarea>
@@ -108,13 +108,13 @@
             {{-- Experiencia + Modalidad + Ubicación --}}
             <div class="grid gap-5 sm:grid-cols-3">
                 <div>
-                    <x-input-label for="years_experience" :value="__('Años de experiencia')" />
+                    <x-input-label for="years_experience" :value="__('Años de experiencia')" :required="true" />
                     <x-text-input id="years_experience" name="years_experience" type="number" min="0" max="70"
                                   class="mt-1 block w-full" :value="old('years_experience', $profile->years_experience)" />
                     <x-input-error :messages="$errors->get('years_experience')" class="mt-1" />
                 </div>
                 <div>
-                    <x-input-label for="modalidad" :value="__('Modalidad')" />
+                    <x-input-label for="modalidad" :value="__('Modalidad')" :required="true" />
                     <select id="modalidad" name="modalidad"
                             class="mt-1 block w-full rounded-md border-line shadow-sm focus:border-sage focus:ring-sage">
                         <option value="">—</option>
@@ -124,7 +124,7 @@
                     </select>
                 </div>
                 <div>
-                    <x-input-label for="location_id" :value="__('Ubicación')" />
+                    <x-input-label for="location_id" :value="__('Ubicación')" :required="true" />
                     <select id="location_id" name="location_id"
                             class="mt-1 block w-full rounded-md border-line shadow-sm focus:border-sage focus:ring-sage">
                         <option value="">—</option>
@@ -136,7 +136,7 @@
             </div>
 
             <div>
-                <x-input-label for="colonia" :value="__('Colonia')" />
+                <x-input-label for="colonia" :value="__('Colonia')" :required="true" />
                 <x-text-input id="colonia" name="colonia" type="text" class="mt-1 block w-full"
                               :value="old('colonia', $profile->colonia)" maxlength="120"
                               placeholder="{{ __('Ej. Roma Norte, Del Valle, Polanco…') }}" />
@@ -146,7 +146,7 @@
 
             {{-- Disciplinas --}}
             <div>
-                <x-input-label :value="__('Disciplinas')" />
+                <x-input-label :value="__('Disciplinas')" :required="true" />
                 @php $selDisc = old('disciplines', $profile->disciplines->pluck('id')->all()); @endphp
                 <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                     @foreach ($disciplines as $d)
@@ -162,7 +162,7 @@
 
             {{-- Disponibilidad (días × AM/PM) --}}
             <div>
-                <x-input-label :value="__('Disponibilidad')" />
+                <x-input-label :value="__('Disponibilidad')" :required="true" />
                 <p class="mt-1 text-xs text-warmgray">{{ __('Marca los días y franjas en que puedes trabajar.') }}</p>
                 @php $selSlots = old('availability', $profile->availability ?? []); @endphp
                 <div class="mt-3 overflow-hidden rounded-xl border border-line">
@@ -187,7 +187,7 @@
 
             {{-- Idiomas --}}
             <div>
-                <x-input-label :value="__('Idiomas')" />
+                <x-input-label :value="__('Idiomas')" :required="true" />
                 @php $selIdiomas = old('languages', $profile->languages ?? []); @endphp
                 <div class="mt-2 flex flex-wrap gap-2">
                     @foreach (\App\Models\ProfessionalProfile::IDIOMAS as $idKey => $idLabel)
@@ -203,7 +203,7 @@
 
             {{-- Certificaciones (texto libre + adjunto privado) --}}
             <div>
-                <x-input-label for="certifications_text" :value="__('Certificaciones')" />
+                <x-input-label for="certifications_text" :value="__('Certificaciones')" :required="true" />
                 <textarea id="certifications_text" name="certifications_text" rows="3" maxlength="2000"
                           class="mt-1 block w-full rounded-md border-line shadow-sm focus:border-sage focus:ring-sage"
                           placeholder="{{ __('Ej. Certificación en Yoga (RYT-200), Instructor de Spinning, TRX...') }}">{{ old('certifications_text', $profile->certifications_text) }}</textarea>
@@ -281,7 +281,7 @@
             {{-- Contacto / redes --}}
             <div class="grid gap-5 sm:grid-cols-2">
                 <div>
-                    <x-input-label for="phone" :value="__('Teléfono')" />
+                    <x-input-label for="phone" :value="__('Teléfono')" :required="true" />
                     <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full"
                                   :value="old('phone', $profile->phone)" placeholder="+52 ..." />
                 </div>
