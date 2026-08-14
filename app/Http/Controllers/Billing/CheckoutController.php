@@ -60,34 +60,51 @@ class CheckoutController extends Controller
             return back()->with('status', 'plan-sin-precio');
         }
 
-        // Blindaje: si el user ya tiene una suscripción activa vigente, no
-        // creamos una nueva (evita duplicados por doble click / F5).
-        $subVigente = Subscription::where('user_id', $user->id)
-            ->whereIn('status', [Subscription::STATUS_ACTIVE, Subscription::STATUS_TRIALING])
-            ->where(function ($q) {
-                $q->whereNull('current_period_end')
-                  ->orWhere('current_period_end', '>=', now());
-            })
-            ->exists();
-        if ($subVigente) {
-            return back()->with('status', 'ya-tienes-suscripcion');
+        // HIGH-43 · Race condition: doble click en "Suscribirme" podía
+        // crear 2 suscripciones porque el chequeo `subVigente` no era
+        // atómico con la creación. Lock por user_id serializa los intentos
+        // simultáneos: el segundo click cae en el rama `ya-tienes-suscripcion`
+        // cuando la primera transacción ya haya escrito la sub.
+        $lock = \Illuminate\Support\Facades\Cache::lock('billing:start:user:'.$user->id, 15);
+        if (! $lock->get()) {
+            return back()->with('status', 'reintentalo-en-unos-segundos');
         }
+        try {
+            // Blindaje: si el user ya tiene una suscripción activa vigente
+            // (o INCOMPLETE de un checkout de Stripe en curso), no creamos otra.
+            $subVigente = Subscription::where('user_id', $user->id)
+                ->whereIn('status', [
+                    Subscription::STATUS_ACTIVE,
+                    Subscription::STATUS_TRIALING,
+                    Subscription::STATUS_INCOMPLETE,
+                ])
+                ->where(function ($q) {
+                    $q->whereNull('current_period_end')
+                      ->orWhere('current_period_end', '>=', now());
+                })
+                ->exists();
+            if ($subVigente) {
+                return back()->with('status', 'ya-tienes-suscripcion');
+            }
 
-        $url = $this->gateway->createCheckoutUrl(
-            $user,
-            $plan,
-            successUrl: route('billing.exitosa'),
-            cancelUrl: route('billing.fallida'),
-        );
+            $url = $this->gateway->createCheckoutUrl(
+                $user,
+                $plan,
+                successUrl: route('billing.exitosa'),
+                cancelUrl: route('billing.fallida'),
+            );
 
-        AuditLog::record($user, $user, 'checkout_started', new: [
-            'plan_id'    => $plan->id,
-            'plan_nombre'=> $plan->nombre,
-            'plan_precio'=> $plan->precio,
-            'gateway'    => $this->gateway->name(),
-        ]);
+            AuditLog::record($user, $user, 'checkout_started', new: [
+                'plan_id'    => $plan->id,
+                'plan_nombre'=> $plan->nombre,
+                'plan_precio'=> $plan->precio,
+                'gateway'    => $this->gateway->name(),
+            ]);
 
-        return redirect()->away($url);
+            return redirect()->away($url);
+        } finally {
+            $lock->release();
+        }
     }
 
     /** GET /suscripcion/exitosa — pantalla de "gracias, tu suscripción está activándose". */
@@ -163,6 +180,11 @@ class CheckoutController extends Controller
                     'membership_plan_id'    => $sub->plan_id,
                     'membership_expires_at' => now()->addMonth(),
                 ])->save();
+            }
+
+            // H5 · registro de conversión (petición cliente): fecha del primer pago.
+            if (! $sub->user->converted_to_paid_at) {
+                $sub->user->forceFill(['converted_to_paid_at' => now()])->save();
             }
 
             // Seguridad MED-1: actor = ejecutante real (no dueño de la sub).

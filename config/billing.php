@@ -3,10 +3,11 @@
 return [
 
     /**
-     * Pasarela activa. Se elige en el kick-off con la cliente.
-     * Valores válidos: 'fake' (default), 'stripe', 'mercadopago' (futuro).
+     * Pasarela activa. Marian eligió MercadoPago (México); Stripe queda
+     * como alternativa por si algún día se cambia de proveedor.
+     * Valores válidos: 'fake' (default dev), 'mercadopago', 'stripe'.
      *
-     * En .env: BILLING_GATEWAY=stripe (o el que corresponda).
+     * En .env: BILLING_GATEWAY=mercadopago
      */
     'gateway' => env('BILLING_GATEWAY', 'fake'),
 

@@ -61,14 +61,25 @@ class ProfessionalProfileResource extends Resource
                     ->color('success')
                     ->requiresConfirmation()
                     ->visible(fn (ProfessionalProfile $r) => ! $r->is_verified)
-                    ->action(fn (ProfessionalProfile $r) => $r->update(['is_verified' => true, 'verified_at' => now()])),
+                    ->action(function (ProfessionalProfile $r) {
+                        $r->update(['is_verified' => true, 'verified_at' => now()]);
+                        // MED-I5 · Bitácora legal (sin este registro, la
+                        // insignia "verificado" aparecía sin trazabilidad).
+                        \App\Models\AuditLog::record(auth()->user(), $r, 'profile_verified',
+                            new: ['is_verified' => true, 'verified_at' => now()->toIso8601String()]);
+                    }),
                 Tables\Actions\Action::make('quitarVerificacion')
                     ->label('Quitar verificación')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
                     ->requiresConfirmation()
                     ->visible(fn (ProfessionalProfile $r) => $r->is_verified)
-                    ->action(fn (ProfessionalProfile $r) => $r->update(['is_verified' => false, 'verified_at' => null])),
+                    ->action(function (ProfessionalProfile $r) {
+                        $r->update(['is_verified' => false, 'verified_at' => null]);
+                        \App\Models\AuditLog::record(auth()->user(), $r, 'profile_unverified',
+                            old: ['is_verified' => true],
+                            new: ['is_verified' => false]);
+                    }),
             ])
             ->bulkActions([]);
     }

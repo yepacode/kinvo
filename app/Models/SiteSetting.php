@@ -61,17 +61,42 @@ class SiteSetting extends Model
             'pillar4_title' => 'Crecimiento',
             'pillar4_body' => 'Tu carrera merece estructura, desarrollo y un lugar al que pertenecer.',
 
-            // Foto divisora
+            // Foto divisora (banda horizontal entre "Pilares" y "Sessions").
+            // El eyebrow y título aparecen sobre la imagen; editables desde el admin.
             'divider_image' => null,
+            'divider_eyebrow' => 'Kinvoo · Comunidad',
+            'divider_title' => "Where talent\nmeets fitness.",
+
+            // Cuenta y sesión: textos narrativos de las pantallas de auth
+            // (Breeze) editables desde admin. Los labels de form (Correo,
+            // Contraseña, Recordarme, etc.) se dejan en __() porque ya viven
+            // en el sistema i18n de Laravel.
+            'register_title'         => 'Crea tu cuenta',
+            'register_subtitle'      => 'Únete a la red profesional del fitness',
+            'register_type_label'    => 'Elige el tipo de cuenta',
+            'register_type_help'     => 'Elige con cuidado: hoy una cuenta es de un solo tipo. Si te equivocas escríbenos y lo cambiamos.',
+            'register_talent_emoji'  => '🧘‍♀️',
+            'register_talent_title'  => 'Soy talento',
+            'register_talent_body'   => 'Coach, instructor o staff que quiere que lo encuentren estudios y marcas.',
+            'register_studio_emoji'  => '🏢',
+            'register_studio_title'  => 'Soy estudio o marca',
+            'register_studio_body'   => 'Gimnasio, estudio o marca que quiere buscar y contactar talento del fitness.',
+            'login_title'            => 'Inicia sesión',
+            'login_subtitle'         => 'Bienvenido de vuelta a Kinvoo',
+            'forgot_title'           => 'Recupera tu contraseña',
+            'forgot_body'            => 'Escribe tu correo y te enviaremos un enlace para crear una nueva contraseña.',
+            'reset_title'            => 'Nueva contraseña',
+            'verify_title'           => 'Verifica tu correo',
+            'verify_body'            => '¡Gracias por unirte a Kinvoo! Antes de empezar, confirma tu correo dando clic en el enlace que te acabamos de enviar. Si no lo recibiste, con gusto te mandamos otro.',
 
             // Sessions
             'sessions_label' => 'Kinvoo Sessions',
-            'sessions_heading' => 'La conversación que el talento wellness *necesitaba tener.*',
+            'sessions_heading' => 'La conversación que el talento *necesitaba tener.*',
             'sessions_body' => 'Encuentros íntimos y curados para hablar de lo que realmente importa. Con las personas correctas, en el momento correcto.',
             'sessions_cta' => 'Quiero asistir',
             'session_topic_1' => 'Crecimiento y desarrollo profesional',
             'session_topic_2' => 'Comunidad e identidad profesional',
-            'session_topic_3' => 'Bienestar del talento wellness',
+            'session_topic_3' => 'Bienestar del talento',
             'session_topic_4' => 'Beneficios y respaldo profesional',
             'session_topic_5' => 'El futuro del trabajo y el bienestar',
 
@@ -99,13 +124,13 @@ class SiteSetting extends Model
             'join_body' => 'Sé parte desde el inicio. Estamos construyendo algo que la industria necesitaba — y queremos que estés adentro.',
             'join_cta' => 'Crear mi cuenta',
             'join_note' => '¿Eres talento o estudio? Elige abajo.',
-            'join_tog1' => 'Soy talento fitness',
+            'join_tog1' => 'Soy talento',
             'join_tog2' => 'Soy estudio / marca',
             'join_tog3' => 'Quiero asistir a una sesión',
 
             // Pie
             'footer_tag' => 'Where talent meets fitness.',
-            'footer_copy' => '© '.date('Y').' | Kinvoo Wellness - Todos los derechos reservados',
+            'footer_copy' => '© '.date('Y').' | Kinvoo - Todos los derechos reservados',
 
             // Fondo del sitio (páginas públicas). Editable desde el panel.
             'background_color' => '#F7F4EE',
@@ -192,9 +217,32 @@ TXT,
             'sessions_cta_en' => 'I want to attend',
             'session_topic_1_en' => 'Growth and professional development',
             'session_topic_2_en' => 'Community and professional identity',
-            'session_topic_3_en' => 'Wellness of the wellness talent',
+            'session_topic_3_en' => 'Talent well-being',
             'session_topic_4_en' => 'Benefits and professional backing',
             'session_topic_5_en' => 'The future of work and wellbeing',
+
+            // Foto divisora EN
+            'divider_eyebrow_en' => 'Kinvoo · Community',
+            'divider_title_en' => "Where talent\nmeets fitness.",
+
+            // Cuenta y sesión EN
+            'register_title_en'         => 'Create your account',
+            'register_subtitle_en'      => 'Join the professional fitness network',
+            'register_type_label_en'    => 'Choose your account type',
+            'register_type_help_en'     => 'Choose carefully: an account has one type only. If you pick wrong, write us and we will switch it.',
+            'register_talent_emoji_en'  => '🧘‍♀️',
+            'register_talent_title_en'  => 'I am talent',
+            'register_talent_body_en'   => 'Coach, instructor or staff who wants studios and brands to find them.',
+            'register_studio_emoji_en'  => '🏢',
+            'register_studio_title_en'  => 'I am a studio or brand',
+            'register_studio_body_en'   => 'Gym, studio or brand looking to find and contact fitness talent.',
+            'login_title_en'            => 'Sign in',
+            'login_subtitle_en'         => 'Welcome back to Kinvoo',
+            'forgot_title_en'           => 'Recover your password',
+            'forgot_body_en'            => 'Enter your email and we will send you a link to create a new password.',
+            'reset_title_en'            => 'New password',
+            'verify_title_en'           => 'Verify your email',
+            'verify_body_en'            => 'Thanks for joining Kinvoo! Before you start, confirm your email by clicking the link we just sent. If you did not get it, we will happily send another.',
 
             // Para quién EN
             'forwho_label_en' => 'For whom',
@@ -226,7 +274,7 @@ TXT,
 
             // Pie EN
             'footer_tag_en' => 'Where talent meets fitness.',
-            'footer_copy_en' => '© '.date('Y').' | Kinvoo Wellness - All rights reserved',
+            'footer_copy_en' => '© '.date('Y').' | Kinvoo - All rights reserved',
 
             // Membresías EN
             'membership_eyebrow_en' => 'Memberships',
@@ -286,6 +334,23 @@ TXT,
             'membership_note' => 'Los precios y beneficios pueden variar. Escríbenos si tienes dudas.',
             'membership_individual_title' => 'Para talento (persona física)',
             'membership_studio_title' => 'Para estudios y marcas',
+
+            // Página /mis-momentos (wall "Comparte un momento") — editable desde admin.
+            'momento_pagina_titulo'    => 'Comparte un momento',
+            'momento_bloque_titulo'    => '¿Para qué es este espacio?',
+            'momento_subtitulo'        => 'Así nuestra comunidad conoce cómo se vive tu estudio, antes de pisarlo.',
+            'momento_bloque_body'      => 'Esto es tu cultura, en vivo. Una clase llena, un evento o momento especial, la energía de un lunes por la mañana — muéstranos cómo se vive ser parte de tu estudio.',
+            'momento_bullet_1'         => 'Foto o video corto.',
+            'momento_bullet_2'         => 'Una frase, no necesitas más.',
+            'momento_bullet_3'         => 'Al publicar, tu momento pasa por moderación y luego aparece en Comunidad, visible para todos los coaches de Kinvoo.',
+
+            // Página /desarrollo (contenido) — editable desde admin.
+            'desarrollo_header_titulo'      => 'Desarrollo y capacitaciones',
+            'desarrollo_onboarding_titulo'  => '💡 ¿Qué encuentro aquí?',
+            'desarrollo_copy_coach_h1'      => 'Clases, tutoriales y material para crecer en tu carrera.',
+            'desarrollo_copy_coach_h2'      => 'Clases grabadas, guías y capacitaciones. Cada pieza tiene su formato (video, PDF, audio, enlace) y categorías para filtrar.',
+            'desarrollo_copy_estudio_h1'    => 'Clases, tutoriales y material para el desarrollo de tu equipo.',
+            'desarrollo_copy_estudio_h2'    => 'Los coaches que forman parte de tu equipo desbloquean este contenido con la membresía que tú cubres.',
 
             // Legales — Aviso de Privacidad
             'legal_privacy_title' => 'Aviso de Privacidad',
@@ -376,6 +441,334 @@ Estos términos se rigen por las leyes de los Estados Unidos Mexicanos, en parti
 18. Modificaciones
 La Plataforma podrá modificar estos términos en cualquier momento, notificando a los usuarios.
 TXT,
+
+            // =============================================================
+            // M20 · Bloque 4 · Textos de la app (títulos/empty/CTA/headers)
+            // 88 keys ALTA identificadas por auditoría multi-agente M15.
+            // Editables desde admin (pestaña "Textos de la app").
+            // =============================================================
+
+            // Dashboard (coach + estudio)
+            'dashboard_saludo'                     => 'Hola, :name',
+            'dashboard_coach_titulo_perfil'        => 'Tu perfil en Kinvoo',
+            'dashboard_coach_perfil_publicado_msg' => 'Tu perfil está :status y visible para contratantes.',
+            'dashboard_coach_perfil_oculto_msg'    => 'Tu perfil está :status. Complétalo y publícalo para que te encuentren.',
+            'dashboard_coach_cta_editar_perfil'    => 'Editar mi perfil',
+            'dashboard_coach_vistas_titulo'        => 'Quién vio tu perfil',
+            'dashboard_coach_vistas_empty'         => 'Aún nadie ha visto tu perfil. Publícalo y compártelo para empezar.',
+            'dashboard_estudio_titulo'             => 'Encuentra talento',
+            'dashboard_estudio_descripcion'        => 'Explora perfiles de profesionales o completa los datos de tu empresa.',
+            'dashboard_estudio_cta_talento'        => 'Buscar talento',
+            'dashboard_estudio_cta_perfil'         => 'Editar mi empresa',
+
+            // Membresías (flashes upsell + CTA)
+            'membresia_flash_directorio'      => 'Para acceder al directorio de talento necesitas una membresía activa. Elige un plan abajo o escríbenos.',
+            'membresia_flash_ofertas'         => 'Para publicar o editar ofertas de trabajo necesitas un plan activo. Elige uno abajo.',
+            'membresia_flash_mas_vacantes'    => 'Con el plan gratis solo puedes tener 1 vacante activa a la vez. Actualiza para publicar más y sin límite de tiempo.',
+            'membresia_flash_contacto'        => 'Para contactar directamente al talento necesitas un plan activo. Elige uno abajo.',
+            'membresia_flash_contenido'       => 'Para acceder a este contenido de nivel avanzado necesitas un plan activo.',
+            'membresia_flash_comunidad'       => 'Comunidad es un espacio de miembros. Activa tu plan para ver los momentos que comparten los estudios.',
+            'membresia_flash_expediente'      => 'Tu expediente de cuidado se activa con un plan de talento. Ahí queda registro de tus consultas, sesiones y beneficios.',
+            'membresia_cuenta_revision_titulo'=> 'Tu cuenta está en revisión',
+            'membresia_cta_suscribirme'       => 'Suscribirme',
+            'membresia_empty_state'           => 'Pronto publicaremos nuestros planes de membresía.',
+
+            // Respaldo (telemedicina/fisio)
+            'respaldo_header_titulo'        => 'Mi respaldo',
+            'respaldo_guia_titulo'          => '🩺 ¿Cómo funciona el respaldo?',
+            'respaldo_guia_body'            => 'Pide una consulta de telemedicina cuando lo necesites. Kinvoo la agenda y te avisa por correo. Si tu plan incluye fisio, también puedes pedir sesión.',
+            'respaldo_flash_enviado_titulo' => '¡Solicitud enviada!',
+            'respaldo_cta_enviar'           => 'Enviar solicitud',
+            'respaldo_solicitudes_titulo'   => 'Mis solicitudes',
+            'respaldo_empty_state'          => 'Aún no has solicitado ninguna sesión. Cuando lo necesites, usa el formulario de arriba.',
+
+            // Pantalla /pending (cuentas en estado especial)
+            'pending_titulo_suspendida'       => 'Cuenta suspendida',
+            'pending_titulo_perfil_revision'  => 'Perfil en revisión',
+            'pending_titulo_cuenta_revision'  => 'Cuenta en revisión',
+            'pending_body_suspendida'         => 'Tu cuenta está suspendida. Escríbenos a hola@gokinvoo.com si crees que fue un error.',
+            'pending_body_perfil_pendiente'   => '¡Gracias por llenar tu perfil! Nuestro equipo lo está revisando y quedará activo en máximo 24 horas.',
+            'pending_body_cuenta_revision'    => '¡Gracias por registrarte en Kinvoo! Un administrador revisará tu perfil antes de activarlo. Te avisamos por correo.',
+
+            // Ofertas · detalle
+            'ofertas_show_flash_enviada_titulo' => '¡Postulación enviada!',
+            'ofertas_show_flash_enviada_texto'  => 'El estudio verá tu candidatura y te contactará si le interesa.',
+            'ofertas_show_flash_ya_postulaste'  => 'Ya postulaste a esta oferta. Puedes ver el estado en Mis postulaciones.',
+            'ofertas_show_postular_titulo'      => 'Postular',
+            'ofertas_show_intro_postular'       => 'No buscamos la respuesta perfecta — solo que ambos sepan si hacen buen equipo.',
+            'ofertas_show_cta_enviar'           => 'Enviar postulación',
+
+            // Pulso Kinvoo (coach + estudio)
+            'pulso_coach_header_titulo'      => 'Encuesta de Pulso Kinvoo',
+            'pulso_coach_guia_titulo'        => '🌡️ ¿Cómo va tu semana?',
+            'pulso_coach_guia_body'          => 'Con tu Pulso, Kinvoo y tu estudio ajustan mejor el cuidado. No se comparten tus respuestas exactas — sólo los agregados.',
+            'pulso_coach_cta_enviar'         => 'Enviar mi pulso',
+            'pulso_coach_historial_titulo'   => 'Mis respuestas anteriores',
+            'pulso_coach_empty_state'        => 'Aún no has contestado. Empieza con tu primer pulso arriba.',
+            'pulso_estudio_titulo'           => 'Pulso de tu equipo',
+
+            // Wall / Comunidad
+            'wall_comunidad_header_titulo'    => 'Comunidad',
+            'wall_comunidad_guia_titulo'      => 'Momentos de la comunidad Kinvoo',
+            'wall_comunidad_guia_body'        => 'Aquí ves cómo se vive cada estudio de la comunidad. Fotos y videos cortos publicados por los estudios y aprobados por el equipo Kinvoo.',
+            'wall_comunidad_cta_publicar'     => '+ Publicar tu momento',
+            'wall_comunidad_empty_state'      => 'Aún no hay momentos publicados. Vuelve pronto — la comunidad Kinvoo está por empezar.',
+            'wall_mis_momentos_flash_enviado_titulo' => '¡Momento enviado!',
+            'wall_mis_momentos_flash_enviado_body'   => 'El equipo Kinvoo lo revisa y lo publica en Comunidad si todo está bien.',
+            'wall_mis_momentos_cta_publicar'         => 'Publicar momento',
+            'wall_mis_momentos_empty_state'          => 'Aún no has compartido ningún momento. Usa el formulario de arriba para publicar el primero.',
+
+            // Mis beneficios
+            'beneficios_header_titulo'   => 'Mis beneficios',
+            'beneficios_guia_titulo'     => '🌱 Todo lo que tu plan te da',
+            'beneficios_guia_body'       => 'Tu plan de Kinvoo se traduce en cuidado real. Aquí ves qué tienes activo y cuánto lo has usado.',
+            'beneficios_activos_titulo'  => 'Qué tienes activo',
+            'beneficios_upgrade_texto'   => '¿Faltó algo? Sube a un plan mayor para desbloquear más beneficios.',
+            'beneficios_upgrade_cta'     => 'Ver planes →',
+
+            // Mi equipo (estudio)
+            'equipo_pagina_titulo'     => 'Mi equipo',
+            'equipo_guia_titulo'       => '💚 ¿Cómo se arma tu equipo?',
+            'equipo_guia_intro'        => 'Invita a tus coaches por correo. En cuanto aceptan, su cuidado empieza a sumar aquí, en tu panel de bienestar.',
+            'equipo_eval_pregunta'     => '¿Cómo evalúas el bienestar de tu equipo este período?',
+            'equipo_invitar_titulo'    => 'Agregar a alguien al equipo',
+            'equipo_listado_titulo'    => 'Miembros del equipo',
+            'equipo_empty_state'       => 'Aún no tienes miembros en tu equipo. Empieza invitando a un profesional por correo.',
+
+            // Login (flashes)
+            'login_flash_cuenta_eliminada_titulo' => 'Tu cuenta fue eliminada.',
+            'login_flash_cuenta_eliminada_body'   => 'Se borraron tu perfil, tus contactos y tus archivos. Nos alegra que hayas sido parte de Kinvoo. Si quieres volver, puedes crear una cuenta nueva.',
+            'login_flash_admin_baja_titulo'       => 'Tu cuenta ya no está activa.',
+            'login_flash_admin_baja_body'         => 'Kinvoo dio de baja tu cuenta. Si crees que fue un error, escríbenos a',
+
+            // Menú principal (etiquetas coach)
+            'nav_coach_mi_perfil'      => 'Mi perfil',
+            'nav_coach_contactos'      => 'Contactos',
+            'nav_coach_oportunidades'  => 'Oportunidades',
+            'nav_coach_desarrollo'     => 'Desarrollo',
+
+            // Ofertas · listado + mis ofertas + form
+            'ofertas_index_titulo'          => 'Oportunidades',
+            'ofertas_index_guia_texto1'     => 'Aquí verás las vacantes que publican los estudios. Podrás aplicar en cuanto tu perfil esté completo — así los estudios conocerán quién eres.',
+            'ofertas_index_empty'           => 'No hay ofertas publicadas por ahora.',
+            'mis_ofertas_titulo'            => 'Mis oportunidades',
+            'mis_ofertas_intro'             => 'Aquí publicas tus vacantes, gestionas las postulaciones y cambias el estado de cada una.',
+            'mis_ofertas_empty_postulaciones' => 'Aún no hay postulaciones. Cuando algún coach postule, aparecerá aquí y te llegará un correo.',
+            'mis_ofertas_empty_general'     => 'Aún no has publicado ofertas. Presiona "+ Publicar oferta" arriba para comenzar.',
+            'ofertas_form_publicar_cta'     => 'Publicar oferta',
+            'mis_postulaciones_titulo'      => 'Mis postulaciones',
+            'mis_postulaciones_empty'       => 'Aún no has postulado a ninguna oferta.',
+
+            // Perfil profesional
+            'perfil_edit_titulo'          => 'Mi perfil profesional',
+            'perfil_edit_intro'           => 'Completa tu perfil y guarda para enviarlo a revisión.',
+            'perfil_edit_estado_revision' => 'Cuando completes tu perfil, el equipo de Kinvoo lo revisará y lo publicará. Te avisamos por correo.',
+            'perfil_edit_cta_guardar'     => 'Guardar y continuar →',
+
+            // Perfil empresa
+            'company_edit_titulo'                 => 'Mi empresa',
+            'company_cuenta_revision_titulo'      => '⏳ Tu cuenta está en revisión',
+            'company_cuenta_revision_descripcion' => 'Completa el perfil de tu estudio y guárdalo. Cuando Kinvoo lo apruebe podrás publicar ofertas, buscar talento, gestionar tu equipo y suscribirte a un plan. Te avisaremos por correo.',
+
+            // Talento (listado + show)
+            'talento_index_titulo'      => 'Encuentra talento',
+            'talento_index_subtitulo'   => 'Filtra por disciplina, ubicación o modalidad.',
+            'talento_index_empty_titulo'=> 'Sin resultados',
+            'talento_show_cta_login'    => 'Inicia sesión como contratante para contactar',
+
+            // Contenido / desarrollo
+            'contenido_index_empty'        => 'No hay contenido disponible para tu cuenta en esta categoría.',
+            'contenido_upsell_activa_plan' => 'Activa tu plan para ver este nivel →',
+            'contenido_form_titulo'        => 'Editar contenido / Nuevo contenido',
+            'contenido_form_boton_publicar'=> 'Publicar contenido',
+            'mis_contenidos_titulo'        => 'Mi desarrollo',
+            'mis_contenidos_intro'         => 'Sube guías, videos o enlaces para compartir con la comunidad Kinvoo. Todos los contenidos que subes son visibles para coaches y estudios de la comunidad.',
+            'mis_contenidos_empty_state'   => 'Aún no has subido contenido. Comparte tu primer video, PDF o enlace con la comunidad.',
+
+            // Expediente coach
+            'expediente_header_titulo'         => 'Mi expediente',
+            'expediente_intro_descripcion'     => 'Aquí ves el estatus de tu cuidado dentro de Kinvoo — qué beneficios tienes activos y qué has usado.',
+            'expediente_charlas_titulo'        => 'Charlas a las que has asistido',
+            'expediente_charlas_empty_state'   => 'Todavía no tienes charlas ni capacitaciones registradas. Kinvoo irá agregándolas conforme participes.',
+
+            // Notificaciones
+            'notificaciones_header_titulo' => 'Notificaciones',
+            'notificaciones_empty_state'   => 'Aún no tienes notificaciones.',
+
+            // Reportes Filament (títulos y empty states)
+            'admin_reporte_coaches_titulo'      => 'Reporte · Actividad de coaches en Desarrollo',
+            'admin_reporte_coaches_modal_titulo'=> 'Historial de contenido — :name',
+            'admin_reporte_coaches_empty'       => 'Sin coaches con actividad todavía',
+            'admin_reporte_conversion_titulo'   => 'Reporte · Conversión de usuarios',
+            'admin_reporte_conversion_empty'    => 'Sin usuarios registrados',
+            'admin_reporte_estudios_titulo'     => 'Reporte · Actividad por estudio',
+            'admin_reporte_estudios_empty'      => 'Sin estudios registrados',
+
+            // Landing/public — CTA "Únete"
+            'nav_unete_cta' => 'Únete',
+
+            // =============================================================
+            // Variante EN de las 88 keys anteriores. landing() cae al ES si vacío.
+            // =============================================================
+
+            // Dashboard EN
+            'dashboard_saludo_en'                     => 'Hi :name',
+            'dashboard_coach_titulo_perfil_en'        => 'Your profile on Kinvoo',
+            'dashboard_coach_perfil_publicado_msg_en' => 'Your profile is :status and visible to contractors.',
+            'dashboard_coach_perfil_oculto_msg_en'    => 'Your profile is :status. Complete and publish it so studios can find you.',
+            'dashboard_coach_cta_editar_perfil_en'    => 'Edit my profile',
+            'dashboard_coach_vistas_titulo_en'        => 'Who viewed your profile',
+            'dashboard_coach_vistas_empty_en'         => "No one has viewed your profile yet. Publish it and share it to get started.",
+            'dashboard_estudio_titulo_en'             => 'Find talent',
+            'dashboard_estudio_descripcion_en'        => "Browse professional profiles or complete your company details.",
+            'dashboard_estudio_cta_talento_en'        => 'Search talent',
+            'dashboard_estudio_cta_perfil_en'         => 'Edit my company',
+
+            // Membresías EN
+            'membresia_flash_directorio_en'      => 'To access the talent directory you need an active membership. Choose a plan below.',
+            'membresia_flash_ofertas_en'         => 'To publish or edit job offers you need an active plan. Choose one below.',
+            'membresia_flash_mas_vacantes_en'    => "The free plan allows only 1 active vacancy at a time. Upgrade to post more.",
+            'membresia_flash_contacto_en'        => 'To contact talent directly you need an active plan. Choose one below.',
+            'membresia_flash_contenido_en'       => "To access this advanced-level content you need an active plan.",
+            'membresia_flash_comunidad_en'       => "Community is a members' space. Activate your plan to see moments shared by studios.",
+            'membresia_flash_expediente_en'      => "Your care record activates with a talent plan. It logs every consult, session and benefit received.",
+            'membresia_cuenta_revision_titulo_en'=> 'Your account is under review',
+            'membresia_cta_suscribirme_en'       => 'Subscribe',
+            'membresia_empty_state_en'           => "We'll publish our membership plans soon.",
+
+            // Respaldo EN
+            'respaldo_header_titulo_en'        => 'My support',
+            'respaldo_guia_titulo_en'          => '🩺 How does support work?',
+            'respaldo_guia_body_en'            => "Request a telemedicine consult whenever you need it. Kinvoo schedules it and emails you.",
+            'respaldo_flash_enviado_titulo_en' => 'Request sent!',
+            'respaldo_cta_enviar_en'           => 'Send request',
+            'respaldo_solicitudes_titulo_en'   => 'My requests',
+            'respaldo_empty_state_en'          => "You haven't requested any session yet. When you need one, use the form above.",
+
+            // Pending EN
+            'pending_titulo_suspendida_en'       => 'Account suspended',
+            'pending_titulo_perfil_revision_en'  => 'Profile under review',
+            'pending_titulo_cuenta_revision_en'  => 'Account under review',
+            'pending_body_suspendida_en'         => 'Your account is suspended. Write to hola@gokinvoo.com if you think this is a mistake.',
+            'pending_body_perfil_pendiente_en'   => "Thanks for filling in your profile! Our team is reviewing it and it will go live within 24 hours.",
+            'pending_body_cuenta_revision_en'    => "Thanks for signing up to Kinvoo! An administrator will review your profile before activating it. We'll email you.",
+
+            // Ofertas · detalle EN
+            'ofertas_show_flash_enviada_titulo_en' => 'Application sent!',
+            'ofertas_show_flash_enviada_texto_en'  => "The studio will see your application and get in touch if interested.",
+            'ofertas_show_flash_ya_postulaste_en'  => "You already applied to this offer. You can see the status in My applications.",
+            'ofertas_show_postular_titulo_en'      => 'Apply',
+            'ofertas_show_intro_postular_en'       => "We're not looking for the perfect answer — just so both know if it's a good fit.",
+            'ofertas_show_cta_enviar_en'           => 'Send application',
+
+            // Pulso EN
+            'pulso_coach_header_titulo_en'      => 'Kinvoo Pulse survey',
+            'pulso_coach_guia_titulo_en'        => '🌡️ How is your week going?',
+            'pulso_coach_guia_body_en'          => "With your Pulse, Kinvoo and your studio fine-tune care. Your individual answers are not shared, only the average.",
+            'pulso_coach_cta_enviar_en'         => 'Send my pulse',
+            'pulso_coach_historial_titulo_en'   => 'My previous answers',
+            'pulso_coach_empty_state_en'        => "You haven't answered yet. Start with your first pulse above.",
+            'pulso_estudio_titulo_en'           => "Your team's pulse",
+
+            // Wall EN
+            'wall_comunidad_header_titulo_en'    => 'Community',
+            'wall_comunidad_guia_titulo_en'      => 'Kinvoo community moments',
+            'wall_comunidad_guia_body_en'        => "See how each studio in the community lives it. Short photos and videos published by studios and approved by the Kinvoo team.",
+            'wall_comunidad_cta_publicar_en'     => '+ Publish your moment',
+            'wall_comunidad_empty_state_en'      => "No moments published yet. Come back soon — the Kinvoo community is just getting started.",
+            'wall_mis_momentos_flash_enviado_titulo_en' => 'Moment sent!',
+            'wall_mis_momentos_flash_enviado_body_en'   => "The Kinvoo team reviews it and publishes it in Community if everything looks good.",
+            'wall_mis_momentos_cta_publicar_en'         => 'Publish moment',
+            'wall_mis_momentos_empty_state_en'          => "You haven't shared any moment yet. Use the form above to publish your first.",
+
+            // Mis beneficios EN
+            'beneficios_header_titulo_en'   => 'My benefits',
+            'beneficios_guia_titulo_en'     => '🌱 Everything your plan gives you',
+            'beneficios_guia_body_en'       => "Your Kinvoo plan translates into real care. Here you see what you have active and how much you've used.",
+            'beneficios_activos_titulo_en'  => "What's active",
+            'beneficios_upgrade_texto_en'   => 'Missing something? Upgrade to unlock more benefits.',
+            'beneficios_upgrade_cta_en'     => 'See plans →',
+
+            // Mi equipo EN
+            'equipo_pagina_titulo_en'     => 'My team',
+            'equipo_guia_titulo_en'       => '💚 How is your team built?',
+            'equipo_guia_intro_en'        => "Invite your coaches by email. As soon as they accept, their care starts adding to your wellbeing panel.",
+            'equipo_eval_pregunta_en'     => "How do you rate your team's wellbeing this period?",
+            'equipo_invitar_titulo_en'    => 'Add someone to the team',
+            'equipo_listado_titulo_en'    => 'Team members',
+            'equipo_empty_state_en'       => "You don't have team members yet. Start by inviting a professional by email.",
+
+            // Login EN
+            'login_flash_cuenta_eliminada_titulo_en' => 'Your account was deleted.',
+            'login_flash_cuenta_eliminada_body_en'   => "Your profile, contacts and files were removed. We're glad you were part of Kinvoo. If you want to come back, you can create a new account.",
+            'login_flash_admin_baja_titulo_en'       => 'Your account is no longer active.',
+            'login_flash_admin_baja_body_en'         => "Kinvoo deactivated your account. If you think this is a mistake, write to",
+
+            // Menú EN
+            'nav_coach_mi_perfil_en'     => 'My profile',
+            'nav_coach_contactos_en'     => 'Contacts',
+            'nav_coach_oportunidades_en' => 'Opportunities',
+            'nav_coach_desarrollo_en'    => 'Development',
+
+            // Ofertas EN
+            'ofertas_index_titulo_en'          => 'Opportunities',
+            'ofertas_index_guia_texto1_en'     => "Here you'll see the vacancies studios post. You can apply once your profile is complete — so studios know who you are.",
+            'ofertas_index_empty_en'           => 'No offers published right now.',
+            'mis_ofertas_titulo_en'            => 'My opportunities',
+            'mis_ofertas_intro_en'             => 'Here you publish vacancies, manage applications and change the status of each one.',
+            'mis_ofertas_empty_postulaciones_en' => "No applications yet. When a coach applies, they'll show up here and you'll get an email.",
+            'mis_ofertas_empty_general_en'     => 'You haven\'t published offers yet. Press "+ Publish offer" above to start.',
+            'ofertas_form_publicar_cta_en'     => 'Publish offer',
+            'mis_postulaciones_titulo_en'      => 'My applications',
+            'mis_postulaciones_empty_en'       => "You haven't applied to any offer yet.",
+
+            // Perfil EN
+            'perfil_edit_titulo_en'          => 'My professional profile',
+            'perfil_edit_intro_en'           => 'Complete your profile and save to send it for review.',
+            'perfil_edit_estado_revision_en' => "When you complete your profile, the Kinvoo team will review and publish it. We'll email you.",
+            'perfil_edit_cta_guardar_en'     => 'Save and continue →',
+
+            // Company EN
+            'company_edit_titulo_en'                 => 'My company',
+            'company_cuenta_revision_titulo_en'      => '⏳ Your account is under review',
+            'company_cuenta_revision_descripcion_en' => 'Complete your studio profile and save it. Once Kinvoo approves, you can post vacancies and contact talent.',
+
+            // Talento EN
+            'talento_index_titulo_en'      => 'Find talent',
+            'talento_index_subtitulo_en'   => 'Filter by discipline, location or modality.',
+            'talento_index_empty_titulo_en'=> 'No results',
+            'talento_show_cta_login_en'    => 'Sign in as contractor to contact',
+
+            // Contenido EN
+            'contenido_index_empty_en'        => 'No content available for your account in this category.',
+            'contenido_upsell_activa_plan_en' => 'Activate your plan to see this level →',
+            'contenido_form_titulo_en'        => 'Edit content / New content',
+            'contenido_form_boton_publicar_en'=> 'Publish content',
+            'mis_contenidos_titulo_en'        => 'My development',
+            'mis_contenidos_intro_en'         => 'Upload guides, videos or links to share with the Kinvoo community. All content you upload is visible to coaches and studios in the community.',
+            'mis_contenidos_empty_state_en'   => "You haven't uploaded content yet. Share your first video, PDF or link with the community.",
+
+            // Expediente EN
+            'expediente_header_titulo_en'         => 'My record',
+            'expediente_intro_descripcion_en'     => "Here you see the status of your care within Kinvoo — which benefits are active and what you've used.",
+            'expediente_charlas_titulo_en'        => "Talks you've attended",
+            'expediente_charlas_empty_state_en'   => "You don't have talks or training registered yet. Kinvoo will add them as you participate.",
+
+            // Notificaciones EN
+            'notificaciones_header_titulo_en' => 'Notifications',
+            'notificaciones_empty_state_en'   => "You don't have notifications yet.",
+
+            // Reportes admin EN
+            'admin_reporte_coaches_titulo_en'      => 'Report · Coach activity in Development',
+            'admin_reporte_coaches_modal_titulo_en'=> 'Content history — :name',
+            'admin_reporte_coaches_empty_en'       => 'No coaches with activity yet',
+            'admin_reporte_conversion_titulo_en'   => 'Report · User conversion',
+            'admin_reporte_conversion_empty_en'    => 'No users registered',
+            'admin_reporte_estudios_titulo_en'     => 'Report · Activity per studio',
+            'admin_reporte_estudios_empty_en'      => 'No studios registered',
+
+            // Landing/public EN
+            'nav_unete_cta_en' => 'Join',
         ];
     }
 

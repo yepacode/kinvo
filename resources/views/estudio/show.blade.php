@@ -31,12 +31,16 @@
     </x-slot>
 
     <div class="mx-auto max-w-3xl px-6 py-10">
+        @auth
+            <x-back-link :href="request()->query('from') === 'talento' ? route('talento.index') : auth()->user()->homeRoute()"
+                         :value="__('← Volver')" />
+        @endauth
         <div class="overflow-hidden rounded-2xl border border-line bg-white">
             {{-- Encabezado --}}
             <div class="flex flex-col items-center gap-4 border-b border-line bg-beige/50 px-6 py-8 text-center sm:flex-row sm:text-left">
                 <div class="h-28 w-28 shrink-0 overflow-hidden rounded-2xl border border-line bg-cream">
                     @if ($profile->logo_path)
-                        <img src="{{ Storage::url($profile->logo_path) }}" alt="{{ $nombre }}" class="h-full w-full object-cover">
+                        <img src="{{ asset('storage/'.$profile->logo_path) }}" alt="{{ $nombre }}" class="h-full w-full object-cover">
                     @else
                         <div class="flex h-full w-full items-center justify-center text-4xl text-warmgray" aria-hidden="true">🏢</div>
                     @endif
@@ -84,18 +88,14 @@
                 @endif
 
                 {{-- Sitio web + multimedia --}}
-                @if ($profile->website || $profile->media_url || $profile->media_path)
+                @if ($profile->website || $profile->media_url || $profile->media_path || $profile->mediaItems->isNotEmpty())
                     <div class="border-t border-line pt-6">
-                        @if ($profile->media_path)
+                        {{-- Carrusel de multimedia (petición cliente: miniatura + carrusel). --}}
+                        @if ($profile->mediaItems->isNotEmpty() || $profile->media_path)
                             <div class="mb-4">
-                                @if ($profile->media_type === 'video')
-                                    <video class="w-full max-w-2xl rounded-md border border-line" controls playsinline preload="metadata">
-                                        <source src="{{ Storage::url($profile->media_path) }}">
-                                        {{ __('Tu navegador no soporta este video.') }}
-                                    </video>
-                                @else
-                                    <img class="w-full max-w-2xl rounded-md border border-line" src="{{ Storage::url($profile->media_path) }}" alt="Multimedia de {{ $profile->company_name }}">
-                                @endif
+                                <x-media-carousel :items="$profile->mediaItems"
+                                                  :legacyPath="$profile->media_path"
+                                                  :legacyType="$profile->media_type" />
                             </div>
                         @endif
                         <div class="flex flex-wrap gap-4 text-sm">

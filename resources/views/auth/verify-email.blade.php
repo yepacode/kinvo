@@ -1,7 +1,7 @@
 <x-guest-layout>
-    <h1 class="mb-1 text-center font-serif text-2xl font-medium text-ink">{{ __('Verifica tu correo') }}</h1>
+    <h1 class="mb-1 text-center font-serif text-2xl font-medium text-ink">{{ landing('verify_title') }}</h1>
     <p class="mb-4 text-sm text-warmgray">
-        {{ __('¡Gracias por unirte a Kinvoo! Antes de empezar, confirma tu correo dando clic en el enlace que te acabamos de enviar. Si no lo recibiste, con gusto te mandamos otro.') }}
+        {{ landing('verify_body') }}
     </p>
 
     @if (session('status') == 'verification-link-sent')

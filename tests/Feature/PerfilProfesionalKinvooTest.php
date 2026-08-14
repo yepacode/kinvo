@@ -16,16 +16,17 @@ class PerfilProfesionalKinvooTest extends TestCase
 
     public function test_profesional_guarda_disponibilidad_idiomas_certificaciones_y_multimedia(): void
     {
+        Storage::fake('public');
         $user = User::factory()->create();
 
-        $this->actingAs($user)->put('/mi-perfil', [
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
             'headline' => 'Coach de yoga',
             'birthdate' => '1995-05-20',
             'availability' => ['lun_am', 'lun_pm', 'fds_am'],
             'languages' => ['es', 'en'],
             'certifications_text' => 'RYT-200, Instructora de Pilates',
             'media_url' => 'https://youtube.com/watch?v=abc',
-        ])->assertRedirect(route('professional.enviado'));
+        ]))->assertRedirect(route('professional.enviado'));
 
         $profile = $user->professionalProfile()->first();
         $this->assertSame(['lun_am', 'lun_pm', 'fds_am'], $profile->availability);
@@ -37,9 +38,11 @@ class PerfilProfesionalKinvooTest extends TestCase
 
     public function test_profesional_guarda_su_nombre_completo(): void
     {
+        Storage::fake('public');
         $user = User::factory()->create();
-        $this->actingAs($user)->put('/mi-perfil', ['full_name' => 'María Fernanda López García'])
-            ->assertRedirect(route('professional.enviado'));
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
+            'full_name' => 'María Fernanda López García',
+        ]))->assertRedirect(route('professional.enviado'));
 
         $this->assertSame('María Fernanda López García', $user->professionalProfile()->first()->full_name);
     }
@@ -66,11 +69,12 @@ class PerfilProfesionalKinvooTest extends TestCase
     public function test_adjunto_de_certificacion_se_guarda_en_disco_privado(): void
     {
         Storage::fake('local');
+        Storage::fake('public');
         $user = User::factory()->create();
 
-        $this->actingAs($user)->put('/mi-perfil', [
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
             'certification_file' => UploadedFile::fake()->create('cert.pdf', 200, 'application/pdf'),
-        ]);
+        ]))->assertRedirect(route('professional.enviado'));
 
         $profile = $user->professionalProfile()->first();
         $this->assertNotNull($profile->certification_file_path);
@@ -83,20 +87,23 @@ class PerfilProfesionalKinvooTest extends TestCase
         Storage::fake('local');
         $user = User::factory()->create();
 
-        $this->actingAs($user)->put('/mi-perfil', [
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
             'photo' => UploadedFile::fake()->image('f.jpg'),
             'certification_file' => UploadedFile::fake()->create('c.pdf', 100, 'application/pdf'),
-        ]);
+        ]))->assertRedirect(route('professional.enviado'));
         $profile = $user->professionalProfile()->first();
         $oldPhoto = $profile->photo_path;
         $oldCert = $profile->certification_file_path;
         $this->assertNotNull($oldPhoto);
         $this->assertNotNull($oldCert);
 
-        $this->actingAs($user)->put('/mi-perfil', [
+        // Segundo PUT: NO subir foto nueva, sólo pedir eliminar. Como el perfil
+        // ya tiene foto/adjunto, la validación los deja nullable.
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
+            'photo' => null,
             'remove_photo' => '1',
             'remove_certification_file' => '1',
-        ]);
+        ]))->assertRedirect(route('professional.enviado'));
 
         $profile->refresh();
         $this->assertNull($profile->photo_path);
@@ -109,13 +116,15 @@ class PerfilProfesionalKinvooTest extends TestCase
     {
         Storage::fake('public');
         $user = User::factory()->create();
-        $this->actingAs($user)->put('/mi-perfil', ['photo' => UploadedFile::fake()->image('a.jpg')]);
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
+            'photo' => UploadedFile::fake()->image('a.jpg'),
+        ]))->assertRedirect(route('professional.enviado'));
 
         // Misma petición: sube una foto nueva Y marca eliminar → debe ganar la nueva.
-        $this->actingAs($user)->put('/mi-perfil', [
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
             'photo' => UploadedFile::fake()->image('b.jpg'),
             'remove_photo' => '1',
-        ]);
+        ]))->assertRedirect(route('professional.enviado'));
 
         $profile = $user->professionalProfile()->first();
         $this->assertNotNull($profile->photo_path);
@@ -127,14 +136,16 @@ class PerfilProfesionalKinvooTest extends TestCase
         Storage::fake('public');
         $user = User::factory()->create();
 
-        $this->actingAs($user)->put('/mi-perfil', [
-            'media_file' => UploadedFile::fake()->image('reel.jpg'),
-        ]);
+        // Nuevo carrusel: la multimedia se guarda como MediaItem polimórfico,
+        // no en media_path/media_type del perfil.
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
+            'media_files' => [UploadedFile::fake()->image('reel.jpg')],
+        ]))->assertRedirect(route('professional.enviado'));
 
-        $profile = $user->professionalProfile()->first();
-        $this->assertNotNull($profile->media_path);
-        $this->assertSame('image', $profile->media_type);
-        Storage::disk('public')->assertExists($profile->media_path);
+        $item = $user->professionalProfile()->first()->mediaItems()->first();
+        $this->assertNotNull($item);
+        $this->assertSame('image', $item->type);
+        Storage::disk('public')->assertExists($item->path);
     }
 
     public function test_profesional_sube_video_como_multimedia(): void
@@ -142,14 +153,14 @@ class PerfilProfesionalKinvooTest extends TestCase
         Storage::fake('public');
         $user = User::factory()->create();
 
-        $this->actingAs($user)->put('/mi-perfil', [
-            'media_file' => UploadedFile::fake()->create('reel.mp4', 500, 'video/mp4'),
-        ]);
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
+            'media_files' => [UploadedFile::fake()->create('reel.mp4', 500, 'video/mp4')],
+        ]))->assertRedirect(route('professional.enviado'));
 
-        $profile = $user->professionalProfile()->first();
-        $this->assertNotNull($profile->media_path);
-        $this->assertSame('video', $profile->media_type);
-        Storage::disk('public')->assertExists($profile->media_path);
+        $item = $user->professionalProfile()->first()->mediaItems()->first();
+        $this->assertNotNull($item);
+        $this->assertSame('video', $item->type);
+        Storage::disk('public')->assertExists($item->path);
     }
 
     public function test_profesional_puede_quitar_multimedia_subida(): void
@@ -181,11 +192,13 @@ class PerfilProfesionalKinvooTest extends TestCase
 
     public function test_profesional_pendiente_si_puede_editar_perfil(): void
     {
+        Storage::fake('public');
         $user = User::factory()->create(['estado' => EstadoUsuario::Pendiente]);
 
         $this->actingAs($user)->get('/mi-perfil')->assertOk();
-        $this->actingAs($user)->put('/mi-perfil', ['headline' => 'Coach'])
-            ->assertRedirect(route('professional.enviado'));
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
+            'headline' => 'Coach',
+        ]))->assertRedirect(route('professional.enviado'));
     }
 
     public function test_foto_de_4mb_se_acepta_y_de_6mb_se_rechaza_con_mensaje_en_espanol(): void
@@ -194,17 +207,18 @@ class PerfilProfesionalKinvooTest extends TestCase
         // "The photo field must not be greater than 2048 kilobytes" y no
         // dejaba subir fotos normales de teléfono. Ahora el límite es 5 MB
         // y el mensaje sale en español.
+        Storage::fake('public');
         $user = User::factory()->create();
 
         // 4 MB → dentro del límite.
-        $this->actingAs($user)->put('/mi-perfil', [
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
             'photo' => \Illuminate\Http\UploadedFile::fake()->image('bien.jpg')->size(4096),
-        ])->assertSessionHasNoErrors();
+        ]))->assertSessionHasNoErrors();
 
         // 6 MB → rechazada en español, sin la palabra "photo" cruda.
-        $this->actingAs($user)->put('/mi-perfil', [
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
             'photo' => \Illuminate\Http\UploadedFile::fake()->image('grande.jpg')->size(6144),
-        ])->assertSessionHasErrors('photo');
+        ]))->assertSessionHasErrors('photo');
 
         $errores = session('errors')->get('photo');
         $this->assertNotEmpty($errores);
@@ -214,20 +228,23 @@ class PerfilProfesionalKinvooTest extends TestCase
 
     public function test_multimedia_pesada_es_rechazada(): void
     {
+        Storage::fake('public');
         $user = User::factory()->create();
 
-        $this->actingAs($user)->put('/mi-perfil', [
-            'media_file' => UploadedFile::fake()->create('big.mp4', 30000, 'video/mp4'),
-        ])->assertSessionHasErrors('media_file');
+        // Nuevo carrusel: array `media_files[]`, límite por archivo = 25 MB.
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
+            'media_files' => [UploadedFile::fake()->create('big.mp4', 30000, 'video/mp4')],
+        ]))->assertSessionHasErrors('media_files.0');
     }
 
     public function test_solo_admin_descarga_el_adjunto(): void
     {
         Storage::fake('local');
+        Storage::fake('public');
         $user = User::factory()->create();
-        $this->actingAs($user)->put('/mi-perfil', [
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
             'certification_file' => UploadedFile::fake()->create('cert.pdf', 100, 'application/pdf'),
-        ]);
+        ]))->assertRedirect(route('professional.enviado'));
         $profile = $user->professionalProfile()->first();
 
         // Un no-admin no puede descargar.
@@ -281,9 +298,11 @@ class PerfilProfesionalKinvooTest extends TestCase
 
     public function test_telefono_valido_es_aceptado(): void
     {
+        Storage::fake('public');
         $user = User::factory()->create();
-        $this->actingAs($user)->put('/mi-perfil', ['phone' => '+52 55 1234 5678'])
-            ->assertSessionHasNoErrors();
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
+            'phone' => '+52 55 1234 5678',
+        ]))->assertSessionHasNoErrors();
     }
 
     public function test_datos_de_contacto_no_aparecen_en_el_perfil_publico(): void

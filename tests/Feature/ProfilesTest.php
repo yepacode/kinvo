@@ -69,14 +69,14 @@ class ProfilesTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->actingAs($user)->put('/mi-perfil', [
+        $this->actingAs($user)->put('/mi-perfil', $this->datosValidosProfesional([
             'headline' => 'Coach de fuerza',
-            'bio' => 'Especialista en powerlifting.',
+            'bio' => 'Especialista en powerlifting olímpico con 10 años de carrera.',
             'years_experience' => 7,
             'modalidad' => 'presencial',
             'disciplines' => $disc,
             'photo' => UploadedFile::fake()->image('foto.jpg'),
-        ]);
+        ]))->assertRedirect(route('professional.enviado'));
 
         $profile = $user->professionalProfile()->first();
         $this->assertSame('Coach de fuerza', $profile->headline);
@@ -116,9 +116,10 @@ class ProfilesTest extends TestCase
 
     public function test_contratante_actualiza_su_empresa(): void
     {
+        Storage::fake('public');
         $user = User::factory()->contratante()->create();
 
-        $this->actingAs($user)->put('/mi-empresa', [
+        $this->actingAs($user)->put('/mi-empresa', $this->datosValidosEstudio([
             'company_name' => 'Estudio Zen',
             'disciplines_text' => 'Yoga, Pilates',
             'estado' => 'Jalisco',
@@ -126,7 +127,7 @@ class ProfilesTest extends TestCase
             'contact_name' => 'Ana',
             'contact_email' => 'ana@zen.example.com',
             'website' => 'https://zen.example.com',
-        ])->assertRedirect(route('company.enviado'));
+        ]))->assertRedirect(route('company.enviado'));
 
         $empresa = $user->companyProfile()->first();
         $this->assertSame('Estudio Zen', $empresa->company_name);

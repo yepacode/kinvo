@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Notificaciones') }}</h2>
+            <h2 class="font-serif text-2xl font-medium text-ink">{{ landing('notificaciones_header_titulo') }}</h2>
             @if (auth()->user()->unreadNotifications()->count() > 0)
                 <form method="POST" action="{{ route('notifications.readAll') }}">
                     @csrf
@@ -35,7 +35,7 @@
                     @endif
                 </a>
             @empty
-                <p class="px-5 py-16 text-center text-warmgray">{{ __('Aún no tienes notificaciones.') }}</p>
+                <p class="px-5 py-16 text-center text-warmgray">{{ landing('notificaciones_empty_state') }}</p>
             @endforelse
         </div>
 

@@ -44,6 +44,9 @@ class LoginRequest extends FormRequest
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
+            // LOW-2 · Contador secundario por email (independiente de IP).
+            // Decae solo tras 10 min; hard-limit=20 intentos globales por email.
+            RateLimiter::hit($this->throttleKeyEmail(), 600);
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
@@ -51,6 +54,7 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+        RateLimiter::clear($this->throttleKeyEmail());
     }
 
     /**
@@ -60,13 +64,21 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        $tooManyByIp    = RateLimiter::tooManyAttempts($this->throttleKey(), 5);
+        // LOW-2 · Aunque el atacante rote IP, este contador global por email
+        // acumula igual y termina bloqueando después de 20 intentos.
+        $tooManyByEmail = RateLimiter::tooManyAttempts($this->throttleKeyEmail(), 20);
+
+        if (! $tooManyByIp && ! $tooManyByEmail) {
             return;
         }
 
         event(new Lockout($this));
 
-        $seconds = RateLimiter::availableIn($this->throttleKey());
+        $seconds = max(
+            RateLimiter::availableIn($this->throttleKey()),
+            RateLimiter::availableIn($this->throttleKeyEmail()),
+        );
 
         throw ValidationException::withMessages([
             'email' => trans('auth.throttle', [
@@ -78,9 +90,23 @@ class LoginRequest extends FormRequest
 
     /**
      * Get the rate limiting throttle key for the request.
+     * LOW-2 · La key `email+ip` permite eludir el bloqueo rotando IP (VPN,
+     * proxies). Complementamos con un check adicional por sólo email en el
+     * método ensureIsNotRateLimited (más abajo) — ver commit adjunto.
      */
     public function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+    }
+
+    /**
+     * LOW-2 · Rate limit secundario por email únicamente: 20 intentos / 10 min
+     * globales para ese email, independiente de la IP. Complementa al
+     * throttleKey de arriba (email+ip) que sigue bloqueando el burst
+     * clásico. Rotación de IP ya no evade este segundo límite.
+     */
+    public function throttleKeyEmail(): string
+    {
+        return 'login-by-email|'.Str::transliterate(Str::lower($this->string('email')));
     }
 }

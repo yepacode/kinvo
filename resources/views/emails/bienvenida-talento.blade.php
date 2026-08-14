@@ -2,7 +2,7 @@
 @php $logoPath = public_path('img/kinvoo-logo.png'); @endphp
 @if (file_exists($logoPath))
 <p style="text-align:center;margin:0 0 24px 0;">
-    <img src="{{ $message->embed($logoPath) }}" alt="Kinvoo — bolsa de talento fitness" width="72" height="72">
+    <img src="{{ $message->embed($logoPath) }}" alt="Kinvoo — bolsa de talento" width="72" height="72">
 </p>
 @endif
 

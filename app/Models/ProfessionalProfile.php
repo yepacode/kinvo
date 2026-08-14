@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 
 class ProfessionalProfile extends Model
 {
+    use \App\Models\Concerns\HasMediaItems;
+
     protected $fillable = [
         'user_id', 'slug', 'full_name', 'photo_path', 'headline', 'birthdate', 'bio',
         'years_experience', 'modalidad', 'availability', 'languages',

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\RolUsuario;
 use App\Filament\Resources\OfferResource\Pages;
 use App\Models\Offer;
 use App\Models\User;
@@ -29,7 +30,7 @@ class OfferResource extends Resource
             Forms\Components\Section::make('Publica quién')->schema([
                 Forms\Components\Select::make('contractor_user_id')
                     ->label('Estudio contratante')
-                    ->options(fn () => User::whereIn('rol', ['contratante', 'admin'])
+                    ->options(fn () => User::whereIn('nivel', [RolUsuario::Contractor->value, RolUsuario::Admin->value])
                         ->orderBy('name')->pluck('name', 'id'))
                     ->searchable()->required(),
                 Forms\Components\Select::make('status')

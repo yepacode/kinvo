@@ -1,5 +1,5 @@
 <x-guest-layout>
-    <h1 class="mb-6 text-center font-serif text-2xl font-medium text-ink">{{ __('Nueva contraseña') }}</h1>
+    <h1 class="mb-6 text-center font-serif text-2xl font-medium text-ink">{{ landing('reset_title') }}</h1>
 
     <form method="POST" action="{{ route('password.store') }}">
         @csrf

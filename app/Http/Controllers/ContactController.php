@@ -37,13 +37,23 @@ class ContactController extends Controller
 
         abort_unless($user->esProfesional(), 403);
 
-        $profile = $user->professionalProfile()->firstOrCreate([]);
-        $contactos = $profile->contacts()->latest()->paginate(15);
+        // MED-H3 · firstOrCreate([]) creaba un ProfessionalProfile vacío
+        // apenas el coach abría /mis-contactos, ensuciando la BD con perfiles
+        // sin `headline` ni datos. En Fase 2 el perfil ya lo crea el registro
+        // (RegisteredUserController), así que aquí solo LEEMOS. Si por alguna
+        // razón no existe (cuenta creada antes del refactor), la vista tolera
+        // $contactos vacío sin explotar.
+        $profile = $user->professionalProfile;
+        $contactos = $profile
+            ? $profile->contacts()->latest()->paginate(15)
+            : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
 
         // Marcar como leídos los no leídos (después de paginar, para que la vista
         // aún pueda resaltar cuáles llegaron sin leer en esta visita).
-        $profile->contacts()->where('estado', EstadoContacto::NoLeido->value)
-            ->update(['estado' => EstadoContacto::Leido->value]);
+        if ($profile) {
+            $profile->contacts()->where('estado', EstadoContacto::NoLeido->value)
+                ->update(['estado' => EstadoContacto::Leido->value]);
+        }
 
         return view('professional.contactos', ['contactos' => $contactos]);
     }
@@ -70,6 +80,14 @@ class ContactController extends Controller
             'professional_interesado_at' => now(),
             'estado' => EstadoContacto::Leido,
         ])->save();
+
+        // MED-I7 · Bitácora legal: sin este registro, la acción del coach
+        // ("me interesa") quedaba fuera de la trazabilidad legal (M8) — sólo
+        // constaba el `updated_at` del Contact.
+        \App\Models\AuditLog::record($user, $contact, 'coach_interested', new: [
+            'to_contact_id' => $contact->id,
+            'to_studio_user_id' => $contact->contractor_user_id,
+        ]);
 
         // Notifica a todos los admins activos (email + campanita). El correo
         // va queued dentro de la Notification; envuelto en try/catch para que
@@ -149,6 +167,14 @@ class ContactController extends Controller
                 ->with('status', 'contacto-enviado');
         }
 
+        // M8 · bitácora legal: cada mensaje enviado a un profesional queda
+        // registrado con actor, destinatario, IP y user-agent.
+        \App\Models\AuditLog::record($request->user(), $contact, 'contact_created', new: [
+            'to_professional_user_id' => $professionalProfile->user_id,
+            'contact_email' => $data['contact_email'],
+            'message_len' => mb_strlen($data['message']),
+        ]);
+
         $professionalProfile->loadMissing('user');
 
         // Aviso por correo al profesional y al owner. Envío SÍNCRONO — en
@@ -175,12 +201,21 @@ class ContactController extends Controller
             ->with('status', 'contacto-enviado');
     }
 
-    /** Solo contratantes con cuenta activa pueden contactar perfiles publicados. */
+    /** Solo contratantes con cuenta activa Y membresía activa pueden contactar
+     *  perfiles publicados. HIGH-28 · defensa en profundidad: el middleware
+     *  `membresia:plan-necesario-contacto` ya bloquea la ruta, pero re-checamos
+     *  aquí para que la lógica no dependa exclusivamente del pipeline de rutas
+     *  (si alguien mueve o quita el middleware, el gate sigue efectivo). */
     private function autorizar(Request $request, ProfessionalProfile $profile): void
     {
         abort_unless($profile->esVisiblePublicamente(), 404);
 
         $user = $request->user();
         abort_unless($user && $user->esContratante() && $user->estaActivo(), 403);
+
+        if (! $user->tieneMembresiaActiva()) {
+            abort(redirect()->route('membresias.index')
+                ->with('status', 'plan-necesario-contacto'));
+        }
     }
 }

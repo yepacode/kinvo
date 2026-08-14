@@ -240,8 +240,13 @@ class UserResource extends Resource
                     ->modalSubmitActionLabel('Aprobar')
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Pendiente)
                     ->action(function (User $u) {
+                        $estadoAnterior = $u->estado?->value;
                         if ($u->esContratante()) {
                             $u->forceFill(['estado' => EstadoUsuario::PerfilPendiente])->save();
+                            // HIGH-3 · bitácora legal de la acción admin.
+                            \App\Models\AuditLog::record(auth()->user(), $u, 'user_approved_step1',
+                                old: ['estado' => $estadoAnterior],
+                                new: ['estado' => EstadoUsuario::PerfilPendiente->value]);
                             $u->notify(new \App\Notifications\CuentaAprobadaContratanteNotification());
                             return;
                         }
@@ -249,6 +254,9 @@ class UserResource extends Resource
                         // Profesional: aprobación única — activa y publica perfil.
                         $u->forceFill(['estado' => EstadoUsuario::Activo])->save();
                         $u->professionalProfile?->update(['is_published' => true]);
+                        \App\Models\AuditLog::record(auth()->user(), $u, 'user_approved',
+                            old: ['estado' => $estadoAnterior, 'is_published' => false],
+                            new: ['estado' => EstadoUsuario::Activo->value, 'is_published' => true]);
                         $u->notify(new \App\Notifications\CuentaAprobadaNotification());
                     }),
                 // Segunda aprobación — solo aparece sobre contratistas con estado
@@ -264,7 +272,32 @@ class UserResource extends Resource
                     ->modalSubmitActionLabel('Aprobar perfil')
                     ->visible(fn (User $u) => $u->esContratante() && $u->estado === EstadoUsuario::PerfilPendiente)
                     ->action(function (User $u) {
+                        // HIGH-34 · validar que el perfil de empresa tenga los
+                        // datos mínimos ANTES de aprobarlo — evita publicar
+                        // "estudios fantasma" con nombre vacío o sin contacto.
+                        $cp = $u->companyProfile;
+                        $faltantes = [];
+                        if (! $cp) {
+                            $faltantes[] = 'no existe el perfil de empresa';
+                        } else {
+                            if (blank($cp->company_name)) $faltantes[] = 'nombre del estudio';
+                            if (blank($cp->estado)) $faltantes[] = 'estado (ubicación)';
+                            if (blank($cp->description) && blank($cp->disciplines_text)) {
+                                $faltantes[] = 'descripción o disciplinas';
+                            }
+                        }
+                        if ($faltantes) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Perfil incompleto — no se puede aprobar')
+                                ->body('Falta(n): '.implode(', ', $faltantes).'. Pídele al estudio que lo complete antes de aprobar.')
+                                ->danger()->persistent()->send();
+                            return;
+                        }
+                        $estadoAnterior = $u->estado?->value;
                         $u->forceFill(['estado' => EstadoUsuario::Activo])->save();
+                        \App\Models\AuditLog::record(auth()->user(), $u, 'company_profile_approved',
+                            old: ['estado' => $estadoAnterior],
+                            new: ['estado' => EstadoUsuario::Activo->value]);
                         $u->notify(new \App\Notifications\PerfilEmpresaAprobadoNotification());
                     }),
                 Tables\Actions\Action::make('rechazar')
@@ -277,7 +310,11 @@ class UserResource extends Resource
                     ->modalSubmitActionLabel('Rechazar')
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Pendiente)
                     ->action(function (User $u) {
+                        $estadoAnterior = $u->estado?->value;
                         $u->suspenderYOcultarPerfil();
+                        \App\Models\AuditLog::record(auth()->user(), $u, 'user_rejected',
+                            old: ['estado' => $estadoAnterior],
+                            new: ['estado' => EstadoUsuario::Suspendido->value]);
                         $u->notify(new \App\Notifications\CuentaRechazadaNotification());
                     }),
                 Tables\Actions\Action::make('suspender')
@@ -289,7 +326,13 @@ class UserResource extends Resource
                     ->modalDescription('El usuario no podrá iniciar sesión y su perfil se ocultará del buscador. Podrás reactivarla más adelante.')
                     ->modalSubmitActionLabel('Suspender')
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Activo)
-                    ->action(fn (User $u) => $u->suspenderYOcultarPerfil()),
+                    ->action(function (User $u) {
+                        $estadoAnterior = $u->estado?->value;
+                        $u->suspenderYOcultarPerfil();
+                        \App\Models\AuditLog::record(auth()->user(), $u, 'user_suspended',
+                            old: ['estado' => $estadoAnterior],
+                            new: ['estado' => EstadoUsuario::Suspendido->value]);
+                    }),
                 Tables\Actions\Action::make('reactivar')
                     ->label('Reactivar')
                     ->icon('heroicon-o-arrow-path')
@@ -300,13 +343,31 @@ class UserResource extends Resource
                     ->modalSubmitActionLabel('Reactivar')
                     ->visible(fn (User $u) => $u->estado === EstadoUsuario::Suspendido)
                     ->action(function (User $u) {
-                        // Reactivación restaura el estado Activo Y republica el perfil,
-                        // porque suspender/rechazar lo despublica. Sin esto, un flujo
-                        // Rechazar → Reactivar dejaba al usuario Activo con perfil
-                        // is_published=false y sin la acción "Aprobar" disponible
-                        // (visible solo si estado=Pendiente) → invisible sin fix.
+                        $estadoAnterior = $u->estado?->value;
+                        // HIGH-4 · Reactivación por rol:
+                        //  - Profesional: vuelve directo a Activo (una sola aprobación).
+                        //  - Contratante: vuelve a PerfilPendiente para forzar la 2ª
+                        //    revisión del perfil de empresa (mismo flujo del alta).
+                        // Sin este split, reactivar un estudio rechazado lo dejaba
+                        // Activo sin haber sido revisado en su 2ª etapa → visible en
+                        // el directorio con datos sin validar.
+                        if ($u->esContratante()) {
+                            $u->forceFill(['estado' => EstadoUsuario::PerfilPendiente])->save();
+                            \App\Models\AuditLog::record(auth()->user(), $u, 'user_reactivated_to_perfil_pendiente',
+                                old: ['estado' => $estadoAnterior],
+                                new: ['estado' => EstadoUsuario::PerfilPendiente->value]);
+                            \Filament\Notifications\Notification::make()
+                                ->title('Reactivado en estado "Perfil pendiente"')
+                                ->body('El estudio deberá completar/actualizar su perfil y tú lo apruebas de nuevo con "Aprobar perfil de empresa".')
+                                ->success()->send();
+                            return;
+                        }
+                        // Profesional: Activo + republicar perfil (suspender lo despublica).
                         $u->forceFill(['estado' => EstadoUsuario::Activo])->save();
                         $u->professionalProfile?->update(['is_published' => true]);
+                        \App\Models\AuditLog::record(auth()->user(), $u, 'user_reactivated',
+                            old: ['estado' => $estadoAnterior, 'is_published' => false],
+                            new: ['estado' => EstadoUsuario::Activo->value, 'is_published' => true]);
                     }),
                 Tables\Actions\Action::make('membresia')
                     ->label('Membresía')
@@ -324,12 +385,26 @@ class UserResource extends Resource
                             ->searchable(),
                         \Filament\Forms\Components\DatePicker::make('membership_expires_at')
                             ->label('Vence el')
-                            ->helperText('Deja vacío para quitar la membresía (queda inactiva).'),
+                            ->helperText('Deja vacío para quitar la membresía (queda inactiva).')
+                            // MED-J7 · No aceptar fechas ya vencidas — un admin
+                            // que ponga una fecha pasada por accidente estaría
+                            // asignando membresía "muerta". Si quiere quitarla,
+                            // el helperText dice cómo (dejar vacío).
+                            ->minDate(now()->toDateString()),
                     ])
-                    ->action(fn (User $u, array $data) => $u->forceFill([
-                        'membership_plan_id' => $data['membership_plan_id'] ?? null,
-                        'membership_expires_at' => $data['membership_expires_at'] ?? null,
-                    ])->save()),
+                    ->action(function (User $u, array $data) {
+                        $old = [
+                            'membership_plan_id' => $u->membership_plan_id,
+                            'membership_expires_at' => (string) $u->membership_expires_at,
+                        ];
+                        $new = [
+                            'membership_plan_id' => $data['membership_plan_id'] ?? null,
+                            'membership_expires_at' => $data['membership_expires_at'] ?? null,
+                        ];
+                        $u->forceFill($new)->save();
+                        \App\Models\AuditLog::record(auth()->user(), $u, 'membership_updated_by_admin',
+                            old: $old, new: $new);
+                    }),
                 Tables\Actions\Action::make('cambiar_tipo')
                     ->label('Cambiar tipo de cuenta')
                     ->icon('heroicon-o-arrows-right-left')
@@ -385,6 +460,7 @@ class UserResource extends Resource
                             if ($cp->logo_path) $archivosPublic[] = $cp->logo_path;
                         }
 
+                        $tipoAnterior = $u->nivel?->value;
                         \Illuminate\Support\Facades\DB::transaction(function () use ($u, $nuevo) {
                             // Los perfiles se borran por FK cascade sobre user_id. Pero los
                             // Save de OTROS usuarios que guardaron este perfil son polimórficos
@@ -407,6 +483,39 @@ class UserResource extends Resource
                             // sentido si ahora es talento (el "estudio" que envió ya no lo es).
                             \App\Models\Contact::where('contractor_user_id', $u->id)->delete();
 
+                            // HIGH-35 · Cleanup completo de datos ligados al ROL ANTERIOR
+                            // — sin esto quedaban filas huérfanas apuntando a un user
+                            // cuyo tipo dejó de tener sentido (offers de un ex-contratante
+                            // ahora talento, postulaciones de un ex-talento ahora estudio, etc.).
+                            // Todo en la misma transacción para atomicidad.
+                            \App\Models\Application::where('professional_user_id', $u->id)->delete();
+                            \App\Models\Offer::where('contractor_user_id', $u->id)->delete();
+                            \App\Models\TeamMember::where('contractor_user_id', $u->id)
+                                ->orWhere('professional_user_id', $u->id)
+                                ->delete();
+                            \App\Models\BenefitRequest::where('user_id', $u->id)->delete();
+                            \App\Models\PulseResponse::where('professional_user_id', $u->id)
+                                ->orWhere('contractor_user_id', $u->id)
+                                ->delete();
+                            \App\Models\WellnessEntry::where('professional_user_id', $u->id)->delete();
+                            \App\Models\WallPost::where('user_id', $u->id)->delete();
+                            // Suscripciones activas: cancelar en la pasarela es la
+                            // responsabilidad del admin (fuera de este flujo). Aquí
+                            // sólo marcamos las locales como canceladas para no dejar
+                            // membresías inconsistentes con el nuevo rol.
+                            \App\Models\Subscription::where('user_id', $u->id)
+                                ->whereIn('status', [
+                                    \App\Models\Subscription::STATUS_ACTIVE,
+                                    \App\Models\Subscription::STATUS_TRIALING,
+                                    \App\Models\Subscription::STATUS_PAST_DUE,
+                                    \App\Models\Subscription::STATUS_INCOMPLETE,
+                                ])
+                                ->update([
+                                    'status' => \App\Models\Subscription::STATUS_CANCELED,
+                                    'canceled_at' => now(),
+                                    'ends_at' => now(),
+                                ]);
+
                             // Membresía: el plan es específico del rol de contratante. Si cambia
                             // de tipo, la pierde. El owner puede reasignarla si corresponde.
                             $u->forceFill([
@@ -425,6 +534,10 @@ class UserResource extends Resource
                             \Illuminate\Support\Facades\Storage::disk('local')->delete($archivosLocal);
                         }
 
+                        \App\Models\AuditLog::record(auth()->user(), $u, 'user_type_changed',
+                            old: ['nivel' => $tipoAnterior],
+                            new: ['nivel' => $nuevo->value]);
+
                         $u->notify(new \App\Notifications\TipoDeCuentaCambiadoNotification($nuevo));
 
                         \Filament\Notifications\Notification::make()
@@ -442,6 +555,15 @@ class UserResource extends Resource
                     ->modalSubmitActionLabel('Eliminar definitivamente')
                     ->visible(fn (User $u) => ! $u->esAdmin() && $u->id !== auth()->id())
                     ->action(function (User $u) {
+                        // HIGH-3 · Registrar en bitácora ANTES del delete: después,
+                        // el subject queda apuntando a un user inexistente pero el
+                        // registro conserva actor + old values.
+                        \App\Models\AuditLog::record(auth()->user(), $u, 'user_deleted_by_admin', old: [
+                            'email'  => $u->email,
+                            'nivel'  => $u->nivel?->value,
+                            'estado' => $u->estado?->value,
+                            'name'   => $u->name,
+                        ]);
                         $u->deleteConLimpieza();
                         \Filament\Notifications\Notification::make()
                             ->title('Cuenta eliminada')

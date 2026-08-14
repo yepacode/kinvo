@@ -12,7 +12,7 @@ class AuditLog extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'actor_user_id', 'subject_type', 'subject_id', 'action', 'old', 'new', 'ip', 'created_at',
+        'actor_user_id', 'subject_type', 'subject_id', 'action', 'old', 'new', 'ip', 'user_agent', 'created_at',
     ];
 
     protected $casts = [
@@ -45,6 +45,7 @@ class AuditLog extends Model
             'old' => $old,
             'new' => $new,
             'ip' => request()?->ip(),
+            'user_agent' => substr((string) request()?->userAgent(), 0, 500),
             'created_at' => now(),
         ]);
     }

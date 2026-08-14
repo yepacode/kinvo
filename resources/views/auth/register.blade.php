@@ -1,15 +1,15 @@
 <x-guest-layout>
-    <h1 class="mb-1 text-center font-serif text-2xl font-medium text-ink">{{ __('Crea tu cuenta') }}</h1>
-    <p class="mb-6 text-center text-sm text-warmgray">{{ __('Únete a la red profesional del fitness') }}</p>
+    <h1 class="mb-1 text-center font-serif text-2xl font-medium text-ink">{{ landing('register_title') }}</h1>
+    <p class="mb-6 text-center text-sm text-warmgray">{{ landing('register_subtitle') }}</p>
 
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
         <!-- Tipo de usuario -->
         <fieldset>
-            <legend class="block text-sm font-medium text-ink">{{ __('Elige el tipo de cuenta') }}</legend>
+            <legend class="block text-sm font-medium text-ink">{{ landing('register_type_label') }}</legend>
             <p class="mt-1 text-xs text-warmgray">
-                {{ __('Elige con cuidado: hoy una cuenta es de un solo tipo. Si te equivocas escríbenos y lo cambiamos.') }}
+                {{ landing('register_type_help') }}
             </p>
             <div class="mt-3 grid gap-3 sm:grid-cols-2">
                 @php $tipo = old('tipo', 'professional'); @endphp
@@ -18,11 +18,11 @@
                            {{ $tipo === 'professional' ? 'checked' : '' }} required>
                     <div class="h-full rounded-xl border border-line bg-white p-4 transition peer-checked:border-sage peer-checked:bg-sage/5 peer-checked:ring-1 peer-checked:ring-sage peer-focus-visible:ring-2 peer-focus-visible:ring-sage peer-focus-visible:ring-offset-1">
                         <div class="flex items-center gap-2">
-                            <span class="text-lg" aria-hidden="true">🧘‍♀️</span>
-                            <span class="text-sm font-semibold text-ink">{{ __('Soy talento') }}</span>
+                            <span class="text-lg" aria-hidden="true">{{ landing('register_talent_emoji') }}</span>
+                            <span class="text-sm font-semibold text-ink">{{ landing('register_talent_title') }}</span>
                         </div>
                         <p class="mt-2 text-xs leading-relaxed text-warmgray">
-                            {{ __('Coach, instructor o staff que quiere que lo encuentren estudios y marcas.') }}
+                            {{ landing('register_talent_body') }}
                         </p>
                     </div>
                 </label>
@@ -31,11 +31,11 @@
                            {{ $tipo === 'contractor' ? 'checked' : '' }}>
                     <div class="h-full rounded-xl border border-line bg-white p-4 transition peer-checked:border-sage peer-checked:bg-sage/5 peer-checked:ring-1 peer-checked:ring-sage peer-focus-visible:ring-2 peer-focus-visible:ring-sage peer-focus-visible:ring-offset-1">
                         <div class="flex items-center gap-2">
-                            <span class="text-lg" aria-hidden="true">🏢</span>
-                            <span class="text-sm font-semibold text-ink">{{ __('Soy estudio o marca') }}</span>
+                            <span class="text-lg" aria-hidden="true">{{ landing('register_studio_emoji') }}</span>
+                            <span class="text-sm font-semibold text-ink">{{ landing('register_studio_title') }}</span>
                         </div>
                         <p class="mt-2 text-xs leading-relaxed text-warmgray">
-                            {{ __('Gimnasio, estudio o marca que quiere buscar y contactar talento del fitness.') }}
+                            {{ landing('register_studio_body') }}
                         </p>
                     </div>
                 </label>

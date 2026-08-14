@@ -1,7 +1,7 @@
 <x-guest-layout>
-    <h1 class="mb-1 text-center font-serif text-2xl font-medium text-ink">{{ __('Recupera tu contraseña') }}</h1>
+    <h1 class="mb-1 text-center font-serif text-2xl font-medium text-ink">{{ landing('forgot_title') }}</h1>
     <p class="mb-6 text-center text-sm text-warmgray">
-        {{ __('Escribe tu correo y te enviaremos un enlace para crear una nueva contraseña.') }}
+        {{ landing('forgot_body') }}
     </p>
 
     <x-auth-session-status class="mb-4" :status="session('status')" />

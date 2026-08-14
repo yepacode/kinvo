@@ -43,6 +43,18 @@ class NewPasswordController extends Controller
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user) use ($request) {
+                // MED-G6 · Un usuario SUSPENDIDO no debe poder resetear su
+                // contraseña — abortar antes de tocar la BD para que Laravel
+                // devuelva el status genérico y evite dar señal al atacante.
+                if (method_exists($user, 'estaActivo') && ! $user->estaActivo() && ! $user->esAdmin()) {
+                    throw ValidationException::withMessages([
+                        'email' => __(Password::INVALID_USER),
+                    ]);
+                }
+                // Cambiar remember_token invalida los tokens "recordarme" en
+                // otros dispositivos (login-remember del atacante). Adicional-
+                // mente disparamos PasswordReset (audit) y logoutOtherDevices
+                // para cerrar las sesiones que usaban el hash anterior.
                 $user->forceFill([
                     'password' => Hash::make($request->password),
                     'remember_token' => Str::random(60),
@@ -51,6 +63,16 @@ class NewPasswordController extends Controller
                 event(new PasswordReset($user));
             }
         );
+
+        // MED-G2 · Cerrar sesiones activas en otros dispositivos post-reset.
+        // Sólo si el reset realmente sucedió (status ok) y hay un user
+        // autenticado en el request. Si el flujo del reset es completamente
+        // anónimo, este bloque no aplica.
+        if ($status === Password::PASSWORD_RESET && $request->user()) {
+            try {
+                \Illuminate\Support\Facades\Auth::logoutOtherDevices($request->password);
+            } catch (\Throwable $e) { report($e); }
+        }
 
         // If the password was successfully reset, we will redirect the user back to
         // the application's home authenticated view. If there is an error we can

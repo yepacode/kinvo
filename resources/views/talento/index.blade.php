@@ -1,9 +1,12 @@
-<x-public-layout :title="__('Buscar talento fitness · Kinvoo')"
+<x-public-layout :title="__('Buscar talento · Kinvoo')"
                  :description="__('Encuentra coaches, instructores y profesionales del fitness por disciplina, ubicación y modalidad.')">
     <div class="mx-auto max-w-5xl px-6 py-10">
+        @auth
+            <x-back-link :href="auth()->user()->homeRoute()" :value="__('← Volver al panel')" />
+        @endauth
         <div class="text-center">
-            <h1 class="font-serif text-4xl font-medium text-ink">{{ __('Encuentra talento fitness') }}</h1>
-            <p class="mt-2 text-warmgray">{{ __('Filtra por disciplina, ubicación o modalidad.') }}</p>
+            <h1 class="font-serif text-4xl font-medium text-ink">{{ landing('talento_index_titulo') }}</h1>
+            <p class="mt-2 text-warmgray">{{ landing('talento_index_subtitulo') }}</p>
         </div>
 
         {{-- Filtros --}}
@@ -55,7 +58,7 @@
         @if ($profiles->isEmpty())
             <div class="mt-4 rounded-2xl border border-dashed border-line bg-white/60 px-6 py-16 text-center">
                 <p class="text-3xl" aria-hidden="true">🔍</p>
-                <p class="mt-3 font-serif text-xl font-medium text-ink">{{ __('Sin resultados') }}</p>
+                <p class="mt-3 font-serif text-xl font-medium text-ink">{{ landing('talento_index_empty_titulo') }}</p>
                 <p class="mt-1 text-sm text-warmgray">{{ __('Prueba con otros filtros o limpia la búsqueda.') }}</p>
             </div>
         @else

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\PersistsUploadedFile;
+
 use App\Enums\EstadoUsuario;
 use App\Enums\RolUsuario;
 use App\Models\CompanyProfile;
@@ -15,6 +17,8 @@ use Illuminate\View\View;
 
 class CompanyProfileController extends Controller
 {
+    use PersistsUploadedFile;
+
     /** Página pública del estudio (solo si el dueño está activo/aprobado). */
     public function show(CompanyProfile $companyProfile): View
     {
@@ -72,12 +76,19 @@ class CompanyProfileController extends Controller
             'company_name' => $user->name,
         ]);
 
+        // Fix B1 (petición cliente): si el user subió logo en un intento previo
+        // pero otro campo falló, el logo se perdía del input al reintentar.
+        // Antes de validar, si hay tmp de sesión, lo re-inyectamos al request
+        // como si viniera del navegador. Ver Concerns\PersistsUploadedFile.
+        $this->restaurarArchivoTemporal($request, 'logo');
+        // Si el request ahora tiene logo, ya no es required (aunque la BD no lo tenga).
+        $logoRequerido = ($profile->logo_path || $request->hasFile('logo')) ? 'nullable' : 'required';
+
         // 2026-08-06 · Petición de la clienta (Marian):
         // "Todos los campos obligatorios EXCEPTO contenido multimedia y web".
         // Los estudios que solo dejan su correo bloquean el flujo.
         // Excepciones opcionales: media_url, media_file, website (redes/web).
-        // El logo es opcional solo si ya existe en el perfil.
-        $logoRequerido = $profile->logo_path ? 'nullable' : 'required';
+        // El logo es opcional si ya existe en BD O si viene un file nuevo/tmp.
 
         $data = $request->validate([
             'company_name' => ['required', 'string', 'max:150'],
@@ -95,8 +106,11 @@ class CompanyProfileController extends Controller
             'contact_email' => ['required', 'email', 'max:150'],
             // OPCIONAL por decisión de negocio (multimedia):
             'media_url' => ['nullable', 'url:http,https', 'max:300'],
-            'media_file' => ['nullable', 'file', 'mimes:mp4,webm,mov,m4v,jpg,jpeg,png,webp,gif', 'max:25600'],
-            'remove_media_file' => ['nullable', 'boolean'],
+            // Multi-upload para carrusel (petición cliente):
+            'media_files'   => ['nullable', 'array', 'max:20'],
+            'media_files.*' => ['file', 'mimes:mp4,webm,mov,m4v,jpg,jpeg,png,webp,gif', 'max:25600'],
+            'media_remove'   => ['nullable', 'array'],
+            'media_remove.*' => ['integer'],
             // Mismo criterio que la foto de perfil: hasta 5 MB y bloqueo de imágenes absurdas (100 MP).
             'logo' => [$logoRequerido, 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=10000,max_height=10000'],
         ], [
@@ -114,14 +128,8 @@ class CompanyProfileController extends Controller
             $data['logo_path'] = $request->file('logo')->store('empresas', 'public');
         }
 
-        if ($request->hasFile('media_file')) {
-            if ($profile->media_path) {
-                Storage::disk('public')->delete($profile->media_path);
-            }
-            $file = $request->file('media_file');
-            $data['media_path'] = $file->store('multimedia/estudio', 'public');
-            $data['media_type'] = str_starts_with($file->getMimeType() ?? '', 'video/') ? 'video' : 'image';
-        }
+        // Carrusel: procesa los uploads nuevos y los deletes marcados.
+        // Se hace después de fill/save del profile — más abajo.
 
         $profile->fill([
             'company_name' => $data['company_name'],
@@ -142,36 +150,68 @@ class CompanyProfileController extends Controller
         if (isset($data['logo_path'])) {
             $profile->logo_path = $data['logo_path'];
         }
-        if (isset($data['media_path'])) {
-            $profile->media_path = $data['media_path'];
-            $profile->media_type = $data['media_type'];
-        }
 
-        if (! $request->hasFile('media_file') && $request->boolean('remove_media_file') && $profile->media_path) {
-            Storage::disk('public')->delete($profile->media_path);
-            $profile->media_path = null;
-            $profile->media_type = null;
-        }
-
+        $wasDirtyKeys = array_keys($profile->getDirty());
         $profile->save();
+
+        // M8 · bitácora legal de cambios en el perfil de empresa.
+        if (! empty($wasDirtyKeys)) {
+            \App\Models\AuditLog::record($user, $profile, 'company_profile_updated', new: [
+                'campos' => $wasDirtyKeys,
+            ]);
+        }
+
+        // Carrusel: eliminar items marcados (solo los que pertenecen a ESTE profile).
+        if ($idsRemover = $request->input('media_remove', [])) {
+            $profile->mediaItems()->whereIn('id', $idsRemover)->get()->each->delete();
+        }
+        // Carrusel: subir nuevos items (multi-file).
+        foreach ($request->file('media_files', []) as $file) {
+            if (! $file) continue;
+            $tipo = str_starts_with($file->getMimeType() ?? '', 'video/') ? 'video' : 'image';
+            $profile->mediaItems()->create([
+                'path'       => $file->store('multimedia/estudio', 'public'),
+                'type'       => $tipo,
+                'sort_order' => ($profile->mediaItems()->max('sort_order') ?? 0) + 1,
+            ]);
+        }
 
         // Doble aprobación del contratista (Flujo 22-jul del cliente): si el
         // usuario aún está en PerfilPendiente, avisamos a los admins de la 2ª
-        // revisión. El correo es opcional (queued dentro de la Notification);
-        // envolvemos en try/catch para que un fallo NO rompa el flujo del usuario.
+        // revisión.
+        // MED-I1 · Anti-spam: cada guardado disparaba N notifs a cada admin.
+        // Un contratante que pulsa "Guardar" 5 veces mientras ajusta el perfil
+        // enviaba 5×N notifs (con 3 admins → 15 badges por sesión). Ahora
+        // deduplicamos por-user con cache de 12h: solo la PRIMERA notif de la
+        // ventana llega; el resto se silencia. Cuando el admin aprueba o
+        // rechaza, la marca se borra para permitir un nuevo aviso en el futuro.
         if ($user->tienePerfilPendiente()) {
-            try {
-                $admins = User::query()
-                    ->where('nivel', RolUsuario::Admin)
-                    ->where('estado', EstadoUsuario::Activo)
-                    ->get();
-                foreach ($admins as $admin) {
-                    $admin->notify(new PerfilEmpresaEnviadoNotification($user));
+            $cacheKey = 'perfil_empresa_notif:user:'.$user->id;
+            if (! \Illuminate\Support\Facades\Cache::has($cacheKey)) {
+                \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addHours(12));
+                try {
+                    $admins = User::query()
+                        ->where('nivel', RolUsuario::Admin)
+                        ->where('estado', EstadoUsuario::Activo)
+                        ->get();
+                    // MED-I3 · try/catch DENTRO del loop: si el correo al 1er
+                    // admin falla, seguimos con los demás. Antes un fallo
+                    // cortaba el resto silenciosamente.
+                    foreach ($admins as $admin) {
+                        try {
+                            $admin->notify(new PerfilEmpresaEnviadoNotification($user));
+                        } catch (\Throwable $e) {
+                            report($e);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    report($e);
                 }
-            } catch (\Throwable $e) {
-                report($e);
             }
         }
+
+        // Fix B1: limpia el tmp del logo tras guardar exitoso.
+        $this->limpiarArchivoTemporal($request, 'logo');
 
         // Paso 3: avanza a la confirmación (arregla la "página estática" al guardar).
         return redirect()->route('company.enviado');

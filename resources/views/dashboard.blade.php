@@ -8,7 +8,7 @@
             $saltar = ['Sr.', 'Sra.', 'Srta.', 'Ing.', 'Dr.', 'Dra.', 'Lic.', 'Mtro.', 'Mtra.', 'Mr.', 'Mrs.', 'Ms.'];
             $primerNombre = (in_array($primera, $saltar, true) && count($palabras) > 1) ? $palabras[1] : $primera;
         @endphp
-        <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Hola, :name', ['name' => $primerNombre]) }}</h2>
+        <h2 class="font-serif text-2xl font-medium text-ink">{{ str_replace(':name', $primerNombre, landing('dashboard_saludo')) }}</h2>
     </x-slot>
 
     <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -17,12 +17,12 @@
             <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
             <div class="rounded-2xl border border-line bg-white p-6 sm:p-8">
                 <p class="text-sm font-medium uppercase tracking-widest text-sage">{{ __('Profesional') }}</p>
-                <h3 class="mt-2 font-serif text-2xl font-medium text-ink">{{ __('Tu perfil en Kinvoo') }}</h3>
+                <h3 class="mt-2 font-serif text-2xl font-medium text-ink">{{ landing('dashboard_coach_titulo_perfil') }}</h3>
                 <p class="mt-2 text-warmgray">
                     @if ($profile && $profile->is_published)
-                        {!! __('Tu perfil está :status y visible para contratantes.', ['status' => '<strong class="text-sage">'.__('publicado').'</strong>']) !!}
+                        {!! str_replace(':status', '<strong class="text-sage">'.__('publicado').'</strong>', e(landing('dashboard_coach_perfil_publicado_msg'))) !!}
                     @else
-                        {!! __('Tu perfil está :status. Complétalo y publícalo para que te encuentren.', ['status' => '<strong>'.__('oculto').'</strong>']) !!}
+                        {!! str_replace(':status', '<strong>'.__('oculto').'</strong>', e(landing('dashboard_coach_perfil_oculto_msg'))) !!}
                     @endif
                 </p>
                 @if ($profile)
@@ -46,7 +46,7 @@
                 <div class="mt-6 flex flex-wrap gap-3">
                     <a href="{{ route('professional.profile.edit') }}"
                        class="rounded-full bg-sage px-6 py-2.5 text-sm font-semibold text-cream transition hover:bg-ink">
-                        {{ __('Editar mi perfil') }}
+                        {{ landing('dashboard_coach_cta_editar_perfil') }}
                     </a>
                     @if ($profile && $profile->is_published)
                         <a href="{{ route('talento.show', $profile->slug) }}" target="_blank"
@@ -65,11 +65,11 @@
                 @endphp
                 <div class="rounded-2xl border border-line bg-white p-6">
                     <div class="flex items-baseline justify-between">
-                        <h3 class="font-serif text-xl font-medium text-ink">{{ __('Quién vio tu perfil') }}</h3>
+                        <h3 class="font-serif text-xl font-medium text-ink">{{ landing('dashboard_coach_vistas_titulo') }}</h3>
                         <span class="text-2xl font-medium text-sage">{{ $totalVistas }}</span>
                     </div>
                     @if ($vistasRecientes->isEmpty())
-                        <p class="mt-2 text-sm text-warmgray">{{ __('Aún nadie ha visto tu perfil. Publícalo y compártelo para empezar.') }}</p>
+                        <p class="mt-2 text-sm text-warmgray">{{ landing('dashboard_coach_vistas_empty') }}</p>
                     @else
                         <ul class="mt-4 divide-y divide-line/60">
                             @foreach ($vistasRecientes as $v)
@@ -86,16 +86,16 @@
         @elseif (auth()->user()->esContratante())
             <div class="rounded-2xl border border-line bg-white p-6 sm:p-8">
                 <p class="text-sm font-medium uppercase tracking-widest text-sage">{{ __('Contratante') }}</p>
-                <h3 class="mt-2 font-serif text-2xl font-medium text-ink">{{ __('Encuentra talento fitness') }}</h3>
-                <p class="mt-2 text-warmgray">{{ __('Explora perfiles de profesionales o completa los datos de tu empresa.') }}</p>
+                <h3 class="mt-2 font-serif text-2xl font-medium text-ink">{{ landing('dashboard_estudio_titulo') }}</h3>
+                <p class="mt-2 text-warmgray">{{ landing('dashboard_estudio_descripcion') }}</p>
                 <div class="mt-6 flex flex-wrap gap-3">
                     <a href="{{ route('talento.index') }}"
                        class="rounded-full bg-sage px-6 py-2.5 text-sm font-semibold text-cream transition hover:bg-ink">
-                        {{ __('Buscar talento') }}
+                        {{ landing('dashboard_estudio_cta_talento') }}
                     </a>
                     <a href="{{ route('company.profile.edit') }}"
                        class="rounded-full border border-line px-6 py-2.5 text-sm font-medium text-warmgray transition hover:border-sage hover:text-sage">
-                        {{ __('Editar mi empresa') }}
+                        {{ landing('dashboard_estudio_cta_perfil') }}
                     </a>
                 </div>
             </div>

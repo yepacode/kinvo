@@ -22,34 +22,28 @@
         @include('partials.head-assets')
     </head>
     <body class="min-h-screen bg-cream font-sans text-ink antialiased">
-        <header class="border-b border-line/70">
-            <div class="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-4 sm:px-6">
-                <a href="/" class="font-serif text-xl font-medium tracking-tight text-ink sm:text-2xl">Kinvoo</a>
-                <nav class="flex items-center gap-3 text-sm sm:gap-4">
-                    {{-- "Buscar talento" solo tiene sentido para anónimos (para atraer), contratantes y admin.
-                         Un profesional autenticado NO debe verlo (su rol es aparecer, no buscar). --}}
-                    @auth
-                        @if (auth()->user()->esContratante() || auth()->user()->esAdmin())
-                            <a href="{{ route('talento.index') }}" class="text-warmgray hover:text-sage">
-                                <span class="sm:hidden">{{ __('Talento') }}</span><span class="hidden sm:inline">{{ __('Buscar talento') }}</span>
-                            </a>
-                        @endif
-                    @else
+        {{-- Nav condicional: para usuarios autenticados se muestra el nav completo
+             de la app (mismo que app-layout) para que no "desaparezca" al entrar a
+             vistas públicas como /talento o /estudio/{slug}. Anónimos siguen viendo
+             el nav marketing mínimo. --}}
+        @auth
+            @include('layouts.navigation')
+        @else
+            <header class="border-b border-line/70">
+                <div class="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-4 sm:px-6">
+                    <a href="/" class="font-serif text-xl font-medium tracking-tight text-ink sm:text-2xl">Kinvoo</a>
+                    <nav class="flex items-center gap-3 text-sm sm:gap-4">
                         <a href="{{ route('talento.index') }}" class="text-warmgray hover:text-sage">
                             <span class="sm:hidden">{{ __('Talento') }}</span><span class="hidden sm:inline">{{ __('Buscar talento') }}</span>
                         </a>
-                    @endauth
-                    @auth
-                        <a href="{{ auth()->user()->homeRoute() }}" class="text-warmgray hover:text-sage">{{ __('Mi cuenta') }}</a>
-                    @else
                         <a href="{{ route('login') }}" class="text-warmgray hover:text-sage">{{ __('Entrar') }}</a>
                         <a href="{{ route('register') }}"
-                           class="rounded-full bg-sage px-4 py-2 font-medium text-cream hover:bg-ink">{{ __('Únete') }}</a>
-                    @endauth
-                    <x-locale-switcher />
-                </nav>
-            </div>
-        </header>
+                           class="rounded-full bg-sage px-4 py-2 font-medium text-cream hover:bg-ink">{{ landing('nav_unete_cta') }}</a>
+                        <x-locale-switcher />
+                    </nav>
+                </div>
+            </header>
+        @endauth
 
         <main>
             {{ $slot }}
@@ -62,7 +56,7 @@
                     <a href="{{ route('legal.terminos') }}" class="hover:text-sage">{{ __('Términos y Condiciones') }}</a>
                 </nav>
                 <p>{{ app()->getLocale() === 'en'
-                    ? '© '.date('Y').' | Kinvoo Wellness - All rights reserved'
+                    ? '© '.date('Y').' | Kinvoo - All rights reserved'
                     : landing('footer_copy') }}</p>
             </div>
         </footer>

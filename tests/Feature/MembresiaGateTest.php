@@ -10,12 +10,18 @@ class MembresiaGateTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_contratante_sin_membresia_es_redirigido_del_directorio(): void
+    /**
+     * MATRIZ ACTUAL (docx cliente PRUEBA KINVOO, jul-2026):
+     * Estudio SIN membresía SÍ ve el directorio de talento — el gate solo
+     * aplica al CONTACTO (route('contacto.create')), no a la búsqueda.
+     * El test anterior asumía la regla vieja "sin plan no ves talento";
+     * al actualizar la matriz para free/paid, el comportamiento se invirtió.
+     */
+    public function test_contratante_sin_membresia_puede_ver_el_directorio(): void
     {
         $user = User::factory()->contratante()->sinMembresia()->create();
 
-        $this->actingAs($user)->get(route('talento.index'))
-            ->assertRedirect(route('membresias.index'));
+        $this->actingAs($user)->get(route('talento.index'))->assertOk();
     }
 
     public function test_contratante_con_membresia_activa_entra_al_directorio(): void
@@ -25,13 +31,17 @@ class MembresiaGateTest extends TestCase
         $this->actingAs($user)->get(route('talento.index'))->assertOk();
     }
 
-    public function test_membresia_vencida_bloquea_el_directorio(): void
+    /**
+     * MATRIZ ACTUAL: la membresía vencida NO bloquea la vista del directorio,
+     * solo el contacto. Es un cambio deliberado (M10) para permitir que el
+     * estudio explore talento antes de suscribirse.
+     */
+    public function test_membresia_vencida_no_bloquea_el_directorio(): void
     {
         $user = User::factory()->contratante()->create();
         $user->forceFill(['membership_expires_at' => now()->subDay()])->save();
 
-        $this->actingAs($user)->get(route('talento.index'))
-            ->assertRedirect(route('membresias.index'));
+        $this->actingAs($user)->get(route('talento.index'))->assertOk();
     }
 
     public function test_membresia_que_vence_hoy_sigue_activa(): void

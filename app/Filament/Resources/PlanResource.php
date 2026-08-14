@@ -71,6 +71,25 @@ class PlanResource extends Resource
                         ->maxLength(500),
                 ]),
 
+                Forms\Components\Section::make('Pasarela de pago')
+                    ->description('Kinvoo soporta MercadoPago (default en México) y Stripe (alternativa). MercadoPago usa el "precio" de arriba directamente — no necesita más config. Stripe sí requiere el Price ID que creas en su dashboard.')
+                    ->schema([
+                        Forms\Components\Toggle::make('is_recurring')
+                            ->label('Es recurrente')
+                            ->helperText('Suscripción periódica (recomendado). Desactiva sólo si es un pago único.')
+                            ->default(true),
+                        Forms\Components\Select::make('interval')
+                            ->label('Periodicidad del cobro')
+                            ->options(['month' => 'Mensual', 'year' => 'Anual'])
+                            ->default('month')
+                            ->helperText('MercadoPago lo interpreta como frequency (1 o 12 meses). En Stripe debe coincidir con el interval del Price.'),
+                        Forms\Components\TextInput::make('provider_price_id')
+                            ->label('Stripe Price ID (opcional)')
+                            ->placeholder('price_1AbCd...')
+                            ->helperText('SOLO si vas a usar Stripe: se obtiene en Stripe → Products → tu producto → Prices → copiar (formato price_...). Si usas MercadoPago, déjalo vacío.')
+                            ->maxLength(120),
+                    ])->columns(3)->collapsible(),
+
                 Forms\Components\Section::make('Visibilidad')->schema([
                     Forms\Components\Toggle::make('destacado')
                         ->label('Destacado')

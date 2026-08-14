@@ -8,6 +8,8 @@ use Illuminate\Support\Str;
 
 class ContentItem extends Model
 {
+    use \App\Models\Concerns\HasMediaItems;
+
     public const TYPE_VIDEO    = 'video';
     public const TYPE_DOCUMENT = 'document';
     public const TYPE_AUDIO    = 'audio';
@@ -17,12 +19,15 @@ class ContentItem extends Model
         'slug', 'title', 'description', 'category', 'type', 'url', 'file_path',
         'gate_role', 'gate_plan_id', 'is_published', 'published_at',
         'uploader_user_id',
+        // H6 · nivel de acceso (1=free, 2/3=premium).
+        'access_level',
     ];
 
     protected $casts = [
         'is_published' => 'boolean',
         'published_at' => 'datetime',
         'views_count' => 'integer',
+        'access_level' => 'integer',
     ];
 
     protected static function booted(): void
@@ -75,6 +80,17 @@ class ContentItem extends Model
         }
         if ($this->gate_plan_id !== null) {
             return $user->tieneMembresiaActiva() && $user->membership_plan_id === $this->gate_plan_id;
+        }
+        // Matriz del cliente: estudio sin membresía NO ve contenido (ni siquiera
+        // nivel 1). El desarrollo es un servicio que el estudio desbloquea al
+        // pagar, sea para consumirlo o para postearlo. El coach free sí ve N1.
+        if ($user->esContratante() && ! $user->tieneMembresiaActiva()) {
+            return false;
+        }
+        // H6 · nivel > 1 requiere membresía activa (petición cliente).
+        // Nivel 1 (default) es free y visible a cualquier coach/admin.
+        if (($this->access_level ?? 1) > 1 && ! $user->tieneMembresiaActiva()) {
+            return false;
         }
         return true;
     }

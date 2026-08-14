@@ -26,18 +26,26 @@ class PerfilEstudioKinvooTest extends TestCase
 
     public function test_estudio_guarda_disciplina_estado_direccion_y_contacto(): void
     {
+        Storage::fake('public');
         $user = User::factory()->contratante()->create();
 
+        // 2026-08-06 · petición Marian: TODOS los campos obligatorios excepto
+        // multimedia/redes. Este test se escribió antes de ese cambio; se
+        // actualiza aquí para incluir description, colonia y logo (required
+        // ahora en CompanyProfileController::update).
         $this->actingAs($user)->put('/mi-empresa', [
             'company_name' => 'Gym Norte',
             'disciplines_text' => 'Crossfit, Boxeo',
+            'description' => 'Gimnasio de fuerza y acondicionamiento en Monterrey desde 2018.',
             'estado' => 'Nuevo León',
             'address' => 'Av. Constitución 100',
+            'colonia' => 'Centro',
             'postal_code' => '64000',
             'contact_name' => 'Luis',
             'contact_phone' => '+52 81 1234 5678',
             'contact_email' => 'luis@gymnorte.mx',
             'media_url' => 'https://youtube.com/watch?v=gym',
+            'logo' => UploadedFile::fake()->image('logo.png', 400, 400),
         ])->assertRedirect(route('company.enviado'));
 
         $p = $user->companyProfile()->first();
@@ -52,15 +60,17 @@ class PerfilEstudioKinvooTest extends TestCase
         Storage::fake('public');
         $user = User::factory()->contratante()->create();
 
-        $this->actingAs($user)->put('/mi-empresa', [
+        // Nuevo carrusel: los videos ya no se guardan en `media_path` del
+        // perfil, sino como MediaItem polimórfico en `mediaItems()`.
+        $this->actingAs($user)->put('/mi-empresa', $this->datosValidosEstudio([
             'company_name' => 'Gym Vídeo',
-            'media_file' => UploadedFile::fake()->create('tour.mp4', 500, 'video/mp4'),
-        ]);
+            'media_files' => [UploadedFile::fake()->create('tour.mp4', 500, 'video/mp4')],
+        ]))->assertRedirect(route('company.enviado'));
 
-        $p = $user->companyProfile()->first();
-        $this->assertNotNull($p->media_path);
-        $this->assertSame('video', $p->media_type);
-        Storage::disk('public')->assertExists($p->media_path);
+        $item = $user->companyProfile()->first()->mediaItems()->first();
+        $this->assertNotNull($item);
+        $this->assertSame('video', $item->type);
+        Storage::disk('public')->assertExists($item->path);
     }
 
     public function test_estudio_suspendido_no_puede_editar_perfil(): void
@@ -98,15 +108,18 @@ class PerfilEstudioKinvooTest extends TestCase
     {
         // Regresión del bug crítico: firstOrCreate buscaba por company_name y tras un
         // rename intentaba INSERT → violación de UNIQUE(user_id) → 500 permanente.
+        Storage::fake('public');
         $user = User::factory()->contratante()->create();
 
-        $this->actingAs($user)->put('/mi-empresa', ['company_name' => 'PowerGym'])
-            ->assertRedirect(route('company.enviado'));
+        $this->actingAs($user)->put('/mi-empresa', $this->datosValidosEstudio([
+            'company_name' => 'PowerGym',
+        ]))->assertRedirect(route('company.enviado'));
 
         // Segunda visita y segundo guardado NO deben dar 500.
         $this->actingAs($user)->get('/mi-empresa')->assertOk();
-        $this->actingAs($user)->put('/mi-empresa', ['company_name' => 'PowerGym 2'])
-            ->assertRedirect(route('company.enviado'));
+        $this->actingAs($user)->put('/mi-empresa', $this->datosValidosEstudio([
+            'company_name' => 'PowerGym 2',
+        ]))->assertRedirect(route('company.enviado'));
 
         $this->assertSame(1, $user->companyProfile()->count());
         $this->assertSame('PowerGym 2', $user->companyProfile()->first()->company_name);

@@ -1,14 +1,17 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Mis ofertas') }}</h2>
+        <h2 class="font-serif text-2xl font-medium text-ink">{{ landing('mis_ofertas_titulo') }}</h2>
     </x-slot>
 
     <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+        <x-back-link :href="route('dashboard')" :value="__('← Volver al panel')" />
+
         {{-- Flashes de resultado de las acciones del CRUD. --}}
         @foreach (['oferta-creada' => __('Oferta publicada. Ya la ven los coaches.'),
                    'oferta-actualizada' => __('Cambios guardados.'),
                    'oferta-cerrada' => __('Oferta cerrada. Ya no recibe postulaciones.'),
-                   'oferta-estado-actualizado' => __('Estado de la oferta actualizado.')] as $flag => $mensaje)
+                   'oferta-estado-actualizado' => __('Estado de la oferta actualizado.'),
+                   'estado-actualizado' => __('Estado de la postulación actualizado. El coach recibirá aviso por correo y en la campanita.')] as $flag => $mensaje)
             @if (session('status') === $flag)
                 <div class="mb-6 rounded-xl border border-sage/40 bg-sage/10 px-5 py-3 text-sm text-ink">{{ $mensaje }}</div>
             @endif
@@ -16,7 +19,7 @@
 
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <p class="text-sm text-warmgray">
-                {{ __('Aquí publicas tus vacantes, gestionas las postulaciones y cambias el estado de cada candidato.') }}
+                {{ landing('mis_ofertas_intro') }}
             </p>
             <a href="{{ route('ofertas.crear') }}"
                class="inline-flex min-h-[44px] items-center rounded-full bg-sage px-5 py-2.5 text-sm font-semibold text-cream hover:bg-ink">
@@ -60,11 +63,20 @@
                     @endif
                 </div>
 
-                @if ($o->applications_count > 0)
-                    <details class="mt-4">
-                        <summary class="cursor-pointer text-sm font-medium text-sage">{{ __('Ver postulaciones') }}</summary>
+                {{-- Sección de postulaciones SIEMPRE visible (aunque sea 0).
+                     Fix B3 · antes se escondía si count=0 y Marian no sabía dónde ver postulaciones.
+                     Empty state explícito + <details open> cuando hay al menos 1. --}}
+                <details class="mt-4" @if ($o->applications_count > 0) open @endif>
+                    <summary class="cursor-pointer text-sm font-medium text-sage">
+                        {{ __('Postulaciones') }} ({{ $o->applications_count }})
+                    </summary>
+                    @if ($o->applications_count === 0)
+                        <p class="mt-3 rounded-xl border border-line/60 bg-cream/40 px-4 py-3 text-sm text-warmgray">
+                            {{ landing('mis_ofertas_empty_postulaciones') }}
+                        </p>
+                    @else
                         <ul class="mt-3 space-y-2">
-                            @foreach ($o->applications()->with('professional')->latest()->get() as $app)
+                            @foreach ($o->applications as $app)
                                 <li class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line/60 px-3 py-2 text-sm">
                                     <span>{{ $app->professional?->name }} — <em class="text-warmgray">{{ $app->created_at->translatedFormat('d M') }}</em></span>
                                     <form method="POST" action="{{ route('ofertas.postulacion.estado', $app) }}" class="flex items-center gap-2">
@@ -80,12 +92,12 @@
                                 </li>
                             @endforeach
                         </ul>
-                    </details>
-                @endif
+                    @endif
+                </details>
             </div>
         @empty
             <div class="rounded-2xl border border-line bg-white px-6 py-12 text-center">
-                <p class="text-warmgray">{{ __('Aún no has publicado ofertas. Presiona “+ Publicar oferta” arriba para comenzar.') }}</p>
+                <p class="text-warmgray">{{ landing('mis_ofertas_empty_general') }}</p>
             </div>
         @endforelse
 

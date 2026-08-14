@@ -1,9 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Mis postulaciones') }}</h2>
+        <h2 class="font-serif text-2xl font-medium text-ink">{{ landing('mis_postulaciones_titulo') }}</h2>
     </x-slot>
 
     <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 space-y-6">
+        <x-back-link :href="route('dashboard')" :value="__('← Volver al panel')" />
+
         <x-guia-inline :titulo="__('¿Cómo funciona una postulación?')">
             <p>{{ __('Cuando postulas a una oferta, el estudio la ve y decide. Aquí ves el estado actual de cada una.') }}</p>
             <ul class="list-disc space-y-1 pl-5">
@@ -45,7 +47,7 @@
             </div>
         @empty
             <div class="rounded-2xl border border-line bg-white px-6 py-12 text-center">
-                <p class="text-warmgray">{{ __('Aún no has postulado a ninguna oferta.') }}</p>
+                <p class="text-warmgray">{{ landing('mis_postulaciones_empty') }}</p>
                 <a href="{{ route('ofertas.index') }}" class="mt-4 inline-block rounded-full bg-sage px-5 py-2 text-sm font-semibold text-cream">{{ __('Ver ofertas') }}</a>
             </div>
         @endforelse
