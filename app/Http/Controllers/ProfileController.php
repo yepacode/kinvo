@@ -58,6 +58,18 @@ class ProfileController extends Controller
                 ->with('status', 'admin-no-se-elimina');
         }
 
+        // HIGH-5 · Bitácora legal: registrar el autoborrado ANTES de eliminar
+        // al user, para conservar contexto (email, rol, estado, IP, UA).
+        // Después del delete la fila de auditoría queda con actor/subject
+        // apuntando a un user inexistente, pero eso es aceptable: es un log
+        // append-only, y la información sensible ya está en `changes`.
+        \App\Models\AuditLog::record($user, $user, 'user_self_deleted', old: [
+            'email'    => $user->email,
+            'nivel'    => $user->nivel?->value,
+            'estado'   => $user->estado?->value,
+            'name'     => $user->name,
+        ]);
+
         // Orden importante: primero desloguear (para que el guard no intente
         // actualizar remember_token sobre un user ya borrado), luego borrar al
         // usuario con su limpieza de archivos y notifications polimórficas.

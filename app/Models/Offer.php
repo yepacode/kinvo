@@ -19,6 +19,10 @@ class Offer extends Model
         'slug', 'title', 'description', 'requirements',
         'salary_min_cents', 'salary_max_cents', 'salary_currency', 'salary_period',
         'modality', 'contract_type',
+        // H3 · petición cliente: colonia + disponibilidad (días/horarios).
+        'colonia', 'availability',
+        // H3 · rangos horarios exactos + notas del horario.
+        'schedule_ranges', 'schedule_notes',
         'status', 'published_at', 'expires_on',
     ];
 
@@ -28,7 +32,25 @@ class Offer extends Model
         'salary_min_cents' => 'integer',
         'salary_max_cents' => 'integer',
         'applications_count' => 'integer',
+        // Availability: array de slots como en ProfessionalProfile
+        // (ej. ['mon_morning','wed_evening']).
+        'availability' => 'array',
+        // Schedule ranges: [{day, from, to}, ...] estructurado para
+        // que el coach vea exacto qué horario necesita el estudio.
+        'schedule_ranges' => 'array',
     ];
+
+    /**
+     * Slots de disponibilidad válidos — mismo formato que
+     * ProfessionalProfile::slotsDisponibilidad() para que el matching
+     * coach↔oferta sea directo.
+     *
+     * @return array<int, string>
+     */
+    public static function slotsDisponibilidad(): array
+    {
+        return \App\Models\ProfessionalProfile::slotsDisponibilidad();
+    }
 
     protected static function booted(): void
     {

@@ -146,6 +146,33 @@ class DemoFase2Seeder extends Seeder
         }
 
         // ==================================================
+        // 3b. Cuentas PENDIENTES demo — para probar el flujo de aprobación
+        //    - Un estudio recién registrado (ve solo "Inicio" + "Mi empresa").
+        //    - Un coach recién registrado (ve solo "Inicio" + "Mi perfil").
+        // Marian los aprueba/rechaza desde /admin/users para probar el flujo real.
+        // ==================================================
+        $estudioPendiente = $this->usuario(
+            self::EMAIL_PREFIX.'estudio.pendiente@kinvoo.test',
+            'Estudio Pendiente Demo',
+            RolUsuario::Contractor,
+            EstadoUsuario::PerfilPendiente,
+        );
+        // Perfil vacío para que Marian pueda llenar y ver el flujo.
+        $estudioPendiente->companyProfile()->firstOrCreate([], [
+            'company_name' => $estudioPendiente->name,
+        ]);
+
+        $coachPendiente = $this->usuario(
+            self::EMAIL_PREFIX.'coach.pendiente@kinvoo.test',
+            'Coach Pendiente Demo',
+            RolUsuario::Professional,
+            EstadoUsuario::Pendiente,
+        );
+        $coachPendiente->professionalProfile()->firstOrCreate([], [
+            'headline' => null,
+        ]);
+
+        // ==================================================
         // 4. Suscripciones demo
         //    3 activas (una por cada estudio) + 1 canceled + 1 past_due
         // ==================================================

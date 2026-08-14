@@ -8,13 +8,14 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * El directorio y los perfiles de talento NO son públicos. Solo pueden verlos:
- *  - Contratistas (estudios) con membresía vigente.
+ * El directorio y los perfiles de talento NO son públicos. Pueden verlos:
+ *  - Contratistas (estudios) — free y paid, ambos. El estudio free PUEDE VER
+ *    al talento (petición cliente H6, docx PRUEBA KINVOO); el contactar sí
+ *    está gated a plan (gate específico en la ruta contactar).
  *  - El admin.
  *  - El propio profesional viendo SU perfil (vista previa).
  * Los demás (anónimos ya filtrados por 'auth') se redirigen:
- *  - Contratista sin membresía → a /membresias.
- *  - Profesional (u otro) → a su área.
+ *  - Profesional (no dueño) → a su área.
  */
 class AccesoDirectorioTalento
 {
@@ -22,8 +23,10 @@ class AccesoDirectorioTalento
     {
         $user = $request->user();
 
-        // Admin y contratista con membresía: acceso completo.
-        if ($user->esAdmin() || ($user->esContratante() && $user->tieneMembresiaActiva())) {
+        // Admin y contratista (free o paid): acceso al directorio.
+        // Nota: el bloqueo por membresía para CONTACTAR está en la ruta
+        // /talento/{slug}/contactar con middleware `membresia:plan-necesario-contacto`.
+        if ($user->esAdmin() || $user->esContratante()) {
             return $next($request);
         }
 
@@ -31,11 +34,6 @@ class AccesoDirectorioTalento
         $profile = $request->route('professionalProfile');
         if ($profile instanceof ProfessionalProfile && $profile->user_id === $user->id) {
             return $next($request);
-        }
-
-        // Contratista sin membresía → a los planes.
-        if ($user->esContratante()) {
-            return redirect()->route('membresias.index')->with('status', 'membresia-requerida');
         }
 
         // Profesional (no dueño) u otro rol → a su área.

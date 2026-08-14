@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\RolUsuario;
 use App\Filament\Resources\WellnessEntryResource\Pages;
 use App\Models\User;
 use App\Models\WellnessEntry;
@@ -41,12 +42,12 @@ class WellnessEntryResource extends Resource
             Forms\Components\Section::make('Beneficiario')->schema([
                 Forms\Components\Select::make('professional_user_id')
                     ->label('Coach / profesional')
-                    ->options(fn () => User::where('rol', 'profesional')
+                    ->options(fn () => User::where('nivel', RolUsuario::Professional->value)
                         ->orderBy('name')->pluck('name', 'id'))
                     ->searchable()->required(),
                 Forms\Components\Select::make('created_by_admin_id')
                     ->label('Registrado por (admin)')
-                    ->options(fn () => User::where('rol', 'admin')
+                    ->options(fn () => User::where('nivel', RolUsuario::Admin->value)
                         ->orderBy('name')->pluck('name', 'id'))
                     ->searchable(),
             ])->columns(2),
@@ -97,7 +98,7 @@ class WellnessEntryResource extends Resource
             ->filters([
                 SelectFilter::make('type')->label('Tipo')->options(self::tipos()),
                 SelectFilter::make('professional_user_id')->label('Coach')
-                    ->options(fn () => User::where('rol', 'profesional')
+                    ->options(fn () => User::where('nivel', RolUsuario::Professional->value)
                         ->orderBy('name')->limit(200)->pluck('name', 'id'))
                     ->searchable(),
                 Filter::make('occurred')

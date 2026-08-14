@@ -6,6 +6,8 @@
     </x-slot>
 
     <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+        <x-back-link :href="route('ofertas.mis-ofertas')" :value="__('← Volver a mis ofertas')" />
+
         {{-- Mini-guía para que el estudio nuevo sepa qué esperar. --}}
         @unless ($oferta->exists)
             <div class="mb-6 rounded-2xl border border-sage/40 bg-sage/10 px-5 py-4 text-sm text-ink">
@@ -60,7 +62,7 @@
                     </select>
                 </div>
                 <div>
-                    <label for="location_id" class="block text-sm font-medium text-ink">{{ __('Ubicación') }}</label>
+                    <label for="location_id" class="block text-sm font-medium text-ink">{{ __('Ciudad') }}</label>
                     <select id="location_id" name="location_id"
                             class="mt-1 w-full min-h-[44px] rounded-xl border border-line px-3 py-2 text-sm">
                         <option value="">{{ __('— Elige —') }}</option>
@@ -70,6 +72,91 @@
                     </select>
                 </div>
             </div>
+
+            {{-- H3 · petición cliente: colonia + disponibilidad como en el perfil profesional. --}}
+            <div>
+                <label for="colonia" class="block text-sm font-medium text-ink">{{ __('Colonia (opcional)') }}</label>
+                <input id="colonia" name="colonia" type="text" maxlength="120"
+                       value="{{ old('colonia', $oferta->colonia) }}"
+                       placeholder="{{ __('Ej: Roma Norte, Chapinero, Palermo...') }}"
+                       class="mt-1 w-full min-h-[44px] rounded-xl border border-line px-3 py-2 text-sm">
+                <p class="mt-1 text-xs text-warmgray">{{ __('Ayuda al coach a ubicar tu estudio de forma más precisa.') }}</p>
+            </div>
+
+            <fieldset class="rounded-xl border border-line/60 bg-cream/40 p-4">
+                <legend class="px-2 text-xs font-medium uppercase tracking-wider text-warmgray">
+                    {{ __('Días y franjas generales (opcional)') }}
+                </legend>
+                <p class="text-xs text-warmgray">{{ __('Marca AM/PM por día para el matching automático con el coach. Para horas exactas, usa la sección de abajo.') }}</p>
+                @php $sel = old('availability', $oferta->availability ?? []); @endphp
+                <div class="mt-3 grid gap-2 sm:grid-cols-3">
+                    @foreach (\App\Models\ProfessionalProfile::DIAS as $diaKey => $diaLabel)
+                        <div class="rounded-lg border border-line/60 bg-white p-3">
+                            <p class="text-sm font-medium text-ink">{{ __($diaLabel) }}</p>
+                            <div class="mt-2 flex gap-3">
+                                @foreach (\App\Models\ProfessionalProfile::FRANJAS as $franjaKey => $franjaLabel)
+                                    @php $slot = $diaKey.'_'.$franjaKey; @endphp
+                                    <label class="inline-flex items-center gap-1.5 text-xs text-ink">
+                                        <input type="checkbox" name="availability[]" value="{{ $slot }}"
+                                               @checked(in_array($slot, $sel, true))
+                                               class="h-4 w-4 rounded border-line text-sage focus:ring-sage">
+                                        {{ $franjaLabel }}
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </fieldset>
+
+            {{-- H3 · petición cliente (chat, ago-2026): horarios EXACTOS.
+                 Ejemplo: "Lunes 07:00 → 09:00". Rangos dinámicos con Alpine.js
+                 (ya presente en el layout para el menú móvil). --}}
+            <fieldset class="rounded-xl border border-line/60 bg-cream/40 p-4"
+                      x-data="{
+                          rangos: {{ Illuminate\Support\Js::from(old('schedule_ranges', $oferta->schedule_ranges ?? [])) }},
+                          agregar() { this.rangos.push({day: 'lun', from: '', to: ''}); },
+                          quitar(i) { this.rangos.splice(i, 1); }
+                      }">
+                <legend class="px-2 text-xs font-medium uppercase tracking-wider text-warmgray">
+                    {{ __('Horarios exactos (opcional)') }}
+                </legend>
+                <p class="text-xs text-warmgray">{{ __('Si necesitas horas concretas — por ejemplo, "Lunes 7:00 a 9:00" — agrégalas aquí. Puedes poner más de una franja por día.') }}</p>
+
+                <template x-for="(r, i) in rangos" :key="i">
+                    <div class="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-line/60 bg-white p-3">
+                        <select :name="`schedule_ranges[${i}][day]`" x-model="r.day"
+                                class="min-h-[44px] rounded-xl border border-line px-3 py-2 text-sm">
+                            @foreach (\App\Models\ProfessionalProfile::DIAS as $diaKey => $diaLabel)
+                                <option value="{{ $diaKey }}">{{ __($diaLabel) }}</option>
+                            @endforeach
+                        </select>
+                        <input type="time" :name="`schedule_ranges[${i}][from]`" x-model="r.from" required
+                               class="min-h-[44px] w-32 rounded-xl border border-line px-3 py-2 text-sm">
+                        <span class="text-warmgray">→</span>
+                        <input type="time" :name="`schedule_ranges[${i}][to]`" x-model="r.to" required
+                               class="min-h-[44px] w-32 rounded-xl border border-line px-3 py-2 text-sm">
+                        <button type="button" @click="quitar(i)"
+                                class="ml-auto rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                                :aria-label="`{{ __('Quitar franja') }} ${i + 1}`">
+                            {{ __('Quitar') }}
+                        </button>
+                    </div>
+                </template>
+
+                <button type="button" @click="agregar()"
+                        class="mt-3 inline-flex min-h-[36px] items-center rounded-full border border-sage/60 bg-white px-4 py-1.5 text-sm font-medium text-sage hover:bg-sage/10">
+                    + {{ __('Agregar franja horaria') }}
+                </button>
+                @error('schedule_ranges.*.to')<p class="mt-2 text-xs text-red-600">{{ __('La hora "hasta" debe ser mayor que "desde".') }}</p>@enderror
+
+                <div class="mt-4">
+                    <label for="schedule_notes" class="block text-sm font-medium text-ink">{{ __('Notas del horario (opcional)') }}</label>
+                    <textarea id="schedule_notes" name="schedule_notes" rows="2" maxlength="1000"
+                              placeholder="{{ __('Ej: sábados alternos, primera semana del mes, prefiero puntualidad estricta...') }}"
+                              class="mt-1 w-full rounded-xl border border-line px-3 py-2 text-sm">{{ old('schedule_notes', $oferta->schedule_notes) }}</textarea>
+                </div>
+            </fieldset>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -146,7 +233,7 @@
                 </a>
                 <button type="submit"
                         class="rounded-full bg-sage px-6 py-2.5 text-sm font-semibold text-cream hover:bg-ink">
-                    {{ $oferta->exists ? __('Guardar cambios') : __('Publicar oferta') }}
+                    {{ $oferta->exists ? __('Guardar cambios') : landing('ofertas_form_publicar_cta') }}
                 </button>
             </div>
         </form>

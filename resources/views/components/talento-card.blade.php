@@ -5,7 +5,7 @@
     <div class="flex items-center gap-4">
         <div class="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-line bg-beige">
             @if ($profile->photo_path)
-                <img src="{{ Storage::url($profile->photo_path) }}" alt="{{ $profile->user->name }}" class="h-full w-full object-cover">
+                <img src="{{ asset('storage/'.$profile->photo_path) }}" alt="{{ $profile->user->name }}" class="h-full w-full object-cover">
             @else
                 <img src="{{ asset('img/kinvoo-logo.png') }}" alt="Kinvoo" class="h-full w-full object-cover p-2">
             @endif

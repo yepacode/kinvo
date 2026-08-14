@@ -103,7 +103,7 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
     Route::get('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'create'])
         ->middleware('membresia')->name('contacto.create');
     Route::post('/talento/{professionalProfile:slug}/contactar', [ContactController::class, 'store'])
-        ->middleware(['membresia', 'throttle:8,1'])->name('contacto.store');
+        ->middleware(['membresia:plan-necesario-contacto', 'throttle:8,1'])->name('contacto.store');
 
     // Notificaciones (campana)
     Route::get('/notificaciones', [NotificationController::class, 'index'])->name('notifications.index');
@@ -145,55 +145,94 @@ Route::post('/webhooks/billing', [WebhookController::class, 'handle'])
     ->name('billing.webhook');
 
 // RSVP público (link firmado por invitado en el correo de invitación a sesiones).
+// MED-G10 · GET solo muestra confirmación; POST muta el estado (anti-prefetch).
 Route::get('/rsvp/{token}', [RsvpController::class, 'responder'])
     ->name('rsvp.responder');
+Route::post('/rsvp/{token}', [RsvpController::class, 'confirmar'])
+    ->middleware('throttle:20,1')
+    ->name('rsvp.confirmar');
 
 // ============================================================
 // Fase 2 · Hito 3 — Producto y bolsa de trabajo
 // ============================================================
 Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
-    // Bolsa de trabajo (2.10)
-    Route::get('/ofertas', [OfferController::class, 'index'])->name('ofertas.index');
-    Route::get('/ofertas/{offer:slug}', [OfferController::class, 'show'])->name('ofertas.show');
-    Route::post('/ofertas/{offer:slug}/postular', [OfferController::class, 'postular'])
+    // Bolsa de trabajo (2.10) — renombrada "Oportunidades" (H2 · petición cliente).
+    // Se mantienen los NAMES `ofertas.*` para no cambiar 20+ archivos que hacen
+    // route('ofertas.index'); las URLs viejas /ofertas y /mis-ofertas se
+    // redirigen 301 más abajo para no romper bookmarks.
+    Route::get('/oportunidades', [OfferController::class, 'index'])->name('ofertas.index');
+    Route::get('/oportunidades/{offer:slug}', [OfferController::class, 'show'])->name('ofertas.show');
+    Route::post('/oportunidades/{offer:slug}/postular', [OfferController::class, 'postular'])
         ->middleware('throttle:6,1')->name('ofertas.postular');
     Route::get('/mis-postulaciones', [OfferController::class, 'misPostulaciones'])->name('ofertas.mis-postulaciones');
-    Route::get('/mis-ofertas', [OfferController::class, 'misOfertas'])->name('ofertas.mis-ofertas');
+    Route::get('/mis-oportunidades', [OfferController::class, 'misOfertas'])->name('ofertas.mis-ofertas');
     Route::post('/postulaciones/{application}/estado', [OfferController::class, 'cambiarEstado'])
         ->name('ofertas.postulacion.estado');
 
-    // CRUD de ofertas del estudio (requiere suscripción activa).
-    // El middleware `membresia.activa` bloquea si el estudio no está al día.
-    Route::middleware(['membresia.activa'])->group(function () {
-        Route::get('/mis-ofertas/nueva', [OfferController::class, 'crear'])->name('ofertas.crear');
-        Route::post('/mis-ofertas', [OfferController::class, 'guardar'])
-            ->middleware('throttle:6,1')->name('ofertas.guardar');
-        Route::get('/mis-ofertas/{oferta}/editar', [OfferController::class, 'editar'])->name('ofertas.editar');
-        Route::put('/mis-ofertas/{oferta}', [OfferController::class, 'actualizar'])
-            ->middleware('throttle:6,1')->name('ofertas.actualizar');
-    });
+    // H6 · CRUD del estudio: SIN gate global de membresía. El controller
+    // aplica la regla free (1 vacante activa + expira 60d) vs. paid (ilimitado).
+    Route::get('/mis-oportunidades/nueva', [OfferController::class, 'crear'])->name('ofertas.crear');
+    Route::post('/mis-oportunidades', [OfferController::class, 'guardar'])
+        ->middleware('throttle:6,1')->name('ofertas.guardar');
+    Route::get('/mis-oportunidades/{oferta}/editar', [OfferController::class, 'editar'])->name('ofertas.editar');
+    Route::put('/mis-oportunidades/{oferta}', [OfferController::class, 'actualizar'])
+        ->middleware('throttle:6,1')->name('ofertas.actualizar');
     // Cambio de estado y cierre no requieren membresía activa (permite al
-    // estudio administrar ofertas antiguas aunque haya vencido su plan).
-    Route::post('/mis-ofertas/{oferta}/estado', [OfferController::class, 'cambiarEstadoOferta'])
+    // estudio administrar oportunidades antiguas aunque haya vencido su plan).
+    // HIGH-18 · throttle para evitar spam al toggle publicar/despublicar/cerrar.
+    Route::post('/mis-oportunidades/{oferta}/estado', [OfferController::class, 'cambiarEstadoOferta'])
+        ->middleware('throttle:20,1')
         ->name('ofertas.cambiar-estado');
-    Route::delete('/mis-ofertas/{oferta}', [OfferController::class, 'eliminar'])
+    Route::delete('/mis-oportunidades/{oferta}', [OfferController::class, 'eliminar'])
         ->name('ofertas.eliminar');
 
-    // Contenido (2.9)
-    Route::get('/contenido', [ContentController::class, 'index'])->name('contenido.index');
-    Route::get('/contenido/{content:slug}', [ContentController::class, 'show'])->name('contenido.show');
+    // Desarrollo (2.9) — renombrado "Desarrollo" (H2 · petición cliente).
+    // Names `contenido.*` se mantienen por la misma razón.
+    Route::get('/desarrollo', [ContentController::class, 'index'])->name('contenido.index');
+    Route::get('/desarrollo/{content:slug}', [ContentController::class, 'show'])->name('contenido.show');
 
     // CRUD del estudio: subir su propio contenido (visible a todos los usuarios activos).
-    Route::get('/mi-contenido', [ContentController::class, 'misContenidos'])->name('contenido.mis-contenidos');
+    Route::get('/mi-desarrollo', [ContentController::class, 'misContenidos'])->name('contenido.mis-contenidos');
     Route::middleware(['membresia.activa'])->group(function () {
-        Route::get('/mi-contenido/nuevo', [ContentController::class, 'crear'])->name('contenido.crear');
-        Route::post('/mi-contenido', [ContentController::class, 'guardar'])
+        Route::get('/mi-desarrollo/nuevo', [ContentController::class, 'crear'])->name('contenido.crear');
+        Route::post('/mi-desarrollo', [ContentController::class, 'guardar'])
             ->middleware('throttle:6,1')->name('contenido.guardar');
-        Route::get('/mi-contenido/{contenido}/editar', [ContentController::class, 'editar'])->name('contenido.editar');
-        Route::put('/mi-contenido/{contenido}', [ContentController::class, 'actualizar'])
+        Route::get('/mi-desarrollo/{contenido}/editar', [ContentController::class, 'editar'])->name('contenido.editar');
+        Route::put('/mi-desarrollo/{contenido}', [ContentController::class, 'actualizar'])
             ->middleware('throttle:6,1')->name('contenido.actualizar');
     });
-    Route::delete('/mi-contenido/{contenido}', [ContentController::class, 'eliminar'])->name('contenido.eliminar');
+    Route::delete('/mi-desarrollo/{contenido}', [ContentController::class, 'eliminar'])->name('contenido.eliminar');
+
+    // H6/M2 · Mis beneficios (coach paid).
+    Route::get('/mis-beneficios', [\App\Http\Controllers\BeneficiosController::class, 'index'])
+        ->name('beneficios.index');
+
+    // H6/M3 · Respaldo (telemedicina + fisio).
+    Route::get('/mi-respaldo', [\App\Http\Controllers\RespaldoController::class, 'index'])
+        ->name('respaldo.index');
+    Route::post('/mi-respaldo/solicitar', [\App\Http\Controllers\RespaldoController::class, 'solicitar'])
+        ->middleware('throttle:6,1')->name('respaldo.solicitar');
+
+    // H6/M4 · Encuesta de Pulso Kinvoo.
+    Route::get('/encuesta-pulso', [\App\Http\Controllers\PulseController::class, 'coach'])
+        ->name('pulso.coach');
+    Route::post('/encuesta-pulso', [\App\Http\Controllers\PulseController::class, 'guardar'])
+        ->middleware('throttle:6,1')->name('pulso.guardar');
+    Route::get('/pulso-equipo', [\App\Http\Controllers\PulseController::class, 'estudio'])
+        ->name('pulso.estudio');
+
+    // H4 · Wall "Comparte un momento" (petición cliente).
+    Route::get('/comunidad', [\App\Http\Controllers\WallController::class, 'comunidad'])->name('wall.comunidad');
+    Route::get('/mis-momentos', [\App\Http\Controllers\WallController::class, 'misMomentos'])->name('wall.mis-momentos');
+    Route::post('/mis-momentos', [\App\Http\Controllers\WallController::class, 'guardar'])
+        ->middleware('throttle:6,1')->name('wall.guardar');
+    Route::delete('/mis-momentos/{post}', [\App\Http\Controllers\WallController::class, 'archivar'])
+        ->name('wall.archivar');
+
+    // LOW-14 · Redirects 301 MOVIDOS fuera del grupo `auth` (más abajo).
+    // Antes, un bookmark público a /ofertas o un enlace en un correo viejo
+    // llevaba al login (por estar dentro de `auth`) en vez de al 301 al
+    // path nuevo — rompía la promesa del rename.
 
     // Expediente coach (2.11)
     Route::get('/mi-expediente', [WellnessController::class, 'index'])->name('expediente.index');
@@ -203,8 +242,24 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
     Route::post('/mi-equipo/invitar', [TeamController::class, 'invitar'])
         ->middleware('throttle:10,1')->name('equipo.invitar');
     Route::post('/mi-equipo/{miembro}/remover', [TeamController::class, 'remover'])->name('equipo.remover');
+    // H3 · nota + calificación de bienestar del estudio.
+    Route::post('/mi-equipo/bienestar/nota', [TeamController::class, 'guardarNotaBienestar'])
+        ->middleware('throttle:20,1')->name('equipo.bienestar.nota');
     Route::post('/invitaciones/{miembro}/aceptar', [TeamController::class, 'aceptar'])->name('equipo.aceptar');
     Route::post('/invitaciones/{miembro}/rechazar', [TeamController::class, 'rechazar'])->name('equipo.rechazar');
 });
+
+// LOW-14 · Redirects 301 públicos (fuera del grupo auth) — URLs viejas del
+// rename Ofertas→Oportunidades / Contenido→Desarrollo. Sin auth para que
+// los bookmarks y enlaces externos redirijan aunque el user no esté logueado
+// (la URL nueva los llevará al login si aplica).
+Route::redirect('/ofertas', '/oportunidades', 301);
+Route::redirect('/mis-ofertas', '/mis-oportunidades', 301);
+Route::redirect('/contenido', '/desarrollo', 301);
+Route::redirect('/mi-contenido', '/mi-desarrollo', 301);
+Route::get('/ofertas/{slug}', fn ($slug) => redirect("/oportunidades/{$slug}", 301));
+Route::get('/mis-ofertas/{oferta}/editar', fn ($o) => redirect("/mis-oportunidades/{$o}/editar", 301));
+Route::get('/contenido/{slug}', fn ($slug) => redirect("/desarrollo/{$slug}", 301));
+Route::get('/mi-contenido/{contenido}/editar', fn ($c) => redirect("/mi-desarrollo/{$c}/editar", 301));
 
 require __DIR__.'/auth.php';

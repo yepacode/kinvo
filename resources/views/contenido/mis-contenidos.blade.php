@@ -1,9 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Mi contenido') }}</h2>
+        <h2 class="font-serif text-2xl font-medium text-ink">{{ landing('mis_contenidos_titulo') }}</h2>
     </x-slot>
 
     <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+        <x-back-link :href="route('dashboard')" :value="__('← Volver al panel')" />
+
         @foreach (['contenido-creado' => __('Contenido publicado. Ya lo ven los usuarios de Kinvoo.'),
                    'contenido-actualizado' => __('Cambios guardados.'),
                    'contenido-eliminado' => __('Contenido eliminado.')] as $flag => $mensaje)
@@ -14,7 +16,7 @@
 
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <p class="text-sm text-warmgray">
-                {{ __('Sube guías, videos o enlaces para compartir con la comunidad Kinvoo. Todos los coaches y estudios lo verán en la sección de Contenido.') }}
+                {{ landing('mis_contenidos_intro') }}
             </p>
             <a href="{{ route('contenido.crear') }}"
                class="inline-flex min-h-[44px] items-center rounded-full bg-sage px-5 py-2.5 text-sm font-semibold text-cream hover:bg-ink">
@@ -60,7 +62,7 @@
             </div>
         @empty
             <div class="rounded-2xl border border-line bg-white px-6 py-12 text-center">
-                <p class="text-warmgray">{{ __('Aún no has subido contenido. Comparte tu primer video, PDF o enlace con la comunidad.') }}</p>
+                <p class="text-warmgray">{{ landing('mis_contenidos_empty_state') }}</p>
             </div>
         @endforelse
 

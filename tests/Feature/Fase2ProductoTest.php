@@ -16,7 +16,7 @@ use Tests\TestCase;
 
 /**
  * Fase 2 · Cubre Hito 3: bolsa de trabajo, contenido con gate, expediente
- * y equipo del estudio con panel de impacto.
+ * y equipo del estudio con panel de bienestar.
  */
 class Fase2ProductoTest extends TestCase
 {
@@ -123,7 +123,7 @@ class Fase2ProductoTest extends TestCase
         ContentItem::create([
             'title' => 'Bienvenida', 'type' => 'video', 'is_published' => true,
         ]);
-        $this->actingAs($coach)->get('/contenido')->assertOk()->assertSee('Bienvenida');
+        $this->actingAs($coach)->get('/desarrollo')->assertOk()->assertSee('Bienvenida');
     }
 
     public function test_contenido_por_rol_oculta_al_rol_incorrecto(): void
@@ -134,8 +134,8 @@ class Fase2ProductoTest extends TestCase
             'title' => 'Solo para estudios', 'type' => 'video',
             'gate_role' => 'contractor', 'is_published' => true,
         ]);
-        $this->actingAs($estudio)->get('/contenido')->assertSee('Solo para estudios');
-        $this->actingAs($coach)->get('/contenido')->assertDontSee('Solo para estudios');
+        $this->actingAs($estudio)->get('/desarrollo')->assertSee('Solo para estudios');
+        $this->actingAs($coach)->get('/desarrollo')->assertDontSee('Solo para estudios');
     }
 
     // ---------- Equipo + impacto ----------

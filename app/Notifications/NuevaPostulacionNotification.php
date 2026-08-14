@@ -3,12 +3,15 @@
 namespace App\Notifications;
 
 use App\Models\Application;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
 /**
- * Fase 2 · Al estudio cuando un profesional postula a su oferta.
- * Solo canal database (campana). El correo lo maneja el flujo aparte.
+ * HIGH-8/17 · Al estudio cuando un profesional postula: canal database + mail.
+ * Antes solo campana → el estudio se enteraba solo al entrar al panel; la
+ * matriz del cliente lista "correo al estudio con la postulación" como
+ * requisito explícito.
  */
 class NuevaPostulacionNotification extends Notification
 {
@@ -16,7 +19,7 @@ class NuevaPostulacionNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'mail'];
     }
 
     public function toArray(object $notifiable): array
@@ -36,5 +39,36 @@ class NuevaPostulacionNotification extends Notification
             'mensaje' => "$nombre postuló a \"".Str::limit($oferta, 40).'"',
             'url' => route('ofertas.mis-ofertas', absolute: false),
         ];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $this->application->loadMissing(['professional', 'offer']);
+        $nombre = $this->application->professional?->name ?: 'Un profesional';
+        $oferta = $this->application->offer?->title ?: 'tu oferta';
+        $url = url(route('ofertas.mis-ofertas', absolute: false));
+
+        $t = \App\Models\EmailTemplate::render('nueva_postulacion',
+            ['nombre' => $nombre, 'oferta' => Str::limit($oferta, 80)],
+            [
+                'subject'      => 'Kinvoo · Nueva postulación a "'.Str::limit($oferta, 60).'"',
+                'greeting'     => 'Hola,',
+                'body'         => '**'.$nombre.'** acaba de postular a tu vacante "'.Str::limit($oferta, 80).'" en Kinvoo. Revisa su perfil, carta de presentación y ponte en contacto directamente.',
+                'action_label' => 'Ver postulaciones',
+                'action_url'   => $url,
+                'outro'        => 'Consejo: los coaches valoran una respuesta rápida — les da confianza sobre tu estudio.',
+            ]
+        );
+        $t['action_url'] = $url;
+
+        $mail = (new MailMessage)->subject($t['subject']);
+        if ($t['greeting']) $mail->greeting($t['greeting']);
+        foreach (explode("\n\n", $t['body']) as $par) {
+            $par = trim($par);
+            if ($par !== '') $mail->line($par);
+        }
+        if ($t['action_label']) $mail->action($t['action_label'], $t['action_url']);
+        if ($t['outro']) $mail->line($t['outro']);
+        return $mail;
     }
 }

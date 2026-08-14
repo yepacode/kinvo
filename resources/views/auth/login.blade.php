@@ -1,20 +1,20 @@
 <x-guest-layout>
-    <h1 class="mb-1 text-center font-serif text-2xl font-medium text-ink">{{ __('Inicia sesión') }}</h1>
-    <p class="mb-6 text-center text-sm text-warmgray">{{ __('Bienvenido de vuelta a Kinvoo') }}</p>
+    <h1 class="mb-1 text-center font-serif text-2xl font-medium text-ink">{{ landing('login_title') }}</h1>
+    <p class="mb-6 text-center text-sm text-warmgray">{{ landing('login_subtitle') }}</p>
 
     <!-- Session Status -->
     @if (session('status') === 'cuenta-eliminada')
         <div class="mb-4 rounded-2xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm text-ink">
-            <p><strong>{{ __('Tu cuenta fue eliminada.') }}</strong></p>
+            <p><strong>{{ landing('login_flash_cuenta_eliminada_titulo') }}</strong></p>
             <p class="mt-1 text-warmgray">
-                {{ __('Se borraron tu perfil, tus contactos y tus archivos. Nos alegra que hayas sido parte de Kinvoo. Si quieres volver, puedes crear una cuenta nueva.') }}
+                {{ landing('login_flash_cuenta_eliminada_body') }}
             </p>
         </div>
     @elseif (session('status') === 'admin-elimino-cuenta')
         <div class="mb-4 rounded-2xl border border-lime/40 bg-lime/10 px-4 py-3 text-sm text-ink">
-            <p><strong>{{ __('Tu cuenta ya no está activa.') }}</strong></p>
+            <p><strong>{{ landing('login_flash_admin_baja_titulo') }}</strong></p>
             <p class="mt-1 text-warmgray">
-                {{ __('Kinvoo dio de baja tu cuenta. Si crees que fue un error, escríbenos a') }}
+                {{ landing('login_flash_admin_baja_body') }}
                 <a href="mailto:hola@gokinvoo.com" class="text-sage underline">hola@gokinvoo.com</a>.
             </p>
         </div>

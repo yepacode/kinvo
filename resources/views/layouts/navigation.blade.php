@@ -17,29 +17,46 @@
                     $cuentaActiva = $u->estaActivo() || $u->esAdmin();
                 @endphp
                 <div class="hidden space-x-8 lg:-my-px lg:ms-10 lg:flex">
-                    {{-- Pendientes: "Inicio" apunta a /cuenta/pendiente en vez de /dashboard
-                         para que no rebote por el middleware cuenta.activa. --}}
-                    <x-nav-link :href="$cuentaActiva ? route('dashboard') : route('account.pending')"
-                                :active="request()->routeIs('dashboard','account.pending')">
-                        {{ __('Inicio') }}
-                    </x-nav-link>
+                    {{-- H2 · petición cliente: quitar "Inicio" del nav (redundante,
+                         el logo Kinvoo a la izquierda ya lleva al home).
+                         Pendientes: como antes el logo va a /, y el gate cuenta.activa
+                         redirige a /cuenta/pendiente automáticamente. --}}
                     @if ($u->esProfesional())
                         <x-nav-link :href="route('professional.profile.edit')" :active="request()->routeIs('professional.profile.*')">
-                            {{ __('Mi perfil') }}
+                            {{ landing('nav_coach_mi_perfil') }}
                         </x-nav-link>
                         @if ($cuentaActiva)
                             <x-nav-link :href="route('professional.contactos')" :active="request()->routeIs('professional.contactos')">
-                                {{ __('Contactos') }}
+                                {{ landing('nav_coach_contactos') }}
                             </x-nav-link>
-                            <x-nav-link :href="route('ofertas.index')" :active="request()->routeIs('ofertas.*')">
-                                {{ __('Ofertas') }}
+                            <x-nav-link :href="route('ofertas.index')" :active="request()->routeIs('ofertas.index','ofertas.show')">
+                                {{ landing('nav_coach_oportunidades') }}
+                            </x-nav-link>
+                            {{-- LOW-5 · "Mis postulaciones" también en desktop
+                                 (antes solo aparecía en el menú móvil, obligando
+                                 al coach a entrar por el sub-menú de perfil). --}}
+                            <x-nav-link :href="route('ofertas.mis-postulaciones')" :active="request()->routeIs('ofertas.mis-postulaciones')">
+                                {{ __('Mis postulaciones') }}
                             </x-nav-link>
                             <x-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.*')">
-                                {{ __('Contenido') }}
+                                {{ landing('nav_coach_desarrollo') }}
                             </x-nav-link>
-                            <x-nav-link :href="route('expediente.index')" :active="request()->routeIs('expediente.*')">
-                                {{ __('Expediente') }}
-                            </x-nav-link>
+                            {{-- Matriz: enlaces coach paid — muestro si tiene beneficio. --}}
+                            @if ($u->hasBenefit('comunidad_ver'))
+                                <x-nav-link :href="route('wall.comunidad')" :active="request()->routeIs('wall.comunidad')">
+                                    {{ __('Comunidad') }}
+                                </x-nav-link>
+                            @endif
+                            @if ($u->hasBenefit('mis_beneficios'))
+                                <x-nav-link :href="route('beneficios.index')" :active="request()->routeIs('beneficios.*','respaldo.*','pulso.coach')">
+                                    {{ __('Mis beneficios') }}
+                                </x-nav-link>
+                            @endif
+                            @if ($u->hasBenefit('expediente_propio'))
+                                <x-nav-link :href="route('expediente.index')" :active="request()->routeIs('expediente.*')">
+                                    {{ __('Expediente') }}
+                                </x-nav-link>
+                            @endif
                         @endif
                     @elseif ($u->esContratante())
                         <x-nav-link :href="route('company.profile.edit')" :active="request()->routeIs('company.profile.*')">
@@ -56,17 +73,29 @@
                                 {{ __('Contactos') }}
                             </x-nav-link>
                             <x-nav-link :href="route('ofertas.mis-ofertas')" :active="request()->routeIs('ofertas.*')">
-                                {{ __('Ofertas') }}
+                                {{ __('Oportunidades') }}
                             </x-nav-link>
                             <x-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.index','contenido.show')">
-                                {{ __('Contenido') }}
+                                {{ __('Desarrollo') }}
                             </x-nav-link>
-                            <x-nav-link :href="route('contenido.mis-contenidos')" :active="request()->routeIs('contenido.mis-contenidos','contenido.crear','contenido.editar')">
-                                {{ __('Mi contenido') }}
-                            </x-nav-link>
-                            <x-nav-link :href="route('equipo.index')" :active="request()->routeIs('equipo.*')">
-                                {{ __('Mi equipo') }}
-                            </x-nav-link>
+                            {{-- Petición cliente (ago-2026): "Mi desarrollo" del estudio
+                                 se reemplaza por "Mis momentos" (wall). El catálogo formal
+                                 de desarrollo lo administra Kinvoo desde Filament admin. --}}
+                            @if ($u->hasBenefit('comunidad_publicar'))
+                                <x-nav-link :href="route('wall.mis-momentos')" :active="request()->routeIs('wall.mis-momentos')">
+                                    {{ __('Mis momentos') }}
+                                </x-nav-link>
+                            @endif
+                            @if ($u->hasBenefit('comunidad_ver'))
+                                <x-nav-link :href="route('wall.comunidad')" :active="request()->routeIs('wall.comunidad')">
+                                    {{ __('Comunidad') }}
+                                </x-nav-link>
+                            @endif
+                            @if ($u->hasBenefit('gestion_equipo'))
+                                <x-nav-link :href="route('equipo.index')" :active="request()->routeIs('equipo.*','pulso.estudio')">
+                                    {{ __('Mi equipo') }}
+                                </x-nav-link>
+                            @endif
                         @endif
                     @endif
                 </div>
@@ -143,9 +172,7 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden lg:hidden" id="mobile-menu">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Inicio') }}
-            </x-responsive-nav-link>
+            {{-- H2 · quitar "Inicio" (redundante — logo Kinvoo va al home). --}}
             @if (auth()->user()->esProfesional())
                 <x-responsive-nav-link :href="route('professional.profile.edit')" :active="request()->routeIs('professional.profile.*')">
                     {{ __('Mi perfil') }}
@@ -156,17 +183,33 @@
                     </x-responsive-nav-link>
                     {{-- Fase 2 · accesos móviles del coach --}}
                     <x-responsive-nav-link :href="route('ofertas.index')" :active="request()->routeIs('ofertas.index','ofertas.show')">
-                        {{ __('Ofertas de trabajo') }}
+                        {{ __('Oportunidades') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('ofertas.mis-postulaciones')" :active="request()->routeIs('ofertas.mis-postulaciones')">
                         {{ __('Mis postulaciones') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.*')">
-                        {{ __('Contenido y capacitaciones') }}
+                        {{ __('Desarrollo y capacitaciones') }}
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('expediente.index')" :active="request()->routeIs('expediente.*')">
-                        {{ __('Mi expediente de cuidado') }}
-                    </x-responsive-nav-link>
+                    {{-- HIGH-7 · Alinear el menú móvil con el desktop:
+                         gates por hasBenefit para NO mostrar items paid al coach free.
+                         Antes se mostraba "Mi expediente" al free y al hacer click
+                         chocaba con un redirect a /membresias → mala UX. --}}
+                    @if ($u->hasBenefit('comunidad_ver'))
+                        <x-responsive-nav-link :href="route('wall.comunidad')" :active="request()->routeIs('wall.comunidad')">
+                            {{ __('Comunidad') }}
+                        </x-responsive-nav-link>
+                    @endif
+                    @if ($u->hasBenefit('mis_beneficios'))
+                        <x-responsive-nav-link :href="route('beneficios.index')" :active="request()->routeIs('beneficios.*','respaldo.*','pulso.coach')">
+                            {{ __('Mis beneficios') }}
+                        </x-responsive-nav-link>
+                    @endif
+                    @if ($u->hasBenefit('expediente_propio'))
+                        <x-responsive-nav-link :href="route('expediente.index')" :active="request()->routeIs('expediente.*')">
+                            {{ __('Mi expediente de cuidado') }}
+                        </x-responsive-nav-link>
+                    @endif
                 @endif
             @elseif ($u->esContratante())
                 <x-responsive-nav-link :href="route('company.profile.edit')" :active="request()->routeIs('company.profile.*')">
@@ -184,17 +227,33 @@
                     </x-responsive-nav-link>
                     {{-- Fase 2 · accesos móviles del estudio --}}
                     <x-responsive-nav-link :href="route('ofertas.mis-ofertas')" :active="request()->routeIs('ofertas.mis-ofertas')">
-                        {{ __('Mis ofertas') }}
+                        {{ __('Mis oportunidades') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.index','contenido.show')">
-                        {{ __('Contenido y capacitaciones') }}
+                        {{ __('Desarrollo y capacitaciones') }}
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('contenido.mis-contenidos')" :active="request()->routeIs('contenido.mis-contenidos','contenido.crear','contenido.editar')">
-                        {{ __('Mi contenido') }}
-                    </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('equipo.index')" :active="request()->routeIs('equipo.*')">
-                        {{ __('Mi equipo') }}
-                    </x-responsive-nav-link>
+                    {{-- HIGH-7 · Gates hasBenefit iguales al desktop para
+                         no exponer al estudio free items a los que va a chocar. --}}
+                    @if ($u->hasBenefit('comunidad_publicar'))
+                        <x-responsive-nav-link :href="route('wall.mis-momentos')" :active="request()->routeIs('wall.mis-momentos')">
+                            {{ __('Mis momentos') }}
+                        </x-responsive-nav-link>
+                    @endif
+                    @if ($u->hasBenefit('comunidad_ver'))
+                        <x-responsive-nav-link :href="route('wall.comunidad')" :active="request()->routeIs('wall.comunidad')">
+                            {{ __('Comunidad') }}
+                        </x-responsive-nav-link>
+                    @endif
+                    @if ($u->tieneMembresiaActiva())
+                        <x-responsive-nav-link :href="route('contenido.mis-contenidos')" :active="request()->routeIs('contenido.mis-contenidos','contenido.crear','contenido.editar')">
+                            {{ __('Mi desarrollo') }}
+                        </x-responsive-nav-link>
+                    @endif
+                    @if ($u->hasBenefit('gestion_equipo'))
+                        <x-responsive-nav-link :href="route('equipo.index')" :active="request()->routeIs('equipo.*','pulso.estudio')">
+                            {{ __('Mi equipo') }}
+                        </x-responsive-nav-link>
+                    @endif
                 @endif
             @endif
         </div>

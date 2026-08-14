@@ -58,6 +58,8 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             // Datetime (no date) para que un refund a las 14:26 revoque acceso
             // inmediato en vez de darlo hasta el 23:59 (LOW agente 8).
             'membership_expires_at' => 'datetime',
+            // H5 · tracking de conversión (petición cliente).
+            'converted_to_paid_at' => 'datetime',
         ];
     }
 
@@ -142,11 +144,23 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     public function suspenderYOcultarPerfil(): void
     {
         $this->forceFill(['estado' => EstadoUsuario::Suspendido])->save();
+        // MED-H1 · El perfil profesional se despublicaba; el de estudio quedaba
+        // visible en el directorio. Sin este ->update() adicional, suspender
+        // a un contratante no lo sacaba de /talento/{slug} ni ocultaba sus
+        // ofertas activas. El helper CompanyProfile::scopeVisiblePublicamente
+        // ya filtra por estado del user activo, pero también cerramos ofertas
+        // publicadas para que no dejen "vacantes fantasma" en el directorio.
         $this->professionalProfile?->update([
             'is_published' => false,
             'is_verified' => false,
             'verified_at' => null,
         ]);
+        if ($this->companyProfile) {
+            // Cerrar ofertas activas del contratante para no dejar fantasmas.
+            \App\Models\Offer::where('contractor_user_id', $this->id)
+                ->where('status', \App\Models\Offer::STATUS_PUBLISHED)
+                ->update(['status' => \App\Models\Offer::STATUS_CLOSED]);
+        }
     }
 
     /**
@@ -192,6 +206,50 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     {
         return $this->membership_expires_at !== null
             && $this->membership_expires_at->gte(now());
+    }
+
+    /**
+     * H6 · Matriz de beneficios por rol/plan (referencia: docx "Matriz de
+     * reglas de negocio – Kinvoo Platform"). Verdadera fuente de gates.
+     *
+     * Beneficios (keys):
+     *  - contenido_avanzado  → Desarrollo Nivel 2/3 (coach paid, estudio paid)
+     *  - comunidad_ver       → ver Momentos del wall (coach paid, estudio paid)
+     *  - comunidad_publicar  → publicar Momentos (solo estudio paid)
+     *  - respaldo_telemed    → sesiones de telemedicina (coach paid)
+     *  - respaldo_fisio      → sesiones de fisioterapia (SOLO coach Plus/Pro)
+     *  - expediente_propio   → coach paid ve su expediente
+     *  - mis_beneficios      → coach paid ve panel "Mis beneficios"
+     *  - panel_bienestar     → estudio paid ve panel + evalúa
+     *  - gestion_equipo      → estudio paid arma equipo
+     *  - pulso_contestar     → coach paid contesta encuesta
+     *  - pulso_ver           → estudio paid ve resultados de su equipo
+     *  - vacantes_ilimitadas → estudio paid publica múltiples vacantes
+     *
+     * Admin siempre true. Anónimos/pendientes siempre false.
+     */
+    public function hasBenefit(string $key): bool
+    {
+        if ($this->esAdmin()) {
+            return true;
+        }
+        if (! $this->estaActivo() || ! $this->tieneMembresiaActiva()) {
+            return false;
+        }
+        $planSlug = $this->membershipPlan?->slug;
+        $esCoach = $this->esProfesional();
+        $esEstudio = $this->esContratante();
+
+        return match ($key) {
+            'contenido_avanzado', 'comunidad_ver' => $esCoach || $esEstudio,
+            'comunidad_publicar', 'panel_bienestar', 'gestion_equipo',
+            'pulso_ver', 'vacantes_ilimitadas'    => $esEstudio,
+            'respaldo_telemed', 'expediente_propio',
+            'mis_beneficios', 'pulso_contestar'   => $esCoach,
+            // Fisioterapia SOLO en el plan superior del coach.
+            'respaldo_fisio'                      => $esCoach && $planSlug === 'individual-pro',
+            default                               => false,
+        };
     }
 
     public function professionalProfile(): HasOne
@@ -286,6 +344,13 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
         // Aprobación activada: mientras no esté activo, va al aviso de cuenta pendiente.
         if (! $this->estaActivo()) {
             return route('account.pending', absolute: $absolute);
+        }
+
+        // LOW-1 · Contratante activo va directo al directorio de talento (su
+        // acción principal) en vez del /dashboard genérico. Coach mantiene
+        // /dashboard porque ahí ve el estado de su perfil, vistas y CTAs.
+        if ($this->esContratante()) {
+            return route('talento.index', absolute: $absolute);
         }
 
         return route('dashboard', absolute: $absolute);

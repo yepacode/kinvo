@@ -8,14 +8,26 @@ use Illuminate\Support\Str;
 
 class CompanyProfile extends Model
 {
+    use \App\Models\Concerns\HasMediaItems;
+
     protected $fillable = [
         'user_id', 'company_name', 'slug', 'sector', 'disciplines_text', 'logo_path',
         'description', 'website', 'location_id', 'estado', 'address', 'postal_code', 'colonia', 'show_address',
         'contact_name', 'contact_phone', 'contact_email', 'media_url', 'media_path', 'media_type',
+        // H3 · petición cliente: calificación + nota que el ESTUDIO deja
+        // sobre el bienestar de su propio equipo (vista /equipo).
+        'wellness_rating', 'wellness_notes',
+        // CRITICAL-4: nota INTERNA del admin sobre el estudio (Filament).
+        // Separada de wellness_notes para evitar el data leak previo.
+        'admin_notes',
+        // H5 · cupos que el admin asigna según lo pagado (null = sin límite).
+        'max_coach_slots',
     ];
 
     protected $casts = [
         'show_address' => 'boolean',
+        'wellness_rating' => 'integer',
+        'max_coach_slots' => 'integer',
     ];
 
     /** Estados de México para el selector de ubicación del estudio. */

@@ -40,7 +40,7 @@
             <div class="flex flex-col items-center gap-4 border-b border-line bg-beige/50 px-6 py-8 text-center sm:flex-row sm:text-left">
                 <div class="h-28 w-28 shrink-0 overflow-hidden rounded-full border border-line bg-cream">
                     @if ($profile->photo_path)
-                        <img src="{{ Storage::url($profile->photo_path) }}" alt="{{ $nombre }}" class="h-full w-full object-cover">
+                        <img src="{{ asset('storage/'.$profile->photo_path) }}" alt="{{ $nombre }}" class="h-full w-full object-cover">
                     @else
                         <img src="{{ asset('img/kinvoo-logo.png') }}" alt="Kinvoo" class="h-full w-full object-cover p-3">
                     @endif
@@ -81,7 +81,7 @@
                 @else
                     <a href="{{ route('login') }}"
                        class="flex items-center justify-center rounded-full border border-line px-7 py-3 text-sm font-medium text-warmgray transition hover:border-sage hover:text-sage">
-                        {{ __('Inicia sesión como contratante para contactar') }}
+                        {{ landing('talento_show_cta_login') }}
                     </a>
                 @endauth
 
@@ -145,16 +145,12 @@
                 @if ($profile->media_path || $profile->media_url)
                     <div>
                         <h2 class="font-serif text-xl font-medium text-ink">{{ __('Contenido multimedia') }}</h2>
-                        @if ($profile->media_path)
+                        {{-- Carrusel de multimedia (petición cliente: miniatura + carrusel). --}}
+                        @if ($profile->mediaItems->isNotEmpty() || $profile->media_path)
                             <div class="mt-3">
-                                @if ($profile->media_type === 'video')
-                                    <video class="w-full max-w-2xl rounded-md border border-line" controls playsinline preload="metadata">
-                                        <source src="{{ Storage::url($profile->media_path) }}">
-                                        {{ __('Tu navegador no soporta este video.') }}
-                                    </video>
-                                @else
-                                    <img class="w-full max-w-2xl rounded-md border border-line" src="{{ Storage::url($profile->media_path) }}" alt="Multimedia de {{ $profile->headline ?: $profile->user->name }}">
-                                @endif
+                                <x-media-carousel :items="$profile->mediaItems"
+                                                  :legacyPath="$profile->media_path"
+                                                  :legacyType="$profile->media_type" />
                             </div>
                         @endif
                         @if ($profile->media_url)

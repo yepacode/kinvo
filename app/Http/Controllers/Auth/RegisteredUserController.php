@@ -52,36 +52,39 @@ class RegisteredUserController extends Controller
             ? RolUsuario::Contractor
             : RolUsuario::Professional;
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-        // nivel/estado/locale no son mass-assignable: se setean explícitamente.
-        // locale se toma del idioma activo en la sesión de registro para que el correo
-        // de bienvenida se envíe en el idioma que el usuario estaba usando.
-        // Guarda defensivo: si prod aún no corre `php artisan migrate` tras un
-        // deploy con la nueva columna `locale`, el registro sigue funcionando
-        // sin romper el flujo del cliente (el locale queda en 'es' por default).
-        $atributos = [
-            'nivel' => $rol,
-            'estado' => EstadoUsuario::Pendiente,
-        ];
-        if (Schema::hasColumn('users', 'locale')) {
-            $atributos['locale'] = in_array(app()->getLocale(), ['es', 'en'], true) ? app()->getLocale() : 'es';
-        }
-        $user->forceFill($atributos)->save();
+        // MED-J1 · Registro atómico: sin transacción, si la creación del
+        // perfil (companyProfile o professionalProfile) fallaba tras crear el
+        // User, quedaba un user huérfano sin perfil que bloqueaba futuros
+        // registros con el mismo email (UNIQUE) y hacía crashear vistas que
+        // asumen perfil no-null. Todo en una transacción: si algo falla,
+        // rollback deja al email libre para reintentar.
+        $user = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $rol) {
+            $u = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
+            $atributos = [
+                'nivel' => $rol,
+                'estado' => EstadoUsuario::Pendiente,
+            ];
+            if (Schema::hasColumn('users', 'locale')) {
+                $atributos['locale'] = in_array(app()->getLocale(), ['es', 'en'], true) ? app()->getLocale() : 'es';
+            }
+            $u->forceFill($atributos)->save();
 
-        // Perfil vacío según el rol, listo para autoeditar.
-        if ($rol === RolUsuario::Contractor) {
-            $user->companyProfile()->create([
-                'company_name' => $user->name,
-            ]);
-        } else {
-            $user->professionalProfile()->create([
-                'headline' => null,
-            ]);
-        }
+            // Perfil vacío según el rol, listo para autoeditar.
+            if ($rol === RolUsuario::Contractor) {
+                $u->companyProfile()->create([
+                    'company_name' => $u->name,
+                ]);
+            } else {
+                $u->professionalProfile()->create([
+                    'headline' => null,
+                ]);
+            }
+            return $u;
+        });
 
         event(new Registered($user));
 
@@ -102,6 +105,12 @@ class RegisteredUserController extends Controller
         }
 
         Auth::login($user);
+
+        // HIGH-1 · Prevención de session fixation: regenerar el session ID
+        // tras login. Sin esto, un atacante que fijó el cookie de sesión ANTES
+        // del registro queda autenticado como la víctima. Espeja el patrón de
+        // AuthenticatedSessionController::store().
+        $request->session()->regenerate();
 
         // Arranca el wizard de onboarding (bienvenida → perfil → confirmación).
         return redirect()->route($rol === RolUsuario::Contractor ? 'company.bienvenida' : 'professional.bienvenida');

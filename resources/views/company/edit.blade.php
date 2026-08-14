@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Mi empresa') }}</h2>
+            <h2 class="font-serif text-2xl font-medium text-ink">{{ landing('company_edit_titulo') }}</h2>
             @if (auth()->user()->estaActivo() && $profile->slug)
                 <a href="{{ route('estudio.show', $profile->slug) }}" target="_blank"
                    class="text-sm text-sage underline hover:text-ink">{{ __('Ver perfil público ↗') }}</a>
@@ -13,9 +13,9 @@
         {{-- Aviso claro para estudios con cuenta aún no aprobada. --}}
         @if (! auth()->user()->estaActivo())
             <div class="mb-6 rounded-xl border border-yellow-200 bg-yellow-50 px-5 py-4 text-sm text-ink">
-                <p class="font-medium">⏳ {{ __('Tu cuenta está en revisión') }}</p>
+                <p class="font-medium">{{ landing('company_cuenta_revision_titulo') }}</p>
                 <p class="mt-1 text-warmgray">
-                    {{ __('Completa el perfil de tu estudio y guárdalo. Cuando Kinvoo lo apruebe podrás publicar ofertas, buscar talento, gestionar tu equipo y suscribirte a un plan. Te avisaremos por correo.') }}
+                    {{ landing('company_cuenta_revision_descripcion') }}
                 </p>
             </div>
         @endif
@@ -67,7 +67,7 @@
                     <template x-if="!preview">
                         <div class="h-full w-full">
                             @if ($profile->logo_path)
-                                <img src="{{ Storage::url($profile->logo_path) }}" alt="{{ __('Logo de la empresa') }}" class="h-full w-full object-cover">
+                                <img src="{{ asset('storage/'.$profile->logo_path) }}" alt="{{ __('Logo de la empresa') }}" class="h-full w-full object-cover">
                             @else
                                 <img src="{{ asset('img/kinvoo-logo.png') }}" alt="Kinvoo" class="h-full w-full object-cover p-2">
                             @endif
@@ -193,31 +193,34 @@
                 </div>
 
                 <div class="mt-5">
-                    <x-input-label for="media_file" :value="__('O sube un archivo (video o imagen, máx. 25 MB)')" />
-                    <input id="media_file" name="media_file" type="file"
+                    <x-input-label for="media_files" :value="__('Sube varias fotos o videos (máx. 25 MB cada uno)')" />
+                    <input id="media_files" name="media_files[]" type="file" multiple
                            accept="video/mp4,video/webm,video/quicktime,video/x-m4v,image/*"
                            class="mt-1 block w-full max-w-full text-sm text-ink file:mr-4 file:rounded-md file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-sage/90" />
-                    <p class="mt-1 text-xs text-warmgray">{{ __('Formatos: MP4, WebM, MOV, JPG, PNG, WebP, GIF.') }}</p>
-                    <x-input-error :messages="$errors->get('media_file')" class="mt-1" />
+                    <p class="mt-1 text-xs text-warmgray">{{ __('Formatos: MP4, WebM, MOV, JPG, PNG, WebP, GIF. Puedes seleccionar varios a la vez.') }}</p>
+                    <x-input-error :messages="$errors->get('media_files')" class="mt-1" />
+                    <x-input-error :messages="$errors->get('media_files.*')" class="mt-1" />
 
-                    @if ($profile->media_path)
-                        <div class="mt-3 flex items-center gap-3 rounded border border-line bg-white p-3 text-sm">
-                            @if ($profile->media_type === 'video')
-                                <video class="h-16 w-24 rounded object-cover" muted preload="metadata">
-                                    <source src="{{ Storage::url($profile->media_path) }}">
-                                </video>
-                            @else
-                                <img class="h-16 w-24 rounded object-cover" src="{{ Storage::url($profile->media_path) }}" alt="{{ __('Multimedia actual') }}">
-                            @endif
-                            <div class="flex-1">
-                                <p class="text-ink">{{ __('Archivo actual:') }} <span class="text-warmgray">{{ basename($profile->media_path) }}</span></p>
-                                <label for="remove_media_file" class="mt-1 flex items-center gap-2 text-xs text-warmgray">
-                                    <input type="hidden" name="remove_media_file" value="0">
-                                    <input type="checkbox" id="remove_media_file" name="remove_media_file" value="1"
-                                           class="rounded border-line text-sage focus:ring-sage">
-                                    {{ __('Quitar este archivo') }}
-                                </label>
-                            </div>
+                    {{-- Galería actual con checkbox para quitar por item. --}}
+                    @if ($profile->mediaItems->isNotEmpty())
+                        <p class="mt-4 text-xs font-medium uppercase tracking-wider text-warmgray">{{ __('Tu galería') }}</p>
+                        <div class="mt-2 grid gap-2 sm:grid-cols-3">
+                            @foreach ($profile->mediaItems as $item)
+                                <div class="rounded border border-line bg-white p-2">
+                                    @if ($item->type === 'video')
+                                        <video class="h-24 w-full rounded object-cover" muted preload="metadata">
+                                            <source src="{{ asset('storage/'.$item->path) }}">
+                                        </video>
+                                    @else
+                                        <img class="h-24 w-full rounded object-cover" src="{{ asset('storage/'.$item->path) }}" alt="">
+                                    @endif
+                                    <label class="mt-2 flex items-center gap-1.5 text-xs text-warmgray">
+                                        <input type="checkbox" name="media_remove[]" value="{{ $item->id }}"
+                                               class="rounded border-line text-red-600 focus:ring-red-500">
+                                        {{ __('Quitar') }}
+                                    </label>
+                                </div>
+                            @endforeach
                         </div>
                     @endif
                 </div>

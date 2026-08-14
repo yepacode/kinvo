@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Mi perfil profesional') }}</h2>
+            <h2 class="font-serif text-2xl font-medium text-ink">{{ landing('perfil_edit_titulo') }}</h2>
             @if ($profile->is_published)
                 <a href="{{ route('talento.show', $profile->slug) }}" target="_blank"
                    class="text-sm text-sage underline hover:text-ink">{{ __('Ver perfil público ↗') }}</a>
@@ -14,7 +14,7 @@
 
         <div class="mb-6 flex items-center justify-between">
             <a href="{{ route('professional.bienvenida') }}" class="text-sm text-warmgray hover:text-sage">{{ __('← Atrás') }}</a>
-            <p class="text-sm text-warmgray">{{ __('Completa tu perfil y guarda para enviarlo a revisión.') }}</p>
+            <p class="text-sm text-warmgray">{{ landing('perfil_edit_intro') }}</p>
         </div>
 
         <form method="POST" action="{{ route('professional.profile.update') }}" enctype="multipart/form-data"
@@ -41,7 +41,7 @@
                     <template x-if="!preview">
                         <div class="h-full w-full">
                             @if ($profile->photo_path)
-                                <img src="{{ Storage::url($profile->photo_path) }}" alt="{{ __('Foto de perfil actual') }}" class="h-full w-full object-cover">
+                                <img src="{{ asset('storage/'.$profile->photo_path) }}" alt="{{ __('Foto de perfil actual') }}" class="h-full w-full object-cover">
                             @else
                                 <img src="{{ asset('img/kinvoo-logo.png') }}" alt="Kinvoo" class="h-full w-full object-cover p-2">
                             @endif
@@ -248,31 +248,33 @@
                 </div>
 
                 <div class="mt-5">
-                    <x-input-label for="media_file" :value="__('O sube un archivo (video o imagen, máx. 25 MB)')" />
-                    <input id="media_file" name="media_file" type="file"
+                    <x-input-label for="media_files" :value="__('Sube varias fotos o videos (máx. 25 MB cada uno)')" />
+                    <input id="media_files" name="media_files[]" type="file" multiple
                            accept="video/mp4,video/webm,video/quicktime,video/x-m4v,image/*"
                            class="mt-1 block w-full max-w-full text-sm text-ink file:mr-4 file:rounded-md file:border-0 file:bg-sage file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-sage/90" />
-                    <p class="mt-1 text-xs text-warmgray">{{ __('Formatos: MP4, WebM, MOV, JPG, PNG, WebP, GIF.') }}</p>
-                    <x-input-error :messages="$errors->get('media_file')" class="mt-1" />
+                    <p class="mt-1 text-xs text-warmgray">{{ __('Formatos: MP4, WebM, MOV, JPG, PNG, WebP, GIF. Puedes seleccionar varios a la vez.') }}</p>
+                    <x-input-error :messages="$errors->get('media_files')" class="mt-1" />
+                    <x-input-error :messages="$errors->get('media_files.*')" class="mt-1" />
 
-                    @if ($profile->media_path)
-                        <div class="mt-3 flex items-center gap-3 rounded border border-line bg-white p-3 text-sm">
-                            @if ($profile->media_type === 'video')
-                                <video class="h-16 w-24 rounded object-cover" muted preload="metadata">
-                                    <source src="{{ Storage::url($profile->media_path) }}">
-                                </video>
-                            @else
-                                <img class="h-16 w-24 rounded object-cover" src="{{ Storage::url($profile->media_path) }}" alt="{{ __('Multimedia actual') }}">
-                            @endif
-                            <div class="flex-1">
-                                <p class="text-ink">{{ __('Archivo actual:') }} <span class="text-warmgray">{{ basename($profile->media_path) }}</span></p>
-                                <label for="remove_media_file" class="mt-1 flex items-center gap-2 text-xs text-warmgray">
-                                    <input type="hidden" name="remove_media_file" value="0">
-                                    <input type="checkbox" id="remove_media_file" name="remove_media_file" value="1"
-                                           class="rounded border-line text-sage focus:ring-sage">
-                                    {{ __('Quitar este archivo') }}
-                                </label>
-                            </div>
+                    @if ($profile->mediaItems->isNotEmpty())
+                        <p class="mt-4 text-xs font-medium uppercase tracking-wider text-warmgray">{{ __('Tu galería') }}</p>
+                        <div class="mt-2 grid gap-2 sm:grid-cols-3">
+                            @foreach ($profile->mediaItems as $item)
+                                <div class="rounded border border-line bg-white p-2">
+                                    @if ($item->type === 'video')
+                                        <video class="h-24 w-full rounded object-cover" muted preload="metadata">
+                                            <source src="{{ asset('storage/'.$item->path) }}">
+                                        </video>
+                                    @else
+                                        <img class="h-24 w-full rounded object-cover" src="{{ asset('storage/'.$item->path) }}" alt="">
+                                    @endif
+                                    <label class="mt-2 flex items-center gap-1.5 text-xs text-warmgray">
+                                        <input type="checkbox" name="media_remove[]" value="{{ $item->id }}"
+                                               class="rounded border-line text-red-600 focus:ring-red-500">
+                                        {{ __('Quitar') }}
+                                    </label>
+                                </div>
+                            @endforeach
                         </div>
                     @endif
                 </div>
@@ -310,14 +312,14 @@
                 </div>
             @else
                 <div class="rounded-xl border border-line bg-cream px-4 py-3 text-sm text-warmgray">
-                    {{ __('Cuando completes tu perfil, el equipo de Kinvoo lo revisará y lo publicará. Te avisaremos cuando esté activo.') }}
+                    {{ landing('perfil_edit_estado_revision') }}
                 </div>
             @endif
 
             <div class="flex justify-end">
                 <button type="submit"
                         class="rounded-full bg-sage px-7 py-2.5 text-sm font-semibold text-cream shadow-sm transition hover:bg-ink">
-                    {{ __('Guardar y continuar →') }}
+                    {{ landing('perfil_edit_cta_guardar') }}
                 </button>
             </div>
         </form>

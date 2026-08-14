@@ -14,6 +14,8 @@ use Illuminate\View\View;
 
 class ProfessionalProfileController extends Controller
 {
+    use \App\Http\Controllers\Concerns\PersistsUploadedFile;
+
     /** Paso 1 del wizard: pantalla de bienvenida. */
     public function bienvenida(Request $request): View
     {
@@ -74,16 +76,20 @@ class ProfessionalProfileController extends Controller
 
         $mayoriaEdad = now()->subYears(18)->toDateString();
 
+        // Fix B1 (petición cliente): al fallar validación, la foto y el
+        // archivo de certificación se perdían del input al reintentar.
+        // Los re-inyectamos desde tmp de sesión si existen.
+        $this->restaurarArchivoTemporal($request, 'photo');
+        $this->restaurarArchivoTemporal($request, 'certification_file');
+
         // 2026-08-06 · Petición de la clienta (Marian):
         // "Todos los campos obligatorios EXCEPTO contenido multimedia y
         // redes sociales/web". Motivo: se estaban creando cuentas sin
         // llenar el perfil (solo correo).
         // Excepciones opcionales: media_url, media_file, instagram, tiktok, web,
         // + los toggles `remove_*` que son helpers de UI.
-        // Foto y archivo de certificación: opcionales solo si YA existen en el
-        // perfil actual (así el usuario no tiene que re-subirlos cada vez que
-        // edita); si es un perfil nuevo, son requeridos.
-        $fotoRequerida = $profile->photo_path ? 'nullable' : 'required';
+        // Foto: opcional si ya existe en BD O si viene un file nuevo/tmp.
+        $fotoRequerida = ($profile->photo_path || $request->hasFile('photo')) ? 'nullable' : 'required';
         $certRequerida = ($profile->certification_file_path || filled($profile->certifications_text))
             ? 'nullable' : 'required_without:certifications_text';
 
@@ -105,8 +111,11 @@ class ProfessionalProfileController extends Controller
             'certification_file' => [$certRequerida, 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
             // OPCIONALES por decisión de negocio:
             'media_url' => ['nullable', 'url:http,https', 'max:300'],
-            'media_file' => ['nullable', 'file', 'mimes:mp4,webm,mov,m4v,jpg,jpeg,png,webp,gif', 'max:25600'],
-            'remove_media_file' => ['nullable', 'boolean'],
+            // Multi-upload para carrusel (petición cliente):
+            'media_files'   => ['nullable', 'array', 'max:20'],
+            'media_files.*' => ['file', 'mimes:mp4,webm,mov,m4v,jpg,jpeg,png,webp,gif', 'max:25600'],
+            'media_remove'   => ['nullable', 'array'],
+            'media_remove.*' => ['integer'],
             'instagram' => ['nullable', 'string', 'max:120', 'regex:/^[@\w.\-\/:?=&%~#]+$/u'],
             'tiktok' => ['nullable', 'string', 'max:120', 'regex:/^[@\w.\-\/:?=&%~#]+$/u'],
             'web' => ['nullable', 'url:http,https', 'max:200'],
@@ -149,14 +158,7 @@ class ProfessionalProfileController extends Controller
                 ->store('certificaciones', 'local');
         }
 
-        if ($request->hasFile('media_file')) {
-            if ($profile->media_path) {
-                Storage::disk('public')->delete($profile->media_path);
-            }
-            $file = $request->file('media_file');
-            $data['media_path'] = $file->store('multimedia/profesional', 'public');
-            $data['media_type'] = str_starts_with($file->getMimeType() ?? '', 'video/') ? 'video' : 'image';
-        }
+        // Multi-upload de carrusel se procesa DESPUÉS del profile->save().
 
         $profile->fill([
             'full_name' => $data['full_name'] ?? null,
@@ -186,10 +188,6 @@ class ProfessionalProfileController extends Controller
         if (isset($data['certification_file_path'])) {
             $profile->certification_file_path = $data['certification_file_path'];
         }
-        if (isset($data['media_path'])) {
-            $profile->media_path = $data['media_path'];
-            $profile->media_type = $data['media_type'];
-        }
 
         // Eliminar foto/adjunto si se marcó la casilla (solo si no se subió uno nuevo).
         if (! $request->hasFile('photo') && $request->boolean('remove_photo') && $profile->photo_path) {
@@ -200,15 +198,36 @@ class ProfessionalProfileController extends Controller
             Storage::disk('local')->delete($profile->certification_file_path);
             $profile->certification_file_path = null;
         }
-        if (! $request->hasFile('media_file') && $request->boolean('remove_media_file') && $profile->media_path) {
-            Storage::disk('public')->delete($profile->media_path);
-            $profile->media_path = null;
-            $profile->media_type = null;
-        }
 
+        $wasDirtyKeys = array_keys($profile->getDirty());
         $profile->save();
 
+        // M8 · bitácora legal de cambios en el perfil profesional.
+        if (! empty($wasDirtyKeys)) {
+            \App\Models\AuditLog::record($user, $profile, 'professional_profile_updated', new: [
+                'campos' => $wasDirtyKeys,
+            ]);
+        }
+
+        // Carrusel multimedia: quitar items marcados + agregar nuevos.
+        if ($idsRemover = $request->input('media_remove', [])) {
+            $profile->mediaItems()->whereIn('id', $idsRemover)->get()->each->delete();
+        }
+        foreach ($request->file('media_files', []) as $file) {
+            if (! $file) continue;
+            $tipo = str_starts_with($file->getMimeType() ?? '', 'video/') ? 'video' : 'image';
+            $profile->mediaItems()->create([
+                'path'       => $file->store('multimedia/profesional', 'public'),
+                'type'       => $tipo,
+                'sort_order' => ($profile->mediaItems()->max('sort_order') ?? 0) + 1,
+            ]);
+        }
+
         $profile->disciplines()->sync($data['disciplines'] ?? []);
+
+        // Fix B1: limpia los tmp files tras guardar exitoso.
+        $this->limpiarArchivoTemporal($request, 'photo');
+        $this->limpiarArchivoTemporal($request, 'certification_file');
 
         // Paso 3: avanza a la confirmación (arregla la "página estática" al guardar).
         return redirect()->route('professional.enviado');

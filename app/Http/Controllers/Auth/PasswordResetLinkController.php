@@ -30,11 +30,21 @@ class PasswordResetLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        // Enviamos el enlace de reset. `Password::sendResetLink` retorna un status
-        // distinto si el email no existe (INVALID_USER) — mostrar ese mensaje
-        // permite ENUMERACIÓN de cuentas. Siempre respondemos con el mensaje de
-        // "te enviamos el enlace", independientemente del status real.
+        // MED-G3 · Anti-enumeración por timing: enviar SMTP tarda ~200-800 ms;
+        // no enviar retorna en ~10 ms. Un atacante que mide diferencia sabe si
+        // el email existe. Nivelar con un delay aleatorio de rango similar
+        // para que la respuesta siempre tarde lo mismo desde afuera.
+        $start = microtime(true);
+
         Password::sendResetLink($request->only('email'));
+
+        // Si tardamos menos de 400 ms (email no existe → no envió correo),
+        // añadimos un pad aleatorio hasta 400-800 ms para simular el envío.
+        $elapsed_ms = (microtime(true) - $start) * 1000;
+        if ($elapsed_ms < 400) {
+            $target = random_int(400, 800);
+            usleep((int) (($target - $elapsed_ms) * 1000));
+        }
 
         return back()->with('status', __(Password::RESET_LINK_SENT));
     }

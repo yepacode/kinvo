@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Services\Billing\FakeGateway;
+use App\Services\Billing\MercadoPagoGateway;
 use App\Services\Billing\StripeGateway;
 use App\Services\Billing\SubscriptionGateway;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -16,12 +18,13 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Fase 2 · Bind del gateway de pagos según config('billing.gateway').
-        // Por default se usa FakeGateway (sin cobros reales) — se cambia a
-        // 'stripe' vía .env cuando la cliente comparta las claves del kick-off.
+        // Por default se usa FakeGateway (sin cobros reales). En producción
+        // Marian eligió MercadoPago (México); Stripe queda como alternativa.
         $this->app->singleton(SubscriptionGateway::class, function () {
             return match (config('billing.gateway', 'fake')) {
-                'stripe' => new StripeGateway(),
-                default  => new FakeGateway(),
+                'mercadopago' => new MercadoPagoGateway(),
+                'stripe'      => new StripeGateway(),
+                default       => new FakeGateway(),
             };
         });
     }
@@ -40,5 +43,8 @@ class AppServiceProvider extends ServiceProvider
 
             return app()->isProduction() ? $rule->uncompromised() : $rule;
         });
+
+        // M8 · Auditoría legal: registra login/logout/register/failed en AuditLog.
+        Event::subscribe(\App\Listeners\AuditAuthEvents::class);
     }
 }

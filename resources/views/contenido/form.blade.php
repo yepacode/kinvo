@@ -1,11 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-serif text-2xl font-medium text-ink">
-            {{ $contenido->exists ? __('Editar contenido') : __('Nuevo contenido') }}
+            {{ landing('contenido_form_titulo') }}
         </h2>
     </x-slot>
 
     <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+        <x-back-link :href="route('contenido.mis-contenidos')" :value="__('← Volver a mi contenido')" />
+
         @unless ($contenido->exists)
             <div class="mb-6 rounded-2xl border border-sage/40 bg-sage/10 px-5 py-4 text-sm text-ink">
                 <p class="font-medium">{{ __('¿Qué tipo de contenido puedes subir?') }}</p>
@@ -89,6 +91,38 @@
                     @endif
                     @error('archivo')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
+
+                {{-- Carrusel: multi-upload de fotos/videos del contenido. --}}
+                <div class="mt-6 border-t border-line/50 pt-4">
+                    <label for="media_files" class="block text-sm font-medium text-ink">{{ __('Galería (opcional): fotos o videos de acompañamiento') }}</label>
+                    <input id="media_files" name="media_files[]" type="file" multiple
+                           accept="video/mp4,video/webm,video/quicktime,image/*"
+                           class="mt-1 w-full text-sm text-warmgray">
+                    <p class="mt-1 text-xs text-warmgray">{{ __('Puedes subir varias imágenes o videos. Aparecerán en un carrusel debajo del contenido.') }}</p>
+                    @error('media_files.*')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+
+                    @if ($contenido->exists && $contenido->mediaItems->isNotEmpty())
+                        <p class="mt-3 text-xs font-medium uppercase tracking-wider text-warmgray">{{ __('Galería actual') }}</p>
+                        <div class="mt-2 grid gap-2 sm:grid-cols-4">
+                            @foreach ($contenido->mediaItems as $m)
+                                <div class="rounded border border-line bg-white p-2">
+                                    @if ($m->type === 'video')
+                                        <video class="h-20 w-full rounded object-cover" muted preload="metadata">
+                                            <source src="{{ asset('storage/'.$m->path) }}">
+                                        </video>
+                                    @else
+                                        <img class="h-20 w-full rounded object-cover" src="{{ asset('storage/'.$m->path) }}" alt="">
+                                    @endif
+                                    <label class="mt-1 flex items-center gap-1 text-[11px] text-warmgray">
+                                        <input type="checkbox" name="media_remove[]" value="{{ $m->id }}"
+                                               class="rounded border-line text-red-600 focus:ring-red-500">
+                                        {{ __('Quitar') }}
+                                    </label>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
             </fieldset>
 
             <div class="flex flex-wrap items-center justify-end gap-3 border-t border-line pt-6">
@@ -98,7 +132,7 @@
                 </a>
                 <button type="submit"
                         class="rounded-full bg-sage px-6 py-2.5 text-sm font-semibold text-cream hover:bg-ink">
-                    {{ $contenido->exists ? __('Guardar cambios') : __('Publicar contenido') }}
+                    {{ $contenido->exists ? __('Guardar cambios') : landing('contenido_form_boton_publicar') }}
                 </button>
             </div>
         </form>

@@ -2,7 +2,43 @@
     <div class="mx-auto max-w-5xl px-6 py-14 sm:py-20">
         @if (session('status') === 'membresia-requerida')
             <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
-                {!! __('Para acceder al directorio de talento necesitas una :status. Elige un plan abajo o escríbenos.', ['status' => '<strong>'.__('membresía activa').'</strong>']) !!}
+                {{ landing('membresia_flash_directorio') }}
+            </div>
+        @elseif (session('status') === 'plan-necesario-ofertas')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
+                {{ landing('membresia_flash_ofertas') }}
+            </div>
+        @elseif (session('status') === 'plan-necesario-mas-vacantes')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
+                {{ landing('membresia_flash_mas_vacantes') }}
+            </div>
+        @elseif (session('status') === 'plan-necesario-contacto')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
+                {{ landing('membresia_flash_contacto') }}
+            </div>
+        @elseif (session('status') === 'plan-necesario-contenido')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
+                {{ landing('membresia_flash_contenido') }}
+            </div>
+        @elseif (session('status') === 'plan-necesario-bienestar')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
+                {{ __('El expediente y evaluación de bienestar se desbloquea cuando contratas un plan de cuidado para tu equipo.') }}
+            </div>
+        @elseif (session('status') === 'plan-necesario-comunidad')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
+                {{ landing('membresia_flash_comunidad') }}
+            </div>
+        @elseif (session('status') === 'plan-necesario-momentos')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
+                {{ __('Publicar momentos en Comunidad es un beneficio de estudios con plan activo.') }}
+            </div>
+        @elseif (session('status') === 'plan-necesario-equipo')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
+                {{ __('La gestión de equipo y su cuidado se activan al contratar un plan para tu estudio.') }}
+            </div>
+        @elseif (session('status') === 'plan-necesario-expediente')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
+                {{ landing('membresia_flash_expediente') }}
             </div>
         @endif
 
@@ -34,7 +70,7 @@
             @elseif (! auth()->user()->estaActivo())
                 {{-- Cuenta pendiente: explicar por qué los botones están bloqueados. --}}
                 <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-yellow-200 bg-yellow-50 px-5 py-4 text-center text-sm text-ink">
-                    <p class="font-medium">{{ __('Tu cuenta está en revisión') }}</p>
+                    <p class="font-medium">{{ landing('membresia_cuenta_revision_titulo') }}</p>
                     <p class="mt-1 text-warmgray">
                         {{ __('Podrás suscribirte cuando Kinvoo apruebe tu perfil. Mientras tanto puedes explorar los planes.') }}
                     </p>
@@ -49,10 +85,18 @@
         </header>
 
         @php
-            $grupos = [
-                ['titulo' => landing('membership_individual_title'), 'planes' => $individuales],
-                ['titulo' => landing('membership_studio_title'), 'planes' => $estudios],
-            ];
+            // H6 · sólo mostrar los planes que aplican al rol del usuario.
+            // Anónimos y admin ven ambos grupos (marketing / gestión).
+            $__u = auth()->user();
+            $grupos = [];
+            $verIndividual = ! $__u || $__u->esAdmin() || $__u->esProfesional();
+            $verEstudio    = ! $__u || $__u->esAdmin() || $__u->esContratante();
+            if ($verIndividual) {
+                $grupos[] = ['titulo' => landing('membership_individual_title'), 'planes' => $individuales];
+            }
+            if ($verEstudio) {
+                $grupos[] = ['titulo' => landing('membership_studio_title'), 'planes' => $estudios];
+            }
         @endphp
 
         @foreach ($grupos as $grupo)
@@ -114,7 +158,7 @@
                                     @csrf
                                     <button type="submit"
                                             class="w-full inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition {{ $plan->destacado ? 'bg-sage text-cream hover:bg-ink' : 'border border-line text-ink hover:border-sage hover:text-sage' }}">
-                                        {{ __('Suscribirme') }}
+                                        {{ landing('membresia_cta_suscribirme') }}
                                     </button>
                                 </form>
                             @elseif (! $user)
@@ -151,7 +195,7 @@
         @endforeach
 
         @if ($individuales->isEmpty() && $estudios->isEmpty())
-            <p class="mt-14 text-center text-warmgray">{{ __('Pronto publicaremos nuestros planes de membresía.') }}</p>
+            <p class="mt-14 text-center text-warmgray">{{ landing('membresia_empty_state') }}</p>
         @endif
 
         @if (landing('membership_note'))

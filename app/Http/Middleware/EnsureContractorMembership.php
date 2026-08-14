@@ -13,12 +13,16 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class EnsureContractorMembership
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, ?string $flashKey = null): Response
     {
         $user = $request->user();
 
         if ($user && $user->esContratante() && $user->estaActivo() && ! $user->tieneMembresiaActiva()) {
-            return redirect()->route('membresias.index')->with('status', 'membresia-requerida');
+            // H6 · el llamador puede pasar un flash específico
+            // (ej. 'plan-necesario-contacto') para mostrar el mensaje de upsell
+            // más ajustado a la acción que se intentó.
+            return redirect()->route('membresias.index')
+                ->with('status', $flashKey ?: 'membresia-requerida');
         }
 
         return $next($request);

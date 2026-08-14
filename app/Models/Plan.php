@@ -10,6 +10,10 @@ class Plan extends Model
     protected $fillable = [
         'nombre', 'slug', 'audiencia', 'precio', 'moneda', 'periodo',
         'descripcion', 'beneficios', 'cobertura', 'destacado', 'activo', 'orden',
+        // Fase 2 · pasarela: ID del price/product en Stripe (o el proveedor
+        // que se elija). Sin este valor el CheckoutController no puede crear
+        // la sesión de suscripción — el StripeGateway lo exige.
+        'provider_price_id', 'is_recurring', 'interval',
     ];
 
     protected $casts = [
@@ -18,6 +22,7 @@ class Plan extends Model
         'destacado' => 'boolean',
         'activo' => 'boolean',
         'orden' => 'integer',
+        'is_recurring' => 'boolean',
     ];
 
     /** A quién va dirigido el plan. */

@@ -49,6 +49,7 @@ class WebhookController extends Controller
         $data = $event['data']['object'] ?? $event['data'] ?? [];
 
         match ($type) {
+            'checkout_completed'     => $this->onCheckoutCompleted($data),
             'payment_succeeded'      => $this->onPaymentSucceeded($data),
             'payment_failed'         => $this->onPaymentFailed($data),
             'subscription_canceled'  => $this->onSubscriptionCanceled($data),
@@ -62,12 +63,62 @@ class WebhookController extends Controller
     private function normalizarTipo(string $type): string
     {
         return match (true) {
+            // Stripe: checkout.session.completed llega inmediatamente después
+            // de que el user paga; contiene subscription_id, customer_id y
+            // client_reference_id — lo usamos para vincular la Subscription
+            // local (creada en INCOMPLETE por StripeGateway) con los IDs reales.
+            str_contains($type, 'checkout.session.completed')                                 => 'checkout_completed',
             str_contains($type, 'payment_succeeded'), str_contains($type, 'payment.approved') => 'payment_succeeded',
             str_contains($type, 'payment_failed'), str_contains($type, 'payment.rejected')     => 'payment_failed',
-            str_contains($type, 'subscription_deleted'), str_contains($type, 'subscription.canceled') => 'subscription_canceled',
+            // Stripe usa `customer.subscription.deleted` cuando la sub se cierra
+            // (después del período pagado si fue cancel_at_period_end).
+            str_contains($type, 'subscription_deleted'), str_contains($type, 'subscription.canceled'), str_contains($type, 'customer.subscription.deleted') => 'subscription_canceled',
             str_contains($type, 'refund')                                                     => 'refund',
             default => $type,
         };
+    }
+
+    /**
+     * Stripe `checkout.session.completed`: primer evento que llega tras el
+     * pago exitoso. Contiene `subscription`, `customer`, `client_reference_id`
+     * (= user_id) y `metadata.local_subscription_id`. Vinculamos la
+     * Subscription local INCOMPLETE con los IDs reales. Idempotente:
+     * si ya está vinculada, no-op.
+     */
+    private function onCheckoutCompleted(array $data): void
+    {
+        $localSubId = $data['metadata']['local_subscription_id'] ?? null;
+        $userId     = $data['client_reference_id'] ?? $data['metadata']['user_id'] ?? null;
+        $stripeSubId = $data['subscription'] ?? null;
+        $customerId  = $data['customer'] ?? null;
+
+        if (! $stripeSubId) return;
+
+        // Preferimos match por local_subscription_id (que pusimos en metadata),
+        // caemos a user_id + status=incomplete si no viene por alguna razón.
+        $sub = null;
+        if ($localSubId) {
+            $sub = Subscription::find($localSubId);
+        }
+        if (! $sub && $userId) {
+            $sub = Subscription::where('user_id', $userId)
+                ->where('status', Subscription::STATUS_INCOMPLETE)
+                ->where('provider', 'stripe')
+                ->latest()->first();
+        }
+        if (! $sub) return;
+
+        // Idempotencia: si ya está vinculada, no repetir.
+        if ($sub->provider_subscription_id === $stripeSubId) return;
+
+        $sub->update([
+            'provider_subscription_id' => $stripeSubId,
+            'provider_customer_id'     => $customerId,
+            'status'                   => Subscription::STATUS_ACTIVE,
+        ]);
+
+        AuditLog::record(null, $sub, 'subscription_linked_stripe',
+            new: ['provider_subscription_id' => $stripeSubId, 'provider_customer_id' => $customerId]);
     }
 
     private function onPaymentSucceeded(array $data): void
@@ -113,6 +164,13 @@ class WebhookController extends Controller
                     'membership_expires_at' => now()->addMonth(),
                 ])->save();
             }
+        }
+
+        // H5 · registro de conversión (petición cliente): guardar la fecha
+        // del PRIMER pago exitoso para el reporte "registro vs conversión".
+        // No sobrescribir si ya está marcado (idempotente frente a reintentos).
+        if (! $user->converted_to_paid_at) {
+            $user->forceFill(['converted_to_paid_at' => now()])->save();
         }
 
         AuditLog::record(null, $user, 'payment_succeeded', new: ['provider_payment_id' => $providerPaymentId]);

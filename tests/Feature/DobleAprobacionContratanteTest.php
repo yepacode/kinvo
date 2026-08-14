@@ -7,6 +7,7 @@ use App\Enums\RolUsuario;
 use App\Models\CompanyProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -77,6 +78,8 @@ class DobleAprobacionContratanteTest extends TestCase
 
     public function test_al_guardar_su_perfil_el_admin_recibe_notificacion(): void
     {
+        Storage::fake('public');
+
         // Admin que recibirá la notificación
         $admin = User::factory()->create();
         $admin->forceFill([
@@ -92,8 +95,12 @@ class DobleAprobacionContratanteTest extends TestCase
         ])->save();
         $contratista->companyProfile()->create(['company_name' => 'Estudio Kinvoo QA']);
 
+        // 2026-08-06 · Marian: todos los campos obligatorios. Usamos el helper
+        // para satisfacer la validación y verificar SOLO la notificación al admin.
         $this->actingAs($contratista)
-            ->put('/mi-empresa', ['company_name' => 'Estudio Kinvoo QA Actualizado'])
+            ->put('/mi-empresa', $this->datosValidosEstudio([
+                'company_name' => 'Estudio Kinvoo QA Actualizado',
+            ]))
             ->assertRedirect('/mi-empresa/enviado');
 
         // El admin recibió su notificación de "revisa este perfil".

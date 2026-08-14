@@ -388,7 +388,7 @@ footer {
       <li><a href="{{ auth()->user()->homeRoute() }}">{{ __('Mi cuenta') }}</a></li>
     @else
       <li><a href="{{ route('login') }}">{{ __('Entrar') }}</a></li>
-      <li><a href="{{ route('register') }}" class="nav-cta">{{ __('Únete') }}</a></li>
+      <li><a href="{{ route('register') }}" class="nav-cta">{{ landing('nav_unete_cta') }}</a></li>
     @endauth
     <li><x-locale-switcher /></li>
   </ul>
@@ -450,8 +450,8 @@ footer {
   <img src="{{ landing_image('divider_image', 'img/landing/divider.jpg') }}" alt="Movimiento fitness" />
   <div class="photo-divider-overlay"></div>
   <div class="float-data">
-    <span class="fd-k">Kinvoo · Comunidad</span>
-    <span class="fd-t" lang="en">Where talent<br>meets fitness.</span>
+    <span class="fd-k">{{ landing('divider_eyebrow') }}</span>
+    <span class="fd-t">{!! nl2br(e(landing('divider_title'))) !!}</span>
   </div>
 </div>
 

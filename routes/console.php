@@ -26,3 +26,8 @@ Schedule::job(new \App\Jobs\RetryFailedPayments)->dailyAt('03:00');
 
 // Fase 2 · Aviso 7 días antes del vencimiento (idempotente por AuditLog).
 Schedule::job(new \App\Jobs\NotifyUpcomingRenewals)->dailyAt('09:00');
+
+// B1 · GC de tmp uploads huérfanos (trait PersistsUploadedFile).
+// Docblock del trait prometía este job; ahora sí existe. Corre a diario a
+// las 04:00 (fuera de horario pico) y borra tmps > 24h de antigüedad.
+Schedule::command('uploads:purge-tmp')->dailyAt('04:00');
