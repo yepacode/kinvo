@@ -6,8 +6,8 @@
     <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
         <x-back-link :href="route('equipo.index')" :value="__('← Mi equipo')" />
 
-        <x-guia-inline :titulo="__('🌡️ Cómo va tu equipo')" tono="beige">
-            <p>{{ __('Este pulso agregado te ayuda a leer el momento de tu equipo. Kinvoo no muestra respuestas individuales — sólo tendencias.') }}</p>
+        <x-guia-inline :titulo="__('⭐ Cómo te evalúa tu equipo')" tono="beige">
+            <p>{{ __('Así evalúa tu equipo al estudio. Kinvoo no muestra respuestas individuales — sólo tendencias.') }}</p>
         </x-guia-inline>
 
         <div class="mt-6 grid gap-3 sm:grid-cols-3">
@@ -64,7 +64,7 @@
             @endif
         @empty
             <p class="mt-3 rounded-2xl border border-line bg-white px-6 py-8 text-center text-warmgray">
-                {{ __('Todavía nadie ha respondido. Anima a tu equipo a contestar su Pulso.') }}
+                {{ __('Todavía nadie ha respondido. Anima a tu equipo a evaluar el estudio.') }}
             </p>
         @endforelse
     </div>

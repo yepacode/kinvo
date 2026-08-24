@@ -11,6 +11,42 @@
             {{ landing('expediente_intro_descripcion') }}
         </p>
 
+        @if (session('status') === 'expediente-compartido')
+            <div class="mb-4 rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm font-medium text-ink">
+                {{ __('Listo: tu expediente ahora se comparte con tu estudio.') }}
+            </div>
+        @elseif (session('status') === 'expediente-privado')
+            <div class="mb-4 rounded-xl border border-line bg-cream px-4 py-3 text-sm font-medium text-ink">
+                {{ __('Listo: tu expediente quedó privado (no se refleja en el panel de tu estudio).') }}
+            </div>
+        @endif
+
+        {{-- Punto 12 · El coach elige si su expediente de cuidado se ve o no. --}}
+        <div class="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-line bg-white p-5">
+            <div class="min-w-0">
+                <p class="font-medium text-ink">
+                    {{ $nombreEstudio
+                        ? __('Compartir mi expediente con :estudio', ['estudio' => $nombreEstudio])
+                        : __('Compartir mi expediente con mi estudio') }}
+                </p>
+                <p class="mt-1 text-xs text-warmgray">
+                    {{ $comparteExpediente
+                        ? __('Tu bienestar cuenta en el panel de tu estudio. Puedes ocultarlo cuando quieras.')
+                        : __('Tu expediente está oculto: no se refleja en el panel de tu estudio.') }}
+                </p>
+            </div>
+            <form method="POST" action="{{ route('expediente.visibilidad') }}" class="shrink-0">
+                @csrf
+                {{-- El switch envía el valor OPUESTO al actual (alterna). --}}
+                <input type="hidden" name="comparte_expediente" value="{{ $comparteExpediente ? '0' : '1' }}">
+                <button type="submit" role="switch" aria-checked="{{ $comparteExpediente ? 'true' : 'false' }}"
+                        aria-label="{{ __('Compartir mi expediente con mi estudio') }}"
+                        class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 {{ $comparteExpediente ? 'bg-sage' : 'bg-line' }}">
+                    <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform {{ $comparteExpediente ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                </button>
+            </form>
+        </div>
+
         {{-- 4 tarjetas de beneficios (Telemedicina / Fisio / Seguro / Desarrollo). --}}
         <div class="grid gap-4 sm:grid-cols-2">
             @php

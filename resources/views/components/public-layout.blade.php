@@ -46,6 +46,17 @@
         @endauth
 
         <main>
+            {{-- Banner de éxito. Clave 'success' (mensaje humano). NO usamos
+                 'status' aquí: en algunas vistas públicas (p. ej. /membresias)
+                 'status' es un CÓDIGO interno, no un texto para mostrar. --}}
+            @if (session('success'))
+                <div class="mx-auto max-w-5xl px-6 pt-6">
+                    <div class="rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm font-medium text-ink">
+                        {{ session('success') }}
+                    </div>
+                </div>
+            @endif
+
             {{ $slot }}
         </main>
 

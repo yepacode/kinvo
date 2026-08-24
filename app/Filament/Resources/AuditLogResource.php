@@ -4,6 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AuditLogResource\Pages;
 use App\Models\AuditLog;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -25,6 +28,10 @@ class AuditLogResource extends Resource
     protected static ?int $navigationSort = 90;
 
     public static function canCreate(): bool { return false; }
+    // Append-only por ley: nunca editar ni borrar entradas de la bitácora.
+    public static function canEdit($record): bool { return false; }
+    public static function canDelete($record): bool { return false; }
+    public static function canDeleteAny(): bool { return false; }
 
     public static function table(Table $table): Table
     {
@@ -113,6 +120,41 @@ class AuditLogResource extends Resource
                         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
                     }),
             ]);
+    }
+
+    /**
+     * Detalle del evento (botón "Ver"). Sin este infolist, la vista salía en
+     * blanco porque el recurso no tiene form() (la bitácora es solo lectura).
+     */
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist->schema([
+            Section::make('Evento')->schema([
+                TextEntry::make('created_at')->label('Fecha y hora')->dateTime('d M Y · H:i:s'),
+                TextEntry::make('action')->label('Acción')->badge(),
+                TextEntry::make('actor.name')->label('Actor')
+                    ->default('(sistema)')
+                    ->helperText(fn ($record) => $record->actor?->email),
+                TextEntry::make('subject_type')->label('Sobre')
+                    ->formatStateUsing(fn ($state) => $state ? class_basename($state) : '—'),
+                TextEntry::make('subject_id')->label('ID del objeto')->default('—'),
+                TextEntry::make('ip')->label('IP')->default('—'),
+                TextEntry::make('user_agent')->label('Navegador / dispositivo')
+                    ->default('—')->columnSpanFull(),
+            ])->columns(2),
+
+            Section::make('Datos anteriores')->schema([
+                TextEntry::make('old_json')->hiddenLabel()
+                    ->state(fn ($record) => json_encode($record->old, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))
+                    ->fontFamily('mono')->copyable()->columnSpanFull(),
+            ])->visible(fn ($record) => filled($record->old))->collapsible(),
+
+            Section::make('Datos nuevos')->schema([
+                TextEntry::make('new_json')->hiddenLabel()
+                    ->state(fn ($record) => json_encode($record->new, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))
+                    ->fontFamily('mono')->copyable()->columnSpanFull(),
+            ])->visible(fn ($record) => filled($record->new))->collapsible(),
+        ]);
     }
 
     public static function getPages(): array

@@ -119,7 +119,7 @@ class ProfilesTest extends TestCase
         Storage::fake('public');
         $user = User::factory()->contratante()->create();
 
-        $this->actingAs($user)->put('/mi-empresa', $this->datosValidosEstudio([
+        $response = $this->actingAs($user)->put('/mi-empresa', $this->datosValidosEstudio([
             'company_name' => 'Estudio Zen',
             'disciplines_text' => 'Yoga, Pilates',
             'estado' => 'Jalisco',
@@ -127,11 +127,43 @@ class ProfilesTest extends TestCase
             'contact_name' => 'Ana',
             'contact_email' => 'ana@zen.example.com',
             'website' => 'https://zen.example.com',
-        ]))->assertRedirect(route('company.enviado'));
+        ]));
 
         $empresa = $user->companyProfile()->first();
+        // Estudio activo → al guardar va a SU perfil público, con flash de éxito (petición Karla).
+        $response->assertRedirect(route('estudio.show', $empresa))
+            ->assertSessionHas('success');
         $this->assertSame('Estudio Zen', $empresa->company_name);
         $this->assertSame('Jalisco', $empresa->estado);
         $this->assertSame('Yoga, Pilates', $empresa->disciplines_text);
+    }
+
+    /**
+     * SEGURIDAD (auditoría ago-2026): el endpoint público del profesional NO
+     * permite auto-publicarse ni auto-verificarse aunque los campos estén en
+     * $fillable — el controller usa $request->validate() con allow-list y
+     * los ignora del body. Test blindado contra regresión (si mañana alguien
+     * hace ->update($request->all()) esto rompe).
+     */
+    public function test_profesional_no_puede_autopublicarse_ni_autoverificarse(): void
+    {
+        $user = User::factory()->create();
+        $user->forceFill([
+            'nivel' => \App\Enums\RolUsuario::Professional,
+            'estado' => \App\Enums\EstadoUsuario::Activo,
+        ])->save();
+        $user->professionalProfile()->firstOrCreate([], ['headline' => 'x']);
+
+        $this->actingAs($user)->put('/mi-perfil', [
+            'headline' => 'Nuevo headline',
+            'is_published' => true,   // intento de bypass
+            'is_verified' => true,    // intento de bypass
+            'verified_at' => now()->toDateTimeString(),
+        ]);
+
+        $p = $user->professionalProfile()->first();
+        $this->assertFalse((bool) $p->is_published, 'is_published NO debe cambiarse desde el endpoint público');
+        $this->assertFalse((bool) $p->is_verified, 'is_verified NO debe cambiarse desde el endpoint público');
+        $this->assertNull($p->verified_at, 'verified_at NO debe cambiarse desde el endpoint público');
     }
 }

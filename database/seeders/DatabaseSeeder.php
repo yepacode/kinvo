@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(TaxonomiaSeeder::class);
         $this->call(PlanSeeder::class);
+        $this->call(ServiceSeeder::class); // catálogo de servicios (Punto 5-A), tras los planes
+        $this->call(EmailTemplateSeeder::class); // plantillas de correo editables (Punto 13)
 
         // Owner de Kinvoo (acceso al panel Filament).
         $owner = User::updateOrCreate(

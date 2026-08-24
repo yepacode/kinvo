@@ -100,6 +100,23 @@ class ReporteEstudios extends Page implements HasTable
                     ->label('Sin cupos asignados')
                     ->query(fn (Builder $q) => $q->whereHas('companyProfile', fn ($c) => $c->whereNull('max_coach_slots'))),
             ])
+            ->actions([
+                // Ver detalle: modal con los coaches activos y las vacantes del estudio.
+                Tables\Actions\Action::make('detalle')
+                    ->label('Ver detalle')
+                    ->icon('heroicon-o-eye')
+                    ->modalHeading(fn (User $record) => 'Detalle · '.($record->companyProfile?->company_name ?? $record->name))
+                    ->modalContent(fn (User $record) => view('filament.reportes.estudio-detalle', [
+                        'coaches' => TeamMember::with('professional')
+                            ->where('contractor_user_id', $record->id)
+                            ->where('status', TeamMember::STATUS_ACTIVE)
+                            ->orderByDesc('joined_at')->get(),
+                        'ofertas' => Offer::where('contractor_user_id', $record->id)
+                            ->latest()->get(),
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Cerrar'),
+            ])
             ->emptyStateHeading(landing('admin_reporte_estudios_empty'));
     }
 

@@ -29,7 +29,8 @@ class CobroExitosoNotification extends Notification
             'mensaje_params' => ['monto' => $this->payment->montoFormateado()],
             'titulo' => 'Recibimos tu pago',
             'mensaje' => 'Se cobraron '.$this->payment->montoFormateado().' correctamente.',
-            'url' => '/dashboard',
+            // Coherente con el correo AvisoCobroExitoso (que lleva a /membresias).
+            'url' => route('membresias.index', absolute: false),
         ];
     }
 }

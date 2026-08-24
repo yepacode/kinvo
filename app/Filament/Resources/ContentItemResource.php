@@ -32,35 +32,71 @@ class ContentItemResource extends Resource
                     ->helperText('Déjalo vacío para generarlo del título.')->maxLength(220),
                 Forms\Components\TextInput::make('category')->label('Categoría')
                     ->placeholder('Ej: entrenamiento, nutrición, mindfulness'),
-                Forms\Components\Select::make('type')->label('Tipo')->required()
+                Forms\Components\Select::make('type')->label('Tipo')->required()->live()
                     ->options([
                         ContentItem::TYPE_VIDEO => 'Video',
-                        ContentItem::TYPE_DOCUMENT => 'Documento',
+                        ContentItem::TYPE_IMAGE => 'Imagen',
+                        ContentItem::TYPE_BLOG => 'Blog / artículo',
                         ContentItem::TYPE_AUDIO => 'Audio',
+                        ContentItem::TYPE_DOCUMENT => 'Documento',
                         ContentItem::TYPE_LINK => 'Enlace',
                     ])->default(ContentItem::TYPE_VIDEO),
-                Forms\Components\Textarea::make('description')->label('Descripción')
+                Forms\Components\Textarea::make('description')->label('Descripción / resumen')
                     ->rows(3)->columnSpanFull(),
             ])->columns(2),
 
-            Forms\Components\Section::make('Ubicación del recurso')->schema([
-                Forms\Components\TextInput::make('url')->label('URL externa (Vimeo/YouTube/enlace)')
-                    ->url()->maxLength(500),
-                Forms\Components\TextInput::make('file_path')->label('Archivo interno (path)')
-                    ->helperText('Usar url o file_path — no ambos.')->maxLength(500),
-            ])->columns(2),
+            Forms\Components\Section::make('Contenido')->schema([
+                // Blog: cuerpo con texto enriquecido.
+                Forms\Components\RichEditor::make('body')->label('Cuerpo del artículo')
+                    ->columnSpanFull()
+                    ->visible(fn (Forms\Get $get) => $get('type') === ContentItem::TYPE_BLOG),
 
-            Forms\Components\Section::make('Restricciones de acceso (gate)')->schema([
-                Forms\Components\Select::make('gate_role')->label('Rol requerido')
+                // Subida real de archivo → disco PRIVADO ('local'). Se sirve por
+                // la ruta gateada contenido.archivo; el link directo no existe.
+                Forms\Components\FileUpload::make('file_path')->label('Archivo (subir)')
+                    ->disk('local')->directory('contenido')->visibility('private')
+                    ->acceptedFileTypes(fn (Forms\Get $get) => match ($get('type')) {
+                        ContentItem::TYPE_VIDEO => ['video/mp4', 'video/webm', 'video/quicktime'],
+                        ContentItem::TYPE_IMAGE => ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+                        ContentItem::TYPE_AUDIO => ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/ogg'],
+                        ContentItem::TYPE_DOCUMENT => ['application/pdf'],
+                        default => null,
+                    })
+                    ->maxSize(51200)
+                    ->afterStateUpdated(fn (Forms\Set $set) => $set('file_disk', 'local'))
+                    ->helperText('Hasta 50 MB. Para videos largos conviene una URL de YouTube/Vimeo (los servidores limitan el tamaño de subida).')
+                    ->visible(fn (Forms\Get $get) => in_array($get('type'), [
+                        ContentItem::TYPE_VIDEO, ContentItem::TYPE_IMAGE,
+                        ContentItem::TYPE_AUDIO, ContentItem::TYPE_DOCUMENT,
+                    ], true)),
+
+                // URL externa: embeds / enlaces / videos pesados.
+                Forms\Components\TextInput::make('url')->label('… o URL externa (YouTube/Vimeo/enlace)')
+                    ->url()->maxLength(500)->columnSpanFull()
+                    ->visible(fn (Forms\Get $get) => $get('type') !== ContentItem::TYPE_BLOG),
+
+                Forms\Components\Hidden::make('file_disk')->default('local'),
+            ]),
+
+            Forms\Components\Section::make('¿Para quién? — rol + nivel + membresía')->schema([
+                Forms\Components\Select::make('gate_role')->label('Rol')
                     ->options([
                         'professional' => 'Solo profesionales (coaches)',
                         'contractor' => 'Solo estudios',
                     ])
                     ->placeholder('Abierto a ambos'),
-                Forms\Components\Select::make('gate_plan_id')->label('Plan mínimo requerido')
+                Forms\Components\Select::make('access_level')->label('Nivel')
+                    ->options([
+                        1 => 'Gratis (nivel 1)',
+                        2 => 'Premium (nivel 2)',
+                        3 => 'Premium+ (nivel 3)',
+                    ])->default(1)->required()->selectablePlaceholder(false)
+                    ->helperText('Nivel 2 o 3 exige membresía activa.'),
+                Forms\Components\Select::make('gate_plan_id')->label('Plan específico (opcional)')
                     ->relationship('gatePlan', 'nombre')
-                    ->placeholder('Sin plan requerido'),
-            ])->columns(2),
+                    ->placeholder('Cualquiera (según nivel/rol)')
+                    ->helperText('Si eliges un plan, SOLO los miembros de ese plan exacto lo verán.'),
+            ])->columns(3),
 
             Forms\Components\Section::make('Publicación')->schema([
                 Forms\Components\Toggle::make('is_published')->label('Publicado')->default(false),
@@ -80,6 +116,8 @@ class ContentItemResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {
                         ContentItem::TYPE_VIDEO => 'Video',
+                        ContentItem::TYPE_IMAGE => 'Imagen',
+                        ContentItem::TYPE_BLOG => 'Blog',
                         ContentItem::TYPE_DOCUMENT => 'Documento',
                         ContentItem::TYPE_AUDIO => 'Audio',
                         ContentItem::TYPE_LINK => 'Enlace',
@@ -102,6 +140,8 @@ class ContentItemResource extends Resource
             ->filters([
                 SelectFilter::make('type')->label('Tipo')->options([
                     ContentItem::TYPE_VIDEO => 'Video',
+                    ContentItem::TYPE_IMAGE => 'Imagen',
+                    ContentItem::TYPE_BLOG => 'Blog',
                     ContentItem::TYPE_DOCUMENT => 'Documento',
                     ContentItem::TYPE_AUDIO => 'Audio',
                     ContentItem::TYPE_LINK => 'Enlace',

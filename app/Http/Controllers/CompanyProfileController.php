@@ -213,6 +213,19 @@ class CompanyProfileController extends Controller
         // Fix B1: limpia el tmp del logo tras guardar exitoso.
         $this->limpiarArchivoTemporal($request, 'logo');
 
+        // Al guardar (petición Karla): si el estudio YA está activo, su perfil es
+        // visible al público, así que lo llevamos a SU perfil para que vea el
+        // resultado de sus cambios. Si todavía está pendiente de aprobación, su
+        // perfil daría 404 (no visible aún) → seguimos con la confirmación del
+        // wizard de alta ("perfil enviado a revisión"), que es su paso final.
+        if ($user->estaActivo()) {
+            // Clave 'success' (mensaje humano) — distinta de 'status', que en
+            // otras vistas (p. ej. /membresias) se usa como CÓDIGO, no como texto.
+            return redirect()
+                ->route('estudio.show', $profile)
+                ->with('success', __('Tu perfil se actualizó correctamente.'));
+        }
+
         // Paso 3: avanza a la confirmación (arregla la "página estática" al guardar).
         return redirect()->route('company.enviado');
     }

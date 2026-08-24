@@ -222,6 +222,11 @@ class WebhookController extends Controller
         try {
             Mail::to($sub->user)->send(new AvisoCobroFallido($sub->user, $sub));
         } catch (\Throwable $e) { report($e); }
+        // Notif in-app (campanita) para que el user vea la razón aunque el mail
+        // se vaya a spam. Complementa AvisoCobroFallido (mail).
+        try {
+            $sub->user?->notify(new \App\Notifications\CobroFallidoNotification($sub));
+        } catch (\Throwable $e) { report($e); }
     }
 
     private function onSubscriptionCanceled(array $data): void

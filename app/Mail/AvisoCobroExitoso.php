@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\EmailTemplate;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -10,25 +11,39 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-/**
- * Envío SÍNCRONO (mismo patrón que Fase 1, Hostinger compartido no tiene queue).
- */
+/** Editable desde el panel (plantilla `aviso_cobro_exitoso`). */
 class AvisoCobroExitoso extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(public User $user, public ?Subscription $subscription) {}
 
+    private function templateData(): array
+    {
+        $nombre = $this->user->name ?: 'Cliente';
+        $plan = $this->subscription?->plan?->nombre ?? 'tu membresía';
+        $url = url('/membresias');
+
+        return EmailTemplate::render('aviso_cobro_exitoso',
+            ['nombre' => $nombre, 'plan' => $plan],
+            [
+                'subject' => __('Recibimos tu pago — Kinvoo'),
+                'greeting' => 'Hola '.$nombre.',',
+                'body' => 'Recibimos correctamente el cobro de **'.$plan.'**. Tu membresía queda activa. ¡Gracias por seguir siendo parte de Kinvoo!',
+                'action_label' => __('Ver mi membresía'),
+                'action_url' => $url,
+                'outro' => __('Guarda este correo como comprobante.'),
+            ]
+        ) + ['action_url' => $url];
+    }
+
     public function envelope(): Envelope
     {
-        return new Envelope(subject: __('Recibimos tu pago — Kinvoo'));
+        return new Envelope(subject: $this->templateData()['subject']);
     }
 
     public function content(): Content
     {
-        return new Content(
-            markdown: 'emails.cobro-exitoso',
-            with: ['user' => $this->user, 'subscription' => $this->subscription],
-        );
+        return new Content(markdown: 'emails.tpl-generic', with: ['tpl' => $this->templateData()]);
     }
 }

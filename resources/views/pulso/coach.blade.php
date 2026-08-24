@@ -20,34 +20,35 @@
               class="mt-6 space-y-5 rounded-2xl border border-line bg-white p-6 sm:p-8">
             @csrf
             <div>
-                <label class="block text-sm font-medium text-ink">{{ __('En general, ¿cómo te sentiste esta semana?') }} *</label>
-                <div class="mt-2 flex items-center gap-3" role="radiogroup">
+                <label class="block text-sm font-medium text-ink">{{ __('En general, ¿cómo calificas a tu estudio esta semana?') }} *</label>
+                <div class="mt-2 flex items-center gap-3" role="radiogroup"
+                     aria-label="{{ __('Calificación de tu estudio') }}">
                     @for ($i = 1; $i <= 5; $i++)
                         <label class="cursor-pointer text-2xl leading-none">
-                            <input type="radio" name="rating" value="{{ $i }}" required class="peer sr-only">
-                            <span class="text-line peer-checked:text-yellow-500 hover:text-yellow-500">★</span>
+                            <input type="radio" name="rating" value="{{ $i }}" required class="peer sr-only" aria-label="{{ $i }} {{ __('estrellas') }}">
+                            <span class="text-line peer-checked:text-yellow-500 hover:text-yellow-500 peer-focus-visible:ring-2 peer-focus-visible:ring-sage peer-focus-visible:ring-offset-2 rounded">★</span>
                         </label>
                     @endfor
-                    <span class="text-xs text-warmgray">{{ __('1 = agotado · 5 = pleno') }}</span>
+                    <span class="text-xs text-warmgray">{{ __('1 = muy mal · 5 = excelente') }}</span>
                 </div>
             </div>
 
             <div>
-                <label for="answer_energy" class="block text-sm font-medium text-ink">{{ __('¿Qué te dio energía?') }}</label>
+                <label for="answer_energy" class="block text-sm font-medium text-ink">{{ __('¿Qué está haciendo bien tu estudio?') }}</label>
                 <input id="answer_energy" name="answer_energy" type="text" maxlength="500"
-                       placeholder="{{ __('Ej: una clase que salió muy bien...') }}"
+                       placeholder="{{ __('Ej: buen ambiente, apoyo del equipo...') }}"
                        class="mt-1 w-full min-h-[44px] rounded-xl border border-line px-3 py-2 text-sm">
             </div>
             <div>
-                <label for="answer_growth" class="block text-sm font-medium text-ink">{{ __('¿En qué creciste?') }}</label>
+                <label for="answer_growth" class="block text-sm font-medium text-ink">{{ __('¿En qué podría mejorar tu estudio?') }}</label>
                 <input id="answer_growth" name="answer_growth" type="text" maxlength="500"
-                       placeholder="{{ __('Ej: aprendí una técnica nueva...') }}"
+                       placeholder="{{ __('Ej: comunicación, horarios, espacios...') }}"
                        class="mt-1 w-full min-h-[44px] rounded-xl border border-line px-3 py-2 text-sm">
             </div>
             <div>
-                <label for="answer_support" class="block text-sm font-medium text-ink">{{ __('¿Qué respaldo te haría falta?') }}</label>
+                <label for="answer_support" class="block text-sm font-medium text-ink">{{ __('¿Qué apoyo necesitas de tu estudio?') }}</label>
                 <input id="answer_support" name="answer_support" type="text" maxlength="500"
-                       placeholder="{{ __('Ej: consulta con nutrición, sesión de fisio...') }}"
+                       placeholder="{{ __('Ej: más material, capacitación, acompañamiento...') }}"
                        class="mt-1 w-full min-h-[44px] rounded-xl border border-line px-3 py-2 text-sm">
             </div>
 

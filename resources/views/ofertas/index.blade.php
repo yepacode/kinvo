@@ -12,10 +12,13 @@
             <p>{{ __('El estado de tus postulaciones lo ves en Mis postulaciones.') }}</p>
         </x-guia-inline>
 
-        <form method="GET" class="mb-6 flex flex-wrap gap-3">
-            <input type="text" name="q" value="{{ request('q') }}" placeholder="{{ __('Buscar por título o descripción...') }}"
+        <form method="GET" class="mb-6 flex flex-wrap gap-3" role="search">
+            <label for="ofertas-q" class="sr-only">{{ __('Buscar oferta por título o descripción') }}</label>
+            <input id="ofertas-q" type="text" name="q" value="{{ request('q') }}" placeholder="{{ __('Buscar por título o descripción...') }}"
                    class="min-h-[44px] basis-full sm:basis-64 sm:flex-1 rounded-full border border-line px-4 py-2 text-sm">
-            <select name="modalidad" class="min-h-[44px] basis-full sm:basis-auto rounded-full border border-line px-4 py-2 text-sm">
+            <label for="ofertas-modalidad" class="sr-only">{{ __('Modalidad') }}</label>
+            <select id="ofertas-modalidad" name="modalidad" aria-label="{{ __('Modalidad') }}"
+                    class="min-h-[44px] basis-full sm:basis-auto rounded-full border border-line px-4 py-2 text-sm">
                 <option value="">{{ __('Todas las modalidades') }}</option>
                 <option value="presencial" @selected(request('modalidad')==='presencial')>{{ __('Presencial') }}</option>
                 <option value="online" @selected(request('modalidad')==='online')>{{ __('Online') }}</option>

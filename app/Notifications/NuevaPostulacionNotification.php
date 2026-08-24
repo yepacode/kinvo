@@ -43,16 +43,19 @@ class NuevaPostulacionNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $this->application->loadMissing(['professional', 'offer']);
+        $this->application->loadMissing(['professional', 'offer.contractor.companyProfile']);
         $nombre = $this->application->professional?->name ?: 'Un profesional';
         $oferta = $this->application->offer?->title ?: 'tu oferta';
+        $estudio = $this->application->offer?->contractor?->companyProfile?->company_name
+            ?: $this->application->offer?->contractor?->name
+            ?: 'Estudio';
         $url = url(route('ofertas.mis-ofertas', absolute: false));
 
         $t = \App\Models\EmailTemplate::render('nueva_postulacion',
-            ['nombre' => $nombre, 'oferta' => Str::limit($oferta, 80)],
+            ['nombre' => $nombre, 'oferta' => Str::limit($oferta, 80), 'estudio' => $estudio],
             [
                 'subject'      => 'Kinvoo · Nueva postulación a "'.Str::limit($oferta, 60).'"',
-                'greeting'     => 'Hola,',
+                'greeting'     => 'Hola '.$estudio.',',
                 'body'         => '**'.$nombre.'** acaba de postular a tu vacante "'.Str::limit($oferta, 80).'" en Kinvoo. Revisa su perfil, carta de presentación y ponte en contacto directamente.',
                 'action_label' => 'Ver postulaciones',
                 'action_url'   => $url,

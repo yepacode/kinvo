@@ -17,9 +17,14 @@ class NoCacheAutenticado
     {
         $response = $next($request);
 
-        return $response
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+        // Usar headers->set (API de Symfony) y NO ->header() (macro de
+        // Illuminate\Http\Response): así funciona también con respuestas de
+        // archivo/stream (BinaryFileResponse/StreamedResponse) — p. ej. la ruta
+        // privada que sirve videos de contenido — que no tienen ->header().
+        $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+
+        return $response;
     }
 }

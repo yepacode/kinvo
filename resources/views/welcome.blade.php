@@ -418,7 +418,9 @@ footer {
   <div class="hero-right">
     <img class="hero-img" src="{{ landing_image('hero_image', 'img/landing/hero.jpg') }}" alt="Comunidad fitness" />
     <div class="hero-overlay"></div>
-    <span class="hero-pill">{{ landing('hero_pill') }}</span>
+    @if (landing_bool('hero_pill_visible', true) && filled(landing('hero_pill')))
+      <span class="hero-pill">{{ landing('hero_pill') }}</span>
+    @endif
   </div>
 </section>
 

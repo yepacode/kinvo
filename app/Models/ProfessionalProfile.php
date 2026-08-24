@@ -12,6 +12,15 @@ class ProfessionalProfile extends Model
 {
     use \App\Models\Concerns\HasMediaItems;
 
+    /**
+     * SEGURIDAD (auditoría ago-2026): `is_published`, `is_verified` y `verified_at`
+     * son campos que SOLO controla el admin. Se mantienen fillable por compatibilidad
+     * con tests/seeders que crean perfiles publicados directamente, PERO el
+     * ProfessionalProfileController::update usa `$request->validate()` para filtrar
+     * el body a un allow-list SIN esos campos, así que no son mass-assignable desde
+     * el endpoint público. NUNCA hacer `->update($request->all())` con este modelo.
+     * Test defensivo: ProfilesTest::test_endpoint_publico_no_puede_autopublicarse.
+     */
     protected $fillable = [
         'user_id', 'slug', 'full_name', 'photo_path', 'headline', 'birthdate', 'bio',
         'years_experience', 'modalidad', 'availability', 'languages',

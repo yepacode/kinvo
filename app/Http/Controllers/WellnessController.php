@@ -95,9 +95,36 @@ class WellnessController extends Controller
                 'titulo' => $v->contentItem?->title ?? __('Contenido'),
                 'fecha'  => $v->viewed_at,
             ]);
-        $charlas = $charlasWellness->merge($charlasContenido)
+        // Bug: `merge()` de una Eloquent Collection sobre objetos stdClass llama
+        // getKey() en cada item (no son modelos) → 500 en cuanto el coach tiene
+        // vistas de contenido. Fusionamos como colección BASE (sobre arrays).
+        $charlas = collect($charlasWellness->all())
+            ->merge($charlasContenido->all())
             ->sortByDesc('fecha')->take(15)->values();
 
-        return view('expediente.index', compact('beneficios', 'charlas'));
+        return view('expediente.index', [
+            'beneficios' => $beneficios,
+            'charlas' => $charlas,
+            'comparteExpediente' => (bool) $user->comparte_expediente,
+            'nombreEstudio' => $nombreEstudio,
+        ]);
+    }
+
+    /**
+     * Punto 12 · el coach elige si su expediente de cuidado se comparte con su
+     * estudio. Si lo apaga, sus registros de bienestar NO se reflejan en el
+     * panel de bienestar del estudio (ver TeamController::index).
+     */
+    public function visibilidad(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user->esProfesional(), 403);
+
+        $data = $request->validate(['comparte_expediente' => ['required', 'boolean']]);
+        $user->forceFill(['comparte_expediente' => $data['comparte_expediente']])->save();
+
+        return back()->with('status', $data['comparte_expediente']
+            ? 'expediente-compartido'
+            : 'expediente-privado');
     }
 }

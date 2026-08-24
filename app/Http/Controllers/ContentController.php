@@ -110,6 +110,30 @@ class ContentController extends Controller
         return view('contenido.show', ['item' => $content]);
     }
 
+    /**
+     * Sirve el archivo subido (video/imagen/audio/documento) validando el gate
+     * de membresía. Los archivos del admin viven en el disco PRIVADO ('local') y
+     * ESTA es la única forma de acceder a ellos: un no-miembro nunca los ve,
+     * aunque adivine la URL. Para el disco local se usa response()->file (soporta
+     * byte-range → permite hacer seek en los videos).
+     */
+    public function archivo(Request $request, ContentItem $content)
+    {
+        abort_unless($content->tieneArchivo(), 404);
+        abort_unless($content->esAccesiblePor($request->user()), 403);
+
+        $disco = $content->file_disk ?: 'public';
+        $storage = Storage::disk($disco);
+        abort_unless($storage->exists($content->file_path), 404);
+
+        if ($disco === 'local') {
+            return response()->file($storage->path($content->file_path));
+        }
+
+        // Contenidos antiguos en disco público: streaming normal.
+        return $storage->response($content->file_path);
+    }
+
     // ================================================================
     // CRUD del estudio: subir su propio contenido (visible a todos los
     // users con sesión activa — coaches y estudios de Kinvoo).

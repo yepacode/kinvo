@@ -118,7 +118,14 @@
             @if (session('status') === 'invitacion-enviada')
                 <div class="mt-2 rounded-lg border border-sage/40 bg-sage/10 px-3 py-2 text-sm text-ink">{{ __('Invitación enviada. El profesional la verá en su panel.') }}</div>
             @elseif (session('status') === 'profesional-no-invitable' || session('status') === 'profesional-no-existe')
-                <div class="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{{ __('No encontramos un profesional con ese correo en Kinvoo.') }}</div>
+                <div class="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {{ __('No encontramos un profesional con ese correo en Kinvoo.') }}
+                    <div class="mt-1 text-xs text-red-700/90">
+                        {{ __('Comprueba que el correo esté bien escrito. Si aún no tiene cuenta, pídele que se registre primero en') }}
+                        <a href="{{ url('/register') }}" class="font-semibold underline">{{ url('/register') }}</a>
+                        {{ __('y luego vuelve a invitarlo.') }}
+                    </div>
+                </div>
             @elseif (session('status') === 'cupos-alcanzados')
                 <div class="mt-2 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-ink">
                     {{ __('Ya alcanzaste el máximo de coaches para tu plan. Escríbenos para ampliar cupos.') }}
@@ -159,7 +166,15 @@
                     @foreach ($miembros as $tm)
                         <li class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3">
                             <div>
-                                <p class="font-medium text-ink">{{ $tm->professional?->name }}</p>
+                                @php $perfilMiembro = $tm->professional?->professionalProfile; @endphp
+                                @if ($perfilMiembro && $perfilMiembro->is_published)
+                                    <a href="{{ route('talento.show', $perfilMiembro->slug) }}"
+                                       class="font-medium text-ink underline decoration-sage/40 decoration-2 underline-offset-2 hover:decoration-sage">
+                                        {{ $tm->professional?->name }} <span aria-hidden="true">↗</span>
+                                    </a>
+                                @else
+                                    <p class="font-medium text-ink">{{ $tm->professional?->name }}</p>
+                                @endif
                                 <p class="text-xs text-warmgray">{{ $tm->professional?->email }}</p>
                             </div>
                             <div class="flex items-center gap-2">

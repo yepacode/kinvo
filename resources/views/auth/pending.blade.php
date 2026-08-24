@@ -24,7 +24,8 @@
 
         @if ($u?->estado === \App\Enums\EstadoUsuario::Suspendido)
             <p class="mt-3 text-sm text-warmgray">
-                {!! landing('pending_body_suspendida') !!}
+                {{-- landing_rich escapa el input y respeta *cursiva*/saltos. --}}
+                {!! landing_rich('pending_body_suspendida') !!}
             </p>
         @elseif ($u?->estado === \App\Enums\EstadoUsuario::PerfilPendiente)
             {{-- Contratista aprobado que ya llenó (o va a llenar) su perfil de

@@ -155,7 +155,9 @@ class ContactoTest extends TestCase
         $html = (new NuevoContacto($contact, $profile->load('user')))->render();
 
         $this->assertStringContainsString('Estudio Zen', $html);
-        $this->assertStringContainsString('nuevo contacto', mb_strtolower($html));
+        // Copy nuevo (Punto 13 · Mailable editable): usa "contactó" en el body.
+        $this->assertStringContainsString('contactó', mb_strtolower($html));
+        $this->assertStringContainsString('Nos encantaría trabajar contigo.', $html);
     }
 
     public function test_triple_submit_solo_crea_un_contacto(): void

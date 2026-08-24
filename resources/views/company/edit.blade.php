@@ -105,7 +105,7 @@
             <div class="grid gap-5 sm:grid-cols-2">
                 <div>
                     <x-input-label for="estado" :value="__('Estado (México)')" :required="true" />
-                    <select id="estado" name="estado"
+                    <select id="estado" name="estado" required
                             class="mt-1 block w-full rounded-md border-line shadow-sm focus:border-sage focus:ring-sage">
                         <option value="">— {{ __('Selecciona') }} —</option>
                         @foreach ($estados as $estado)
@@ -116,7 +116,7 @@
                 </div>
                 <div>
                     <x-input-label for="postal_code" :value="__('Código Postal (CP)')" :required="true" />
-                    <x-text-input id="postal_code" name="postal_code" type="text" inputmode="numeric" class="mt-1 block w-full"
+                    <x-text-input id="postal_code" name="postal_code" type="text" inputmode="numeric" required class="mt-1 block w-full"
                                   :value="old('postal_code', $profile->postal_code)" maxlength="10" placeholder="11560" />
                     <p class="mt-1 text-xs text-warmgray">{{ __('Nos ayuda a ubicar la colonia exacta.') }}</p>
                     <x-input-error :messages="$errors->get('postal_code')" class="mt-1" />
@@ -125,7 +125,7 @@
 
             <div>
                 <x-input-label for="address" :value="__('Dirección del estudio')" :required="true" />
-                <x-text-input id="address" name="address" type="text" class="mt-1 block w-full"
+                <x-text-input id="address" name="address" type="text" required class="mt-1 block w-full"
                               :value="old('address', $profile->address)" maxlength="255"
                               placeholder="{{ __('Calle y número') }}" />
                 <x-input-error :messages="$errors->get('address')" class="mt-1" />
@@ -140,7 +140,7 @@
 
             <div>
                 <x-input-label for="colonia" :value="__('Colonia')" :required="true" />
-                <x-text-input id="colonia" name="colonia" type="text" class="mt-1 block w-full"
+                <x-text-input id="colonia" name="colonia" type="text" required class="mt-1 block w-full"
                               :value="old('colonia', $profile->colonia)" maxlength="120"
                               placeholder="{{ __('Ej. Roma Norte, Del Valle, Polanco…') }}" />
                 <p class="mt-1 text-xs text-warmgray">{{ __('Opcional. Se muestra en tu perfil público solo si activas mostrar dirección.') }}</p>
@@ -154,17 +154,19 @@
                 <div class="grid gap-4 sm:grid-cols-3">
                     <div>
                         <x-input-label for="contact_name" :value="__('Nombre de contacto')" :required="true" />
-                        <x-text-input id="contact_name" name="contact_name" type="text" class="mt-1 block w-full"
+                        <x-text-input id="contact_name" name="contact_name" type="text" required class="mt-1 block w-full"
                                       :value="old('contact_name', $profile->contact_name)" maxlength="150" />
+                        <x-input-error :messages="$errors->get('contact_name')" class="mt-1" />
                     </div>
                     <div>
                         <x-input-label for="contact_phone" :value="__('Teléfono')" :required="true" />
-                        <x-text-input id="contact_phone" name="contact_phone" type="text" class="mt-1 block w-full"
+                        <x-text-input id="contact_phone" name="contact_phone" type="text" required class="mt-1 block w-full"
                                       :value="old('contact_phone', $profile->contact_phone)" placeholder="+52 ..." />
+                        <x-input-error :messages="$errors->get('contact_phone')" class="mt-1" />
                     </div>
                     <div>
                         <x-input-label for="contact_email" :value="__('Email')" :required="true" />
-                        <x-text-input id="contact_email" name="contact_email" type="email" class="mt-1 block w-full"
+                        <x-text-input id="contact_email" name="contact_email" type="email" required class="mt-1 block w-full"
                                       :value="old('contact_email', $profile->contact_email)" />
                         <x-input-error :messages="$errors->get('contact_email')" class="mt-1" />
                     </div>
@@ -228,7 +230,7 @@
 
             <div>
                 <x-input-label for="description" :value="__('Descripción')" :required="true" />
-                <textarea id="description" name="description" rows="4" maxlength="2000"
+                <textarea id="description" name="description" rows="4" maxlength="2000" required minlength="20"
                           class="mt-1 block w-full rounded-md border-line shadow-sm focus:border-sage focus:ring-sage"
                           placeholder="{{ __('Cuenta qué hace tu estudio y qué tipo de talento buscas.') }}">{{ old('description', $profile->description) }}</textarea>
                 <x-input-error :messages="$errors->get('description')" class="mt-1" />

@@ -253,7 +253,7 @@ class UserResource extends Resource
 
                         // Profesional: aprobación única — activa y publica perfil.
                         $u->forceFill(['estado' => EstadoUsuario::Activo])->save();
-                        $u->professionalProfile?->update(['is_published' => true]);
+                        $u->professionalProfile?->forceFill(['is_published' => true])->save();
                         \App\Models\AuditLog::record(auth()->user(), $u, 'user_approved',
                             old: ['estado' => $estadoAnterior, 'is_published' => false],
                             new: ['estado' => EstadoUsuario::Activo->value, 'is_published' => true]);
@@ -364,7 +364,7 @@ class UserResource extends Resource
                         }
                         // Profesional: Activo + republicar perfil (suspender lo despublica).
                         $u->forceFill(['estado' => EstadoUsuario::Activo])->save();
-                        $u->professionalProfile?->update(['is_published' => true]);
+                        $u->professionalProfile?->forceFill(['is_published' => true])->save();
                         \App\Models\AuditLog::record(auth()->user(), $u, 'user_reactivated',
                             old: ['estado' => $estadoAnterior, 'is_published' => false],
                             new: ['estado' => EstadoUsuario::Activo->value, 'is_published' => true]);

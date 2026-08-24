@@ -185,4 +185,23 @@ class Fase2ProductoTest extends TestCase
             ->assertSeeInOrder(['Consultas médicas', '2'])
             ->assertSeeInOrder(['Sesiones de fisio', '1']);
     }
+
+    public function test_miembro_del_equipo_enlaza_a_su_perfil_publicado(): void
+    {
+        $estudio = $this->estudio();
+        $coach = $this->coach();
+        TeamMember::create([
+            'contractor_user_id' => $estudio->id,
+            'professional_user_id' => $coach->id,
+            'status' => TeamMember::STATUS_ACTIVE,
+            'joined_at' => now(),
+        ]);
+
+        // El coach de coach() tiene perfil publicado → en "Mi equipo" su nombre
+        // debe ser un enlace a su perfil público (Punto 5-B).
+        $slug = $coach->professionalProfile->slug;
+        $this->actingAs($estudio)->get(route('equipo.index'))
+            ->assertOk()
+            ->assertSee(route('talento.show', $slug), false);
+    }
 }

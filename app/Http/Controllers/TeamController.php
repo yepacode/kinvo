@@ -35,17 +35,19 @@ class TeamController extends Controller
             ->get();
 
         // Panel de bienestar: agregar expediente de los miembros activos.
+        // Punto 12 · SOLO cuentan los coaches que eligieron compartir su
+        // expediente de cuidado; quien apagó el switch no se refleja aquí.
         $activosIds = $miembros->where('status', TeamMember::STATUS_ACTIVE)
+            ->filter(fn ($tm) => $tm->professional?->comparte_expediente)
             ->pluck('professional_user_id');
+        // Perf (auditoría ago-2026): antes eran 4 queries; ahora 1 con GROUP BY.
+        $conteos = WellnessEntry::whereIn('professional_user_id', $activosIds)
+            ->selectRaw('type, count(*) as n')->groupBy('type')->pluck('n', 'type');
         $impacto = [
-            'telemedicine' => WellnessEntry::whereIn('professional_user_id', $activosIds)
-                ->where('type', WellnessEntry::TYPE_TELEMEDICINE)->count(),
-            'physio' => WellnessEntry::whereIn('professional_user_id', $activosIds)
-                ->where('type', WellnessEntry::TYPE_PHYSIO)->count(),
-            'talk' => WellnessEntry::whereIn('professional_user_id', $activosIds)
-                ->where('type', WellnessEntry::TYPE_TALK)->count(),
-            'insurance' => WellnessEntry::whereIn('professional_user_id', $activosIds)
-                ->where('type', WellnessEntry::TYPE_INSURANCE)->count(),
+            'telemedicine' => (int) ($conteos[WellnessEntry::TYPE_TELEMEDICINE] ?? 0),
+            'physio' => (int) ($conteos[WellnessEntry::TYPE_PHYSIO] ?? 0),
+            'talk' => (int) ($conteos[WellnessEntry::TYPE_TALK] ?? 0),
+            'insurance' => (int) ($conteos[WellnessEntry::TYPE_INSURANCE] ?? 0),
         ];
 
         // Pulso Kinvoo (petición cliente): score 8.2/10 con delta vs mes pasado

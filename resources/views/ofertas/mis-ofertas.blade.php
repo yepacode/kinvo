@@ -81,7 +81,12 @@
                                     <span>{{ $app->professional?->name }} — <em class="text-warmgray">{{ $app->created_at->translatedFormat('d M') }}</em></span>
                                     <form method="POST" action="{{ route('ofertas.postulacion.estado', $app) }}" class="flex items-center gap-2">
                                         @csrf
-                                        <select name="status" class="min-h-[44px] rounded-full border border-line px-3 py-2 text-sm">
+                                        {{-- Auto-guarda al cambiar el estado. Antes había que pulsar "Guardar"
+                                             aparte y muchos no lo hacían → parecía que "no cambiaba" (reporte
+                                             cliente ago-2026). El botón queda como respaldo (teclado / sin JS).
+                                             La CSP permite el handler inline ('unsafe-inline' en script-src). --}}
+                                        <select name="status" onchange="this.form.submit()"
+                                                class="min-h-[44px] rounded-full border border-line px-3 py-2 text-sm">
                                             <option value="seen" @selected($app->status==='seen')>{{ __('Vista') }}</option>
                                             <option value="in_contact" @selected($app->status==='in_contact')>{{ __('En contacto') }}</option>
                                             <option value="accepted" @selected($app->status==='accepted')>{{ __('Aceptada') }}</option>

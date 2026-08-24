@@ -76,13 +76,25 @@ class PostulacionActualizadaNotification extends Notification
         ];
         $asunto = $asuntos[$this->application->status] ?? 'Actualización de tu postulación';
         $mensaje = $lineas[$this->application->status] ?? 'El estado de tu postulación cambió.';
+        $coach = $notifiable->name ?: 'Coach';
+        $ofertaTitulo = $oferta?->title ?? '';
+        $url = url(route('ofertas.mis-postulaciones', absolute: false));
 
-        return (new MailMessage)
-            ->subject('Kinvoo · '.$asunto.($oferta ? ' — '.$oferta->title : ''))
-            ->greeting('Hola '.($notifiable->name ?: 'Coach').',')
-            ->line($mensaje)
-            ->when($oferta, fn ($m) => $m->line('**Oferta:** '.$oferta->title))
-            ->action('Ver mis postulaciones', url(route('ofertas.mis-postulaciones', absolute: false)))
-            ->line('Recibes este aviso porque postulaste a una oferta en Kinvoo.');
+        // Editable desde el panel: una plantilla por estado (postulacion_seen/
+        // in_contact/accepted/rejected).
+        $t = \App\Models\EmailTemplate::render('postulacion_'.$this->application->status,
+            ['coach' => $coach, 'estudio' => $estudio, 'oferta' => $ofertaTitulo],
+            [
+                'subject' => 'Kinvoo · '.$asunto.($ofertaTitulo ? ' — '.$ofertaTitulo : ''),
+                'greeting' => 'Hola '.$coach.',',
+                'body' => $mensaje.($ofertaTitulo ? "\n\n".'**Oferta:** '.$ofertaTitulo : ''),
+                'action_label' => 'Ver mis postulaciones',
+                'action_url' => $url,
+                'outro' => 'Recibes este aviso porque postulaste a una oferta en Kinvoo.',
+            ]
+        );
+        $t['action_url'] = $url;
+
+        return \App\Models\EmailTemplate::toMailMessage($t);
     }
 }

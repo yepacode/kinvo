@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 class Plan extends Model
@@ -60,5 +61,11 @@ class Plan extends Model
     public function periodoLabel(): string
     {
         return self::PERIODOS[$this->periodo] ?? $this->periodo;
+    }
+
+    /** Servicios del catálogo que incluye este plan (Punto 5-A). */
+    public function services(): BelongsToMany
+    {
+        return $this->belongsToMany(Service::class);
     }
 }

@@ -49,15 +49,25 @@ class ProfesionalInteresadoNotification extends Notification
         // aún sale — sólo se pierde el nombre.
         $profesional = $this->contact->professionalProfile?->user?->name ?? 'Un profesional';
         $estudio = $this->contact->contact_name ?: 'Un estudio';
+        $mensaje = Str::limit((string) $this->contact->message, 300);
+        $url = url(route('filament.admin.resources.contacts.index', absolute: false));
 
-        return (new MailMessage)
-            ->subject('Conexión pendiente en Kinvoo · '.$profesional.' quiere conectar con '.$estudio)
-            ->greeting('Hola equipo Kinvoo,')
-            ->line($profesional.' marcó "Me interesa, conéctame" en la bandeja de contactos.')
-            ->line('Quiere que hagamos el puente con **'.$estudio.'**.')
-            ->line('Mensaje original del estudio:')
-            ->line('> '.Str::limit((string) $this->contact->message, 300))
-            ->action('Ver en el panel', url(route('filament.admin.resources.contacts.index', absolute: false)))
-            ->line('Recuerda cerrar la conexión y avisar a ambas partes por su canal habitual.');
+        // Editable desde el panel (plantilla profesional_interesado).
+        $t = \App\Models\EmailTemplate::render('profesional_interesado',
+            ['profesional' => $profesional, 'estudio' => $estudio, 'mensaje' => $mensaje],
+            [
+                'subject' => 'Conexión pendiente en Kinvoo · '.$profesional.' quiere conectar con '.$estudio,
+                'greeting' => 'Hola equipo Kinvoo,',
+                'body' => $profesional.' marcó "Me interesa, conéctame" en la bandeja de contactos.'."\n\n"
+                    .'Quiere que hagamos el puente con **'.$estudio.'**.'."\n\n"
+                    .'Mensaje original del estudio:'."\n\n".'> '.$mensaje,
+                'action_label' => 'Ver en el panel',
+                'action_url' => $url,
+                'outro' => 'Recuerda cerrar la conexión y avisar a ambas partes por su canal habitual.',
+            ]
+        );
+        $t['action_url'] = $url;
+
+        return \App\Models\EmailTemplate::toMailMessage($t);
     }
 }

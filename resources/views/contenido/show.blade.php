@@ -5,23 +5,33 @@
 
     <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
         <div class="rounded-2xl border border-line bg-white p-6 sm:p-8">
-            @if ($item->type === 'video' && $item->url)
+            @php $recurso = $item->archivoUrl(); @endphp
+
+            @if ($item->type === 'video' && $recurso)
                 <div class="mb-6 aspect-video overflow-hidden rounded-xl bg-black">
-                    <video src="{{ $item->url }}" controls class="h-full w-full"></video>
+                    <video src="{{ $recurso }}" controls playsinline preload="metadata" class="h-full w-full"></video>
                 </div>
-            @elseif ($item->type === 'audio' && $item->url)
-                <audio src="{{ $item->url }}" controls class="mb-6 w-full"></audio>
-            @elseif ($item->type === 'document' && ($item->file_path || $item->url))
-                <a href="{{ $item->url ?? \Illuminate\Support\Facades\Storage::url($item->file_path) }}"
-                   target="_blank"
+            @elseif ($item->type === 'image' && $recurso)
+                <img src="{{ $recurso }}" alt="{{ $item->title }}" class="mb-6 w-full rounded-xl">
+            @elseif ($item->type === 'audio' && $recurso)
+                <audio src="{{ $recurso }}" controls class="mb-6 w-full"></audio>
+            @elseif ($item->type === 'document' && $recurso)
+                <a href="{{ $recurso }}" target="_blank" rel="noopener"
                    class="mb-6 inline-flex items-center gap-2 rounded-full bg-sage px-5 py-2 text-sm font-semibold text-cream">
                     📄 {{ __('Descargar documento') }}
                 </a>
-            @elseif ($item->url)
-                <a href="{{ $item->url }}" target="_blank"
+            @elseif ($item->type !== 'blog' && $item->url)
+                <a href="{{ $item->url }}" target="_blank" rel="noopener"
                    class="mb-6 inline-flex items-center gap-2 text-sm text-sage underline">
                     {{ __('Abrir recurso externo') }} →
                 </a>
+            @endif
+
+            @if ($item->esBlog() && $item->body)
+                {{-- Cuerpo del artículo. HTML de confianza: sólo lo escribe el admin. --}}
+                <div class="prose prose-sm mb-6 max-w-none text-ink/90">
+                    {!! $item->body !!}
+                </div>
             @endif
 
             @if ($item->description)

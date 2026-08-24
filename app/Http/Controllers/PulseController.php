@@ -117,7 +117,11 @@ class PulseController extends Controller
             ->selectRaw('rating, COUNT(*) as n')
             ->groupBy('rating')->pluck('n', 'rating')->toArray();
 
-        $ultimas = (clone $q)->with('user')->latest()->take(30)->get();
+        // SEGURIDAD (auditoría ago-2026): la encuesta es ANÓNIMA para el estudio.
+        // NO eager-load 'user' aquí — aunque la vista no imprima el nombre, la
+        // relación queda disponible a través del blade y cualquier `@dump` o
+        // export futuro filtraría la identidad del coach.
+        $ultimas = (clone $q)->latest()->take(30)->get();
 
         return view('pulso.estudio', compact('promedio', 'total', 'porRating', 'ultimas'));
     }

@@ -43,6 +43,7 @@ class SiteSetting extends Model
             'hero_cta1' => 'Únete a la comunidad',
             'hero_cta2' => 'Explora el talento',
             'hero_pill' => 'Where talent meets fitness.',
+            'hero_pill_visible' => '1', // '1' = mostrar la etiqueta sobre la foto; '0' = ocultarla
             'hero_image' => null,
 
             // Misión
@@ -499,13 +500,13 @@ TXT,
             'ofertas_show_cta_enviar'           => 'Enviar postulación',
 
             // Pulso Kinvoo (coach + estudio)
-            'pulso_coach_header_titulo'      => 'Encuesta de Pulso Kinvoo',
-            'pulso_coach_guia_titulo'        => '🌡️ ¿Cómo va tu semana?',
-            'pulso_coach_guia_body'          => 'Con tu Pulso, Kinvoo y tu estudio ajustan mejor el cuidado. No se comparten tus respuestas exactas — sólo los agregados.',
-            'pulso_coach_cta_enviar'         => 'Enviar mi pulso',
+            'pulso_coach_header_titulo'      => 'Evalúa a tu estudio',
+            'pulso_coach_guia_titulo'        => '⭐ ¿Cómo va tu estudio?',
+            'pulso_coach_guia_body'          => 'Tu evaluación ayuda a que tu estudio mejore. No se comparten tus respuestas exactas — sólo los agregados.',
+            'pulso_coach_cta_enviar'         => 'Enviar mi evaluación',
             'pulso_coach_historial_titulo'   => 'Mis respuestas anteriores',
             'pulso_coach_empty_state'        => 'Aún no has contestado. Empieza con tu primer pulso arriba.',
-            'pulso_estudio_titulo'           => 'Pulso de tu equipo',
+            'pulso_estudio_titulo'           => 'Cómo te evalúa tu equipo',
 
             // Wall / Comunidad
             'wall_comunidad_header_titulo'    => 'Comunidad',
@@ -662,13 +663,13 @@ TXT,
             'ofertas_show_cta_enviar_en'           => 'Send application',
 
             // Pulso EN
-            'pulso_coach_header_titulo_en'      => 'Kinvoo Pulse survey',
-            'pulso_coach_guia_titulo_en'        => '🌡️ How is your week going?',
-            'pulso_coach_guia_body_en'          => "With your Pulse, Kinvoo and your studio fine-tune care. Your individual answers are not shared, only the average.",
-            'pulso_coach_cta_enviar_en'         => 'Send my pulse',
+            'pulso_coach_header_titulo_en'      => 'Rate your studio',
+            'pulso_coach_guia_titulo_en'        => '⭐ How is your studio doing?',
+            'pulso_coach_guia_body_en'          => "Your feedback helps your studio improve. Your individual answers are not shared, only the average.",
+            'pulso_coach_cta_enviar_en'         => 'Send my rating',
             'pulso_coach_historial_titulo_en'   => 'My previous answers',
             'pulso_coach_empty_state_en'        => "You haven't answered yet. Start with your first pulse above.",
-            'pulso_estudio_titulo_en'           => "Your team's pulse",
+            'pulso_estudio_titulo_en'           => "How your team rates you",
 
             // Wall EN
             'wall_comunidad_header_titulo_en'    => 'Community',

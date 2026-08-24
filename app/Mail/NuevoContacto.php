@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Contact;
+use App\Models\EmailTemplate;
 use App\Models\ProfessionalProfile;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -11,10 +12,8 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Envío SÍNCRONO (no ShouldQueue). En Hostinger compartido la cola
- * depende de un cron + queue:work --stop-when-empty, que a veces falla
- * o no está bien configurado. Enviamos directo en el request para que
- * el correo llegue seguro; SMTP responde en ~1-2 s.
+ * Correo al owner cuando un estudio contacta a un coach. Editable
+ * (plantilla `nuevo_contacto`).
  */
 class NuevoContacto extends Mailable
 {
@@ -25,20 +24,35 @@ class NuevoContacto extends Mailable
         public ProfessionalProfile $profile,
     ) {}
 
-    public function envelope(): Envelope
+    private function templateData(): array
     {
-        // El nombre viene del formulario público → limpiamos CRLF y truncamos
-        // para evitar inyección de cabeceras y asuntos gigantes.
+        // Nombre viene del formulario público → limpio CRLF y trunco (evita header injection).
         $nombre = trim(preg_replace("/[\r\n]+/", ' ', (string) $this->contact->contact_name));
         $nombre = mb_strimwidth($nombre, 0, 80, '…', 'UTF-8');
+        $profesional = $this->profile->user?->name ?? 'un profesional';
+        $mensaje = mb_strimwidth((string) $this->contact->message, 0, 500, '…', 'UTF-8');
+        $url = url(route('filament.admin.resources.contacts.index', absolute: false));
 
-        return new Envelope(
-            subject: __('Nuevo contacto en Kinvoo — :nombre', ['nombre' => $nombre]),
-        );
+        return EmailTemplate::render('nuevo_contacto',
+            ['estudio' => $nombre, 'profesional' => $profesional, 'mensaje' => $mensaje],
+            [
+                'subject' => __('Nuevo contacto en Kinvoo — :nombre', ['nombre' => $nombre]),
+                'greeting' => __('Hola equipo Kinvoo,'),
+                'body' => '**'.$nombre.'** contactó a **'.$profesional.'** en Kinvoo.'."\n\n".'Mensaje:'."\n\n".'> '.$mensaje,
+                'action_label' => __('Ver en el panel'),
+                'action_url' => $url,
+                'outro' => __('Revísalo cuanto antes para dar seguimiento.'),
+            ]
+        ) + ['action_url' => $url];
+    }
+
+    public function envelope(): Envelope
+    {
+        return new Envelope(subject: $this->templateData()['subject']);
     }
 
     public function content(): Content
     {
-        return new Content(markdown: 'mail.nuevo-contacto');
+        return new Content(markdown: 'emails.tpl-generic', with: ['tpl' => $this->templateData()]);
     }
 }

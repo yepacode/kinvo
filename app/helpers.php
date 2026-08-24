@@ -24,6 +24,18 @@ if (! function_exists('landing')) {
     }
 }
 
+if (! function_exists('landing_bool')) {
+    /**
+     * Setting booleano (toggles del panel): interpreta '1'/'true'/1/true como
+     * verdadero y '0'/''/null/'false' como falso, sin importar cómo se guardó.
+     * Úsalo para banderas de visibilidad (p. ej. hero_pill_visible).
+     */
+    function landing_bool(string $key, bool $default = false): bool
+    {
+        return filter_var(SiteSetting::get($key, $default), FILTER_VALIDATE_BOOLEAN);
+    }
+}
+
 if (! function_exists('landing_rich')) {
     /**
      * Texto con énfasis: *palabra* → <em>palabra</em> y saltos de línea → <br>.

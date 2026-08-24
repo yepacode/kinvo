@@ -112,15 +112,16 @@
                             <span class="ml-1 rounded-full bg-sage/10 px-3 py-1 text-xs font-medium text-sage">{{ enum_label('application_status', $miPostulacion->status) }}</span>
                         </p>
                     @else
-                        {{-- H2 · copy del cliente (docx PRUEBA KINVOO, jul-2026). --}}
-                        <p class="mt-2 text-sm text-ink/90">{{ landing('ofertas_show_intro_postular') }}</p>
-                        <p class="mt-1 text-xs text-warmgray">{{ __('El estudio verá esto junto con tu perfil completo.') }}</p>
+                        {{-- H2 · copy del cliente (docx PRUEBA KINVOO, jul-2026). El intro
+                             "No buscamos la respuesta perfecta..." ya no va arriba: ahora es
+                             parte del placeholder del textarea (petición cliente ago-2026). --}}
+                        <p class="mt-2 text-xs text-warmgray">{{ __('El estudio verá esto junto con tu perfil completo.') }}</p>
                         <form method="POST" action="{{ route('ofertas.postular', $offer->slug) }}" class="mt-3">
                             @csrf
                             <label class="block text-sm font-medium text-ink">{{ __('Cuéntanos sobre tu interés y la manera en que harías equipo en este estudio: (opcional)') }}</label>
                             <textarea name="cover_letter" rows="4" maxlength="2000"
                                       class="mt-1 w-full rounded-xl border border-line px-3 py-2 text-sm"
-                                      placeholder="{{ __('Escribe con tus propias palabras...') }}"></textarea>
+                                      placeholder="{{ landing('ofertas_show_intro_postular') }}"></textarea>
                             <button type="submit" class="mt-3 rounded-full bg-sage px-5 py-2 text-sm font-semibold text-cream hover:bg-ink">
                                 {{ landing('ofertas_show_cta_enviar') }}
                             </button>

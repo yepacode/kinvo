@@ -126,9 +126,10 @@ class LogoPersistenciaB1Test extends TestCase
             ->put('/mi-empresa', array_merge($this->payloadValido(), ['logo' => $logo]));
 
         $r->assertSessionHasNoErrors();
-        $r->assertRedirect(route('company.enviado'));
 
         $profile = CompanyProfile::where('user_id', $user->id)->firstOrFail();
+        // Estudio activo → al guardar va a SU perfil público (petición Karla).
+        $r->assertRedirect(route('estudio.show', $profile));
         $this->assertNotNull($profile->logo_path);
         Storage::disk('public')->assertExists($profile->logo_path);
     }

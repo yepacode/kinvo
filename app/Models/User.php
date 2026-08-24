@@ -60,6 +60,8 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             'membership_expires_at' => 'datetime',
             // H5 · tracking de conversión (petición cliente).
             'converted_to_paid_at' => 'datetime',
+            // Punto 12 · el coach elige si su expediente de cuidado se comparte.
+            'comparte_expediente' => 'boolean',
         ];
     }
 
@@ -150,11 +152,12 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
         // ofertas activas. El helper CompanyProfile::scopeVisiblePublicamente
         // ya filtra por estado del user activo, pero también cerramos ofertas
         // publicadas para que no dejen "vacantes fantasma" en el directorio.
-        $this->professionalProfile?->update([
+        // forceFill: campos privilegiados fuera de fillable (auditoría seguridad ago-2026).
+        $this->professionalProfile?->forceFill([
             'is_published' => false,
             'is_verified' => false,
             'verified_at' => null,
-        ]);
+        ])->save();
         if ($this->companyProfile) {
             // Cerrar ofertas activas del contratante para no dejar fantasmas.
             \App\Models\Offer::where('contractor_user_id', $this->id)
@@ -208,6 +211,61 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             && $this->membership_expires_at->gte(now());
     }
 
+    /** @var \Illuminate\Support\Collection<int, int>|null memo por request */
+    protected ?\Illuminate\Support\Collection $planesServiciosCache = null;
+
+    /** @var \Illuminate\Database\Eloquent\Collection<int, \App\Models\Service>|null */
+    protected ?\Illuminate\Database\Eloquent\Collection $serviciosCache = null;
+
+    /**
+     * IDs de planes cuyos servicios puede USAR el usuario (Punto 5-A extendido):
+     *  - su propio plan, si su membresía está vigente;
+     *  - los planes de los estudios donde es COLABORADOR ACTIVO y el estudio
+     *    tiene membresía vigente — el estudio paga y cubre a su equipo, y son
+     *    los colaboradores quienes eligen qué servicio solicitar.
+     */
+    public function planesDeServicios(): \Illuminate\Support\Collection
+    {
+        if ($this->planesServiciosCache !== null) {
+            return $this->planesServiciosCache;
+        }
+
+        $planes = collect();
+        if ($this->membership_plan_id && $this->tieneMembresiaActiva()) {
+            $planes->push($this->membership_plan_id);
+        }
+
+        $planesEstudio = \App\Models\TeamMember::query()
+            ->where('team_members.professional_user_id', $this->id)
+            ->where('team_members.status', \App\Models\TeamMember::STATUS_ACTIVE)
+            ->join('users', 'users.id', '=', 'team_members.contractor_user_id')
+            ->whereNotNull('users.membership_plan_id')
+            ->where('users.membership_expires_at', '>=', now())
+            ->pluck('users.membership_plan_id');
+
+        return $this->planesServiciosCache = $planes->merge($planesEstudio)->unique()->values();
+    }
+
+    /** Servicios activos incluidos por cualquiera de sus planes de servicios. */
+    public function serviciosIncluidos(): \Illuminate\Database\Eloquent\Collection
+    {
+        if ($this->serviciosCache !== null) {
+            return $this->serviciosCache;
+        }
+
+        return $this->serviciosCache = \App\Models\Service::query()
+            ->where('activo', true)
+            ->whereHas('plans', fn ($q) => $q->whereIn('plans.id', $this->planesDeServicios()->all()))
+            ->orderBy('orden')->orderBy('nombre')
+            ->get();
+    }
+
+    /** ¿Puede el usuario solicitar este servicio (está incluido en algún plan suyo)? */
+    public function puedeUsarServicio(\App\Models\Service $service): bool
+    {
+        return $service->activo && $this->serviciosIncluidos()->contains('id', $service->id);
+    }
+
     /**
      * H6 · Matriz de beneficios por rol/plan (referencia: docx "Matriz de
      * reglas de negocio – Kinvoo Platform"). Verdadera fuente de gates.
@@ -228,6 +286,11 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
      *
      * Admin siempre true. Anónimos/pendientes siempre false.
      */
+    /** Memo por-request del slug del plan (evita N+1 al llamar hasBenefit muchas
+     *  veces en el mismo render — nav+dashboard hacían ~15 lazy loads). */
+    protected ?string $planSlugMemo = null;
+    protected bool $planSlugMemoResolved = false;
+
     public function hasBenefit(string $key): bool
     {
         if ($this->esAdmin()) {
@@ -236,7 +299,11 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
         if (! $this->estaActivo() || ! $this->tieneMembresiaActiva()) {
             return false;
         }
-        $planSlug = $this->membershipPlan?->slug;
+        if (! $this->planSlugMemoResolved) {
+            $this->planSlugMemo = $this->membershipPlan?->slug;
+            $this->planSlugMemoResolved = true;
+        }
+        $planSlug = $this->planSlugMemo;
         $esCoach = $this->esProfesional();
         $esEstudio = $this->esContratante();
 

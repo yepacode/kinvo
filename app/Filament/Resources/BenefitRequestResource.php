@@ -51,9 +51,14 @@ class BenefitRequestResource extends Resource
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Coach')->searchable(),
                 Tables\Columns\TextColumn::make('type')
-                    ->label('Tipo')->badge()
-                    ->color(fn ($state) => $state === 'physio' ? 'success' : 'info')
-                    ->formatStateUsing(fn ($state) => $state === 'physio' ? '💪 Fisioterapia' : '🩺 Telemedicina'),
+                    ->label('Servicio')->badge()
+                    ->color(fn ($state) => match ($state) {
+                        'physio' => 'success',
+                        'telemedicine' => 'info',
+                        default => 'primary',
+                    })
+                    // Muestra el servicio del catálogo (service_id) o la etiqueta legacy.
+                    ->formatStateUsing(fn ($state, $record) => $record->etiquetaServicio()),
                 Tables\Columns\TextColumn::make('preferred_slot')
                     ->label('Prefiere')->limit(40)->placeholder('—'),
                 Tables\Columns\TextColumn::make('scheduled_for')

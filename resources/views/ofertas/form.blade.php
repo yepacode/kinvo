@@ -56,7 +56,7 @@
                     <select id="discipline_id" name="discipline_id"
                             class="mt-1 w-full min-h-[44px] rounded-xl border border-line px-3 py-2 text-sm">
                         <option value="">{{ __('— Elige —') }}</option>
-                        @foreach (\App\Models\Discipline::orderBy('nombre')->get() as $d)
+                        @foreach (\App\Models\Discipline::where('activo', true)->orderBy('nombre')->get() as $d)
                             <option value="{{ $d->id }}" @selected(old('discipline_id', $oferta->discipline_id) == $d->id)>{{ $d->nombre }}</option>
                         @endforeach
                     </select>
@@ -66,8 +66,8 @@
                     <select id="location_id" name="location_id"
                             class="mt-1 w-full min-h-[44px] rounded-xl border border-line px-3 py-2 text-sm">
                         <option value="">{{ __('— Elige —') }}</option>
-                        @foreach (\App\Models\Location::orderBy('nombre')->get() as $l)
-                            <option value="{{ $l->id }}" @selected(old('location_id', $oferta->location_id) == $l->id)>{{ $l->nombre }}</option>
+                        @foreach (\App\Models\Location::where('activo', true)->orderBy('ciudad')->get() as $l)
+                            <option value="{{ $l->id }}" @selected(old('location_id', $oferta->location_id) == $l->id)>{{ $l->etiqueta() }}</option>
                         @endforeach
                     </select>
                 </div>

@@ -9,6 +9,7 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -68,6 +69,11 @@ class ConfiguracionSitio extends Page implements HasForms
                         TextInput::make('hero_cta1')->label('Botón principal'),
                         TextInput::make('hero_cta2')->label('Botón secundario'),
                         TextInput::make('hero_pill')->label('Etiqueta sobre la foto'),
+                        Toggle::make('hero_pill_visible')
+                            ->label('Mostrar la etiqueta sobre la foto')
+                            ->helperText('Desactívalo si NO quieres que aparezca ese texto sobre la imagen del hero.')
+                            ->formatStateUsing(fn ($state) => filter_var($state ?? true, FILTER_VALIDATE_BOOLEAN))
+                            ->dehydrateStateUsing(fn ($state) => $state ? '1' : '0'),
                         FileUpload::make('hero_image')->label('Foto del hero')
                             ->image()->disk('public')->directory('landing')->imageEditor(),
                     ]),

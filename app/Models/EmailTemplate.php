@@ -53,20 +53,48 @@ class EmailTemplate extends Model
     }
 
     /**
-     * MED-G5 · Los placeholders vienen de datos de usuario (nombres, títulos,
-     * mensajes libres). Los emails que renderiza MailMessage aceptan Markdown,
-     * y ese renderizador no re-escapa lo interpolado con str_replace. Un
-     * usuario malicioso que ponga `<script>...</script>` en su nombre podría
-     * inyectarlo en el HTML del correo. Escapamos con htmlspecialchars antes
-     * de interpolar. Los `**negritas**` y `[link](url)` del template original
-     * siguen funcionando porque son parte del `body` estático (no del placeholder).
+     * Reemplaza `{{placeholders}}` con los valores dados, SIN escape HTML.
+     * El escape lo hace la capa de renderizado (Blade `{{ }}` en tpl-generic
+     * o Markdown de MailMessage en las Notifications). Antes hacía doble
+     * escape → un estudio "Café D'Amico & Co" salía como "Café D&#039;Amico &amp; Co"
+     * en los correos.
+     *
+     * Los placeholders traen datos de usuario (nombres, mensajes libres). Como
+     * la capa de renderizado los escapa (o los pasa por Markdown que no ejecuta
+     * HTML crudo), el riesgo XSS de un `<script>` en un nombre queda contenido.
      */
     private static function replace(string $s, array $vars): string
     {
         foreach ($vars as $k => $v) {
-            $safe = htmlspecialchars((string) $v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            $s = str_replace('{{'.$k.'}}', $safe, $s);
+            $s = str_replace('{{'.$k.'}}', (string) $v, $s);
         }
         return $s;
+    }
+
+    /**
+     * Construye un MailMessage a partir del array de render() (subject/greeting/
+     * body/action_label/action_url/outro). Centraliza el armado para que cada
+     * notificación solo llame a render() + este helper.
+     */
+    public static function toMailMessage(array $t): \Illuminate\Notifications\Messages\MailMessage
+    {
+        $mail = (new \Illuminate\Notifications\Messages\MailMessage)->subject($t['subject'] ?? '');
+        if (! empty($t['greeting'])) {
+            $mail->greeting($t['greeting']);
+        }
+        foreach (explode("\n\n", (string) ($t['body'] ?? '')) as $parrafo) {
+            $parrafo = trim($parrafo);
+            if ($parrafo !== '') {
+                $mail->line($parrafo);
+            }
+        }
+        if (! empty($t['action_label']) && ! empty($t['action_url'])) {
+            $mail->action($t['action_label'], $t['action_url']);
+        }
+        if (! empty($t['outro'])) {
+            $mail->line($t['outro']);
+        }
+
+        return $mail;
     }
 }

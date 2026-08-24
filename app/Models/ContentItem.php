@@ -14,9 +14,11 @@ class ContentItem extends Model
     public const TYPE_DOCUMENT = 'document';
     public const TYPE_AUDIO    = 'audio';
     public const TYPE_LINK     = 'link';
+    public const TYPE_IMAGE    = 'image';
+    public const TYPE_BLOG     = 'blog';
 
     protected $fillable = [
-        'slug', 'title', 'description', 'category', 'type', 'url', 'file_path',
+        'slug', 'title', 'description', 'body', 'category', 'type', 'url', 'file_path', 'file_disk',
         'gate_role', 'gate_plan_id', 'is_published', 'published_at',
         'uploader_user_id',
         // H6 · nivel de acceso (1=free, 2/3=premium).
@@ -58,6 +60,36 @@ class ContentItem extends Model
     public function esOficial(): bool
     {
         return $this->uploader_user_id === null;
+    }
+
+    /** ¿Tiene un archivo subido (vs. sólo una URL externa embebida)? */
+    public function tieneArchivo(): bool
+    {
+        return filled($this->file_path);
+    }
+
+    /**
+     * URL desde la que se sirve el recurso reproducible/descargable.
+     * Si hay archivo subido, se sirve por la ruta PRIVADA que valida el plan
+     * (el link directo al disco nunca se expone); si no, se usa la URL externa.
+     */
+    public function archivoUrl(): ?string
+    {
+        if ($this->tieneArchivo()) {
+            return route('contenido.archivo', $this);
+        }
+
+        return $this->url;
+    }
+
+    public function esBlog(): bool
+    {
+        return $this->type === self::TYPE_BLOG;
+    }
+
+    public function esImagen(): bool
+    {
+        return $this->type === self::TYPE_IMAGE;
     }
 
     /**

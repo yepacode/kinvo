@@ -44,7 +44,15 @@ trait PersistsUploadedFile
         // Caso A: el request TRAE file nuevo → snapshot en tmp y sigue.
         if ($request->hasFile($campo)) {
             $file = $request->file($campo);
-            $ext = $file->getClientOriginalExtension() ?: 'bin';
+            // SEGURIDAD (auditoría ago-2026): la extensión del CLIENTE no es
+            // confiable (un `foo.php` guardado en disco es RCE si algún path
+            // se sirve). Derivamos la extensión del MIME real (guessExtension)
+            // y whitelisteamos a formatos de imagen/pdf esperados.
+            $ext = strtolower((string) $file->guessExtension() ?: 'bin');
+            $extPermitidas = ['jpg','jpeg','png','webp','gif','pdf','svg'];
+            if (! in_array($ext, $extPermitidas, true)) {
+                $ext = 'bin';
+            }
             $tmpPath = "tmp-uploads/{$userId}/{$campo}.{$ext}";
             Storage::disk('local')->putFileAs(
                 "tmp-uploads/{$userId}",

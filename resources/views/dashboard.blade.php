@@ -12,6 +12,31 @@
     </x-slot>
 
     <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        {{-- Punto 7 · Invitaciones a equipos pendientes. Data desde DashboardController. --}}
+        @if ($invitacionesPendientes->isNotEmpty())
+            <div class="mb-8 rounded-2xl border border-lime/50 bg-lime/10 p-5 sm:p-6">
+                <h3 class="font-serif text-lg font-medium text-ink">🤝 {{ __('Invitaciones a equipos') }}</h3>
+                <p class="mt-1 text-sm text-warmgray">{{ __('Un estudio quiere sumarte a su equipo. Acepta o rechaza:') }}</p>
+                <ul class="mt-4 space-y-3">
+                    @foreach ($invitacionesPendientes as $inv)
+                        <li class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3">
+                            <span class="font-medium text-ink">{{ $inv->contractor?->name }}</span>
+                            <div class="flex gap-2">
+                                <form method="POST" action="{{ route('equipo.aceptar', $inv) }}">
+                                    @csrf
+                                    <button type="submit" class="min-h-[40px] rounded-full bg-sage px-5 py-2 text-sm font-semibold text-cream hover:bg-ink">{{ __('Aceptar') }}</button>
+                                </form>
+                                <form method="POST" action="{{ route('equipo.rechazar', $inv) }}">
+                                    @csrf
+                                    <button type="submit" class="min-h-[40px] rounded-full border border-line bg-white px-5 py-2 text-sm font-medium text-warmgray hover:bg-cream">{{ __('Rechazar') }}</button>
+                                </form>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         @if (auth()->user()->esProfesional())
             @php $profile = auth()->user()->professionalProfile; @endphp
             <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
@@ -57,12 +82,8 @@
                 </div>
             </div>
 
-            {{-- Quién vio tu perfil --}}
+            {{-- Quién vio tu perfil. Data ($totalVistas, $vistasRecientes) desde DashboardController. --}}
             @if ($profile)
-                @php
-                    $totalVistas = $profile->views()->count();
-                    $vistasRecientes = $profile->views()->with('viewer')->latest()->take(6)->get();
-                @endphp
                 <div class="rounded-2xl border border-line bg-white p-6">
                     <div class="flex items-baseline justify-between">
                         <h3 class="font-serif text-xl font-medium text-ink">{{ landing('dashboard_coach_vistas_titulo') }}</h3>

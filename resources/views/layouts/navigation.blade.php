@@ -57,6 +57,11 @@
                                     {{ __('Expediente') }}
                                 </x-nav-link>
                             @endif
+                            @if ($u->serviciosIncluidos()->isNotEmpty())
+                                <x-nav-link :href="route('servicios.index')" :active="request()->routeIs('servicios.*')">
+                                    {{ __('Mis servicios') }}
+                                </x-nav-link>
+                            @endif
                         @endif
                     @elseif ($u->esContratante())
                         <x-nav-link :href="route('company.profile.edit')" :active="request()->routeIs('company.profile.*')">
@@ -94,6 +99,11 @@
                             @if ($u->hasBenefit('gestion_equipo'))
                                 <x-nav-link :href="route('equipo.index')" :active="request()->routeIs('equipo.*','pulso.estudio')">
                                     {{ __('Mi equipo') }}
+                                </x-nav-link>
+                            @endif
+                            @if ($u->serviciosIncluidos()->isNotEmpty())
+                                <x-nav-link :href="route('servicios.index')" :active="request()->routeIs('servicios.*')">
+                                    {{ __('Mis servicios') }}
                                 </x-nav-link>
                             @endif
                         @endif
@@ -210,6 +220,11 @@
                             {{ __('Mi expediente de cuidado') }}
                         </x-responsive-nav-link>
                     @endif
+                    @if ($u->serviciosIncluidos()->isNotEmpty())
+                        <x-responsive-nav-link :href="route('servicios.index')" :active="request()->routeIs('servicios.*')">
+                            {{ __('Mis servicios') }}
+                        </x-responsive-nav-link>
+                    @endif
                 @endif
             @elseif ($u->esContratante())
                 <x-responsive-nav-link :href="route('company.profile.edit')" :active="request()->routeIs('company.profile.*')">
@@ -252,6 +267,11 @@
                     @if ($u->hasBenefit('gestion_equipo'))
                         <x-responsive-nav-link :href="route('equipo.index')" :active="request()->routeIs('equipo.*','pulso.estudio')">
                             {{ __('Mi equipo') }}
+                        </x-responsive-nav-link>
+                    @endif
+                    @if ($u->serviciosIncluidos()->isNotEmpty())
+                        <x-responsive-nav-link :href="route('servicios.index')" :active="request()->routeIs('servicios.*')">
+                            {{ __('Mis servicios') }}
                         </x-responsive-nav-link>
                     @endif
                 @endif

@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'membresia' => \App\Http\Middleware\EnsureContractorMembership::class,
             'membresia.activa' => \App\Http\Middleware\EnsureMembershipActive::class,
             'acceso.directorio' => \App\Http\Middleware\AccesoDirectorioTalento::class,
+            'admin' => \App\Http\Middleware\EnsureAdmin::class,
         ]);
 
         // Webhooks de pasarelas (Stripe/MP) no pueden enviar X-XSRF-TOKEN.

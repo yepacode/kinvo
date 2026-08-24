@@ -391,26 +391,6 @@ class OfferController extends Controller
         return null;
     }
 
-    /** Bloqueo: solo estudios con suscripción activa pueden publicar/editar ofertas. */
-    private function autorizarSuscripcionActiva(\App\Models\User $user): void
-    {
-        // El middleware `membresia.activa` en la ruta ya lo bloquea, pero el
-        // controller lo reafirma por si alguien llama al método vía API.
-        $vigente = \App\Models\Subscription::where('user_id', $user->id)
-            ->whereIn('status', [\App\Models\Subscription::STATUS_ACTIVE, \App\Models\Subscription::STATUS_TRIALING])
-            ->where(function ($q) {
-                $q->whereNull('current_period_end')
-                  ->orWhere('current_period_end', '>=', now());
-            })
-            ->exists();
-
-        if (! $vigente && ! $user->tieneMembresiaActiva()) {
-            // Fix B2 (petición cliente): flash específico para que sepa
-            // que no es un "error", es que necesita plan activo.
-            abort(redirect()->route('membresias.index')->with('status', 'plan-necesario-ofertas'));
-        }
-    }
-
     /** Estudio cambia el estado de una postulación (seen, in_contact, accepted, rejected). */
     public function cambiarEstado(Request $request, Application $application): RedirectResponse
     {

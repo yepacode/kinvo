@@ -71,6 +71,15 @@ class PlanResource extends Resource
                         ->maxLength(500),
                 ]),
 
+                Forms\Components\Section::make('Servicios incluidos (catálogo)')
+                    ->description('Servicios del catálogo que esta membresía incluye. Los miembros de este plan podrán verlos y solicitarlos en "Mis servicios" (con aprobación del admin).')
+                    ->schema([
+                        Forms\Components\Select::make('services')
+                            ->label('Servicios que incluye este plan')
+                            ->relationship('services', 'nombre')
+                            ->multiple()->preload()->searchable(),
+                    ]),
+
                 Forms\Components\Section::make('Pasarela de pago')
                     ->description('Kinvoo soporta MercadoPago (default en México) y Stripe (alternativa). MercadoPago usa el "precio" de arriba directamente — no necesita más config. Stripe sí requiere el Price ID que creas en su dashboard.')
                     ->schema([

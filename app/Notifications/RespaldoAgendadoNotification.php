@@ -36,15 +36,25 @@ class RespaldoAgendadoNotification extends Notification
         $tipo = $this->request->type === BenefitRequest::TYPE_PHYSIO
             ? 'Fisioterapia' : 'Telemedicina';
         $cuando = $this->request->scheduled_for?->translatedFormat('l d M Y · H:i') ?? '';
+        $coach = $notifiable->name ?: 'Coach';
+        $nota = $this->request->admin_note ?: '';
+        $url = url(route('respaldo.index', absolute: false));
 
-        return (new MailMessage)
-            ->subject('Kinvoo · Tu sesión de '.$tipo.' está agendada')
-            ->greeting('Hola '.($notifiable->name ?: 'Coach').',')
-            ->line('Tu solicitud de **'.$tipo.'** ya fue agendada por Kinvoo.')
-            ->line('**Cuándo:** '.$cuando)
-            ->when($this->request->admin_note,
-                fn ($m) => $m->line('**Nota Kinvoo:** '.$this->request->admin_note))
-            ->action('Ver detalle', url(route('respaldo.index', absolute: false)))
-            ->line('Si necesitas reprogramar, respóndenos a este correo.');
+        // Editable desde el panel (plantilla respaldo_agendado_coach).
+        $t = \App\Models\EmailTemplate::render('respaldo_agendado_coach',
+            ['coach' => $coach, 'tipo' => $tipo, 'cuando' => $cuando, 'admin_note' => $nota],
+            [
+                'subject' => 'Kinvoo · Tu sesión de '.$tipo.' está agendada',
+                'greeting' => 'Hola '.$coach.',',
+                'body' => 'Tu solicitud de **'.$tipo.'** ya fue agendada por Kinvoo.'."\n\n".'**Cuándo:** '.$cuando
+                    .($nota ? "\n\n".'**Nota Kinvoo:** '.$nota : ''),
+                'action_label' => 'Ver detalle',
+                'action_url' => $url,
+                'outro' => 'Si necesitas reprogramar, respóndenos a este correo.',
+            ]
+        );
+        $t['action_url'] = $url;
+
+        return \App\Models\EmailTemplate::toMailMessage($t);
     }
 }

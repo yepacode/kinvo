@@ -46,7 +46,7 @@ class PerfilEstudioKinvooTest extends TestCase
             'contact_email' => 'luis@gymnorte.mx',
             'media_url' => 'https://youtube.com/watch?v=gym',
             'logo' => UploadedFile::fake()->image('logo.png', 400, 400),
-        ])->assertRedirect(route('company.enviado'));
+        ])->assertRedirectContains('/estudio/'); // estudio activo → su perfil público (petición Karla)
 
         $p = $user->companyProfile()->first();
         $this->assertSame('Crossfit, Boxeo', $p->disciplines_text);
@@ -65,7 +65,7 @@ class PerfilEstudioKinvooTest extends TestCase
         $this->actingAs($user)->put('/mi-empresa', $this->datosValidosEstudio([
             'company_name' => 'Gym Vídeo',
             'media_files' => [UploadedFile::fake()->create('tour.mp4', 500, 'video/mp4')],
-        ]))->assertRedirect(route('company.enviado'));
+        ]))->assertRedirectContains('/estudio/'); // estudio activo → su perfil público (petición Karla)
 
         $item = $user->companyProfile()->first()->mediaItems()->first();
         $this->assertNotNull($item);
@@ -113,13 +113,13 @@ class PerfilEstudioKinvooTest extends TestCase
 
         $this->actingAs($user)->put('/mi-empresa', $this->datosValidosEstudio([
             'company_name' => 'PowerGym',
-        ]))->assertRedirect(route('company.enviado'));
+        ]))->assertRedirectContains('/estudio/'); // estudio activo → su perfil público (petición Karla)
 
         // Segunda visita y segundo guardado NO deben dar 500.
         $this->actingAs($user)->get('/mi-empresa')->assertOk();
         $this->actingAs($user)->put('/mi-empresa', $this->datosValidosEstudio([
             'company_name' => 'PowerGym 2',
-        ]))->assertRedirect(route('company.enviado'));
+        ]))->assertRedirectContains('/estudio/'); // estudio activo → su perfil público (petición Karla)
 
         $this->assertSame(1, $user->companyProfile()->count());
         $this->assertSame('PowerGym 2', $user->companyProfile()->first()->company_name);

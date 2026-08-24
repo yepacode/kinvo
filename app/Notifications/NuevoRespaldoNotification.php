@@ -27,6 +27,11 @@ class NuevoRespaldoNotification extends Notification
      */
     private function tipoLabel(): string
     {
+        // Servicio del catálogo (Punto 5-A): usar su nombre tal cual.
+        if ($this->request->service) {
+            return $this->request->service->nombre;
+        }
+
         return $this->request->type === BenefitRequest::TYPE_PHYSIO
             ? __('Fisioterapia')
             : __('Telemedicina');
@@ -39,7 +44,7 @@ class NuevoRespaldoNotification extends Notification
         // idioma del receptor al renderizar (patrón que ya usan otras notifs).
         return [
             'tipo'        => 'benefit_request',
-            'icono'       => $this->request->type === BenefitRequest::TYPE_PHYSIO ? '💪' : '🩺',
+            'icono'       => $this->request->service?->icono ?: ($this->request->type === BenefitRequest::TYPE_PHYSIO ? '💪' : '🩺'),
             'titulo_key'  => 'Nuevo Respaldo: :tipo — :coach',
             'titulo_params' => [
                 'tipo'  => $this->tipoLabel(),
@@ -65,17 +70,27 @@ class NuevoRespaldoNotification extends Notification
             $this->request->loadMissing('user');
             $tipo = $this->tipoLabel();
             $coach = $this->request->user?->name ?? __('Un coach');
+            $prefiere = $this->request->preferred_slot ?: '';
+            $nota = $this->request->note ?: '';
+            $url = url(route('filament.admin.resources.benefit-requests.index', absolute: false));
 
-            return (new MailMessage)
-                ->subject('Kinvoo · '.__('Nuevo Respaldo pendiente').' ('.$tipo.') — '.$coach)
-                ->greeting(__('Hola equipo Kinvoo,'))
-                ->line($coach.' '.__('pidió una sesión de').' **'.$tipo.'**.')
-                ->when($this->request->preferred_slot,
-                    fn ($m) => $m->line('**'.__('Prefiere:').'** '.$this->request->preferred_slot))
-                ->when($this->request->note,
-                    fn ($m) => $m->line('**'.__('Nota:').'** '.$this->request->note))
-                ->action(__('Agendar en el panel'), url(route('filament.admin.resources.benefit-requests.index', absolute: false)))
-                ->line(__('Al confirmar la fecha, el coach recibirá el aviso automáticamente.'));
+            // Editable desde el panel (plantilla respaldo_nuevo_admin).
+            $t = \App\Models\EmailTemplate::render('respaldo_nuevo_admin',
+                ['coach' => $coach, 'tipo' => $tipo, 'preferred_slot' => $prefiere, 'note' => $nota],
+                [
+                    'subject' => 'Kinvoo · '.__('Nuevo Respaldo pendiente').' ('.$tipo.') — '.$coach,
+                    'greeting' => __('Hola equipo Kinvoo,'),
+                    'body' => $coach.' '.__('pidió una sesión de').' **'.$tipo.'**.'
+                        .($prefiere ? "\n\n".'**'.__('Prefiere:').'** '.$prefiere : '')
+                        .($nota ? "\n\n".'**'.__('Nota:').'** '.$nota : ''),
+                    'action_label' => __('Agendar en el panel'),
+                    'action_url' => $url,
+                    'outro' => __('Al confirmar la fecha, el coach recibirá el aviso automáticamente.'),
+                ]
+            );
+            $t['action_url'] = $url;
+
+            return \App\Models\EmailTemplate::toMailMessage($t);
         } finally {
             app()->setLocale($localeOriginal);
         }

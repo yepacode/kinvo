@@ -62,7 +62,8 @@ class ProfessionalProfileResource extends Resource
                     ->requiresConfirmation()
                     ->visible(fn (ProfessionalProfile $r) => ! $r->is_verified)
                     ->action(function (ProfessionalProfile $r) {
-                        $r->update(['is_verified' => true, 'verified_at' => now()]);
+                        // forceFill: campos privilegiados fuera de fillable (auditoría ago-2026).
+                        $r->forceFill(['is_verified' => true, 'verified_at' => now()])->save();
                         // MED-I5 · Bitácora legal (sin este registro, la
                         // insignia "verificado" aparecía sin trazabilidad).
                         \App\Models\AuditLog::record(auth()->user(), $r, 'profile_verified',
@@ -75,7 +76,7 @@ class ProfessionalProfileResource extends Resource
                     ->requiresConfirmation()
                     ->visible(fn (ProfessionalProfile $r) => $r->is_verified)
                     ->action(function (ProfessionalProfile $r) {
-                        $r->update(['is_verified' => false, 'verified_at' => null]);
+                        $r->forceFill(['is_verified' => false, 'verified_at' => null])->save();
                         \App\Models\AuditLog::record(auth()->user(), $r, 'profile_unverified',
                             old: ['is_verified' => true],
                             new: ['is_verified' => false]);

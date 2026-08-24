@@ -40,7 +40,7 @@ Route::get('/terminos-y-condiciones', [LegalController::class, 'terminos'])->nam
 
 // Descarga del adjunto privado de certificaciones (solo admin; validado en el controller).
 Route::get('/panel/certificacion/{professionalProfile}', [ProfessionalProfileController::class, 'certificacion'])
-    ->middleware('auth')->name('admin.certificacion');
+    ->middleware(['auth', 'admin'])->name('admin.certificacion');
 
 // Directorio y perfiles de talento — PRIVADOS: solo estudios con membresía vigente
 // y el admin (el profesional puede ver su propio perfil). No visibles al público.
@@ -60,9 +60,8 @@ Route::get('/cuenta/pendiente', function () {
     return view('auth.pending');
 })->middleware(['auth', 'nocache'])->name('account.pending');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified', 'cuenta.activa', 'nocache'])->name('dashboard');
+Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified', 'cuenta.activa', 'nocache'])->name('dashboard');
 
 // Ajustes de cuenta (Breeze) — accesible aunque la cuenta esté pendiente.
 Route::middleware(['auth', 'nocache'])->group(function () {
@@ -107,7 +106,8 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
 
     // Notificaciones (campana)
     Route::get('/notificaciones', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notificaciones/leer-todo', [NotificationController::class, 'readAll'])->name('notifications.readAll');
+    Route::post('/notificaciones/leer-todo', [NotificationController::class, 'readAll'])
+        ->middleware('throttle:20,1')->name('notifications.readAll');
     Route::get('/notificaciones/{id}/abrir', [NotificationController::class, 'open'])->name('notifications.open');
 
     // Guardados / favoritos
@@ -190,6 +190,10 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
     // Names `contenido.*` se mantienen por la misma razón.
     Route::get('/desarrollo', [ContentController::class, 'index'])->name('contenido.index');
     Route::get('/desarrollo/{content:slug}', [ContentController::class, 'show'])->name('contenido.show');
+    // Sirve el archivo subido (video/imagen/audio/doc) por una ruta PRIVADA que
+    // valida el gate de membresía. El disco nunca se expone: el link directo al
+    // archivo no existe para quien no cumple el plan/rol/nivel.
+    Route::get('/desarrollo/{content:slug}/archivo', [ContentController::class, 'archivo'])->name('contenido.archivo');
 
     // CRUD del estudio: subir su propio contenido (visible a todos los usuarios activos).
     Route::get('/mi-desarrollo', [ContentController::class, 'misContenidos'])->name('contenido.mis-contenidos');
@@ -212,6 +216,12 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
         ->name('respaldo.index');
     Route::post('/mi-respaldo/solicitar', [\App\Http\Controllers\RespaldoController::class, 'solicitar'])
         ->middleware('throttle:6,1')->name('respaldo.solicitar');
+
+    // Punto 5-A · Mis servicios (catálogo incluido en la membresía).
+    Route::get('/mis-servicios', [\App\Http\Controllers\ServiciosController::class, 'index'])
+        ->name('servicios.index');
+    Route::post('/mis-servicios/{service}/solicitar', [\App\Http\Controllers\ServiciosController::class, 'solicitar'])
+        ->middleware('throttle:10,1')->name('servicios.solicitar');
 
     // H6/M4 · Encuesta de Pulso Kinvoo.
     Route::get('/encuesta-pulso', [\App\Http\Controllers\PulseController::class, 'coach'])
@@ -236,6 +246,9 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
 
     // Expediente coach (2.11)
     Route::get('/mi-expediente', [WellnessController::class, 'index'])->name('expediente.index');
+    // Punto 12 · el coach elige si su expediente se comparte con su estudio.
+    Route::post('/mi-expediente/visibilidad', [WellnessController::class, 'visibilidad'])
+        ->name('expediente.visibilidad');
 
     // Equipo estudio (2.12) + Panel impacto (2.13)
     Route::get('/mi-equipo', [TeamController::class, 'index'])->name('equipo.index');

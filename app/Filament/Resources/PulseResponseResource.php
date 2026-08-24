@@ -2,8 +2,12 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\RolUsuario;
 use App\Filament\Resources\PulseResponseResource\Pages;
 use App\Models\PulseResponse;
+use App\Models\User;
+use Filament\Forms;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -25,7 +29,38 @@ class PulseResponseResource extends Resource
 
     public static function canCreate(): bool
     {
-        return false;
+        return true; // Punto 16: el admin puede registrar Pulso manualmente.
+    }
+
+    /** Form para registrar/ver una respuesta de Pulso manualmente (Punto 16). */
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
+            Forms\Components\Select::make('contractor_user_id')
+                ->label('Estudio')
+                ->options(fn () => User::query()->where('nivel', RolUsuario::Contractor)
+                    ->with('companyProfile')->get()
+                    ->mapWithKeys(fn (User $u) => [$u->id => $u->companyProfile?->company_name ?: $u->name]))
+                ->searchable()->required()
+                ->helperText('¿A qué estudio corresponde esta evaluación?'),
+            Forms\Components\Select::make('user_id')
+                ->label('Coach (opcional)')
+                ->options(fn () => User::query()->where('nivel', RolUsuario::Professional)
+                    ->orderBy('name')->pluck('name', 'id'))
+                ->searchable()->placeholder('Sin coach — nota general del estudio'),
+            Forms\Components\Select::make('rating')
+                ->label('Calificación')
+                ->options([1 => '1 ★', 2 => '2 ★', 3 => '3 ★', 4 => '4 ★', 5 => '5 ★'])
+                ->required()->native(false),
+            Forms\Components\DatePicker::make('period_start')
+                ->label('Semana / fecha (opcional)'),
+            Forms\Components\Textarea::make('answer_energy')
+                ->label('¿Qué está haciendo bien el estudio?')->rows(2)->maxLength(500)->columnSpanFull(),
+            Forms\Components\Textarea::make('answer_growth')
+                ->label('¿En qué podría mejorar?')->rows(2)->maxLength(500)->columnSpanFull(),
+            Forms\Components\Textarea::make('answer_support')
+                ->label('Apoyo pedido / notas varias')->rows(2)->maxLength(500)->columnSpanFull(),
+        ])->columns(2);
     }
 
     public static function table(Table $table): Table
@@ -35,7 +70,8 @@ class PulseResponseResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label('Coach')->searchable(),
+                    ->label('Coach')->searchable()
+                    ->placeholder('— (nota manual)'),
                 Tables\Columns\TextColumn::make('contractor.name')
                     ->label('Estudio')
                     ->state(fn (PulseResponse $r) => $r->contractor?->companyProfile?->company_name
@@ -71,8 +107,9 @@ class PulseResponseResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPulseResponses::route('/'),
-            'view'  => Pages\ViewPulseResponse::route('/{record}'),
+            'index'  => Pages\ListPulseResponses::route('/'),
+            'create' => Pages\CreatePulseResponse::route('/create'),
+            'view'   => Pages\ViewPulseResponse::route('/{record}'),
         ];
     }
 }
