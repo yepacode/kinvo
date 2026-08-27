@@ -26,13 +26,20 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        // SEGURIDAD (auditoría ago-2026): un usuario Suspendido NO puede editar
+        // su email/password desde /profile (antes podía cambiar credenciales tras
+        // ser suspendido). El admin siempre puede.
+        $user = $request->user();
+        abort_if(! $user->esAdmin() && $user->estaSuspendido(), 403,
+            'Tu cuenta está suspendida.');
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user->fill($request->validated());
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -56,6 +63,12 @@ class ProfileController extends Controller
         if ($user->esAdmin()) {
             return Redirect::route('profile.edit')
                 ->with('status', 'admin-no-se-elimina');
+        }
+
+        // Un usuario Suspendido tampoco puede autoborrarse: el admin necesita
+        // conservar el historial para el flujo legal de la suspensión.
+        if ($user->estaSuspendido()) {
+            abort(403, 'Tu cuenta está suspendida.');
         }
 
         // HIGH-5 · Bitácora legal: registrar el autoborrado ANTES de eliminar

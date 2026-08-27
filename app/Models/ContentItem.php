@@ -44,6 +44,16 @@ class ContentItem extends Model
                 $c->slug = $slug;
             }
         });
+
+        // Al borrar el registro, borramos el archivo físico. Sin esto los archivos
+        // quedaban como huérfanos en storage/app/private/contenido/ (leak de disco
+        // + posible exposición si algún día se serviera esa carpeta).
+        static::deleted(function (ContentItem $c) {
+            if (filled($c->file_path)) {
+                $disco = $c->file_disk ?: 'public';
+                \Illuminate\Support\Facades\Storage::disk($disco)->delete($c->file_path);
+            }
+        });
     }
 
     public function gatePlan(): BelongsTo

@@ -251,6 +251,13 @@ class CheckoutController extends Controller
         if (! $candidato) {
             return $fallback;
         }
+        // SEGURIDAD (auditoría ago-2026): rechazar schemes peligrosos (javascript:,
+        // data:, vbscript:). parse_url no siempre saca el 'scheme' correcto para
+        // estos, mejor validamos con regex al inicio del string tras trim.
+        $trim = ltrim((string) $candidato);
+        if (preg_match('/^(javascript|data|vbscript|file|about):/i', $trim)) {
+            return $fallback;
+        }
         $parsed = parse_url($candidato);
         $host = $parsed['host'] ?? null;
         $ourHost = parse_url(url('/'), PHP_URL_HOST);

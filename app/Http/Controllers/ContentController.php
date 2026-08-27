@@ -126,12 +126,22 @@ class ContentController extends Controller
         $storage = Storage::disk($disco);
         abort_unless($storage->exists($content->file_path), 404);
 
+        // MIME real (auditoría ago-2026): derivamos el Content-Type del contenido
+        // del archivo, no de la extensión. Si el archivo es un JPEG con extensión
+        // .png (o al revés), el navegador antes lo dibujaba negro/roto.
+        $mime = null;
+        if ($disco === 'local' && function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime = finfo_file($finfo, $storage->path($content->file_path)) ?: null;
+            finfo_close($finfo);
+        }
+        $headers = $mime ? ['Content-Type' => $mime] : [];
+
         if ($disco === 'local') {
-            return response()->file($storage->path($content->file_path));
+            return response()->file($storage->path($content->file_path), $headers);
         }
 
-        // Contenidos antiguos en disco público: streaming normal.
-        return $storage->response($content->file_path);
+        return $storage->response($content->file_path, null, $headers);
     }
 
     // ================================================================
