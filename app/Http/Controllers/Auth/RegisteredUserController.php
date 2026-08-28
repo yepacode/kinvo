@@ -64,9 +64,17 @@ class RegisteredUserController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
             ]);
+            // Feedback Karla 27-ago: el estudio tenía DOS aprobaciones
+            //   (Pendiente → PerfilPendiente → Activo). Ahora entra directo
+            //   como PerfilPendiente para poder llenar el perfil desde el
+            //   primer login; el admin lo aprueba una sola vez cuando el
+            //   perfil está listo. El coach conserva su flujo estándar
+            //   (Pendiente → Activo).
             $atributos = [
                 'nivel' => $rol,
-                'estado' => EstadoUsuario::Pendiente,
+                'estado' => $rol === RolUsuario::Contractor
+                    ? EstadoUsuario::PerfilPendiente
+                    : EstadoUsuario::Pendiente,
             ];
             if (Schema::hasColumn('users', 'locale')) {
                 $atributos['locale'] = in_array(app()->getLocale(), ['es', 'en'], true) ? app()->getLocale() : 'es';

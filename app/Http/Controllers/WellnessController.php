@@ -102,9 +102,15 @@ class WellnessController extends Controller
             ->merge($charlasContenido->all())
             ->sortByDesc('fecha')->take(15)->values();
 
+        // Feedback Karla 27-ago: el "Expediente" absorbe "Mis servicios" —
+        // el catálogo del plan del coach se muestra aquí abajo. Vive como
+        // sección dentro de la misma vista (no se creó ruta nueva).
+        $misServicios = $user->serviciosIncluidos();
+
         return view('expediente.index', [
             'beneficios' => $beneficios,
             'charlas' => $charlas,
+            'misServicios' => $misServicios,
             'comparteExpediente' => (bool) $user->comparte_expediente,
             'nombreEstudio' => $nombreEstudio,
         ]);

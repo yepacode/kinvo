@@ -54,7 +54,11 @@ class RegistrationTest extends TestCase
 
         $user = User::where('email', 'gym@example.com')->first();
         $this->assertSame(RolUsuario::Contractor, $user->nivel);
-        $this->assertSame(EstadoUsuario::Pendiente, $user->estado);
+        // Feedback Karla 27-ago: los estudios entran DIRECTO a PerfilPendiente
+        // (antes pasaban por Pendiente → PerfilPendiente → Activo con dos aprobaciones).
+        // Ahora es una sola aprobación: el admin aprueba el perfil de empresa cuando
+        // el estudio lo envía completo → Activo.
+        $this->assertSame(EstadoUsuario::PerfilPendiente, $user->estado);
     }
 
     public function test_registration_rechaza_contrasena_debil(): void

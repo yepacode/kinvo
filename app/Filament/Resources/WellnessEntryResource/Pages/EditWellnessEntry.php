@@ -13,6 +13,10 @@ class EditWellnessEntry extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('volver')
+                ->label('← Volver al listado')
+                ->color('gray')
+                ->url(static::getResource()::getUrl('index')),
             Actions\DeleteAction::make(),
         ];
     }

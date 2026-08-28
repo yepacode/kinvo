@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Enums\RolUsuario;
 use App\Filament\Resources\WellnessEntryResource\Pages;
+use App\Models\Service;
 use App\Models\User;
 use App\Models\WellnessEntry;
 use Filament\Forms;
@@ -56,12 +57,22 @@ class WellnessEntryResource extends Resource
                 Forms\Components\Select::make('type')->label('Tipo')
                     ->options(self::tipos())->required(),
                 Forms\Components\DatePicker::make('occurred_on')->label('Fecha')->required(),
+                Forms\Components\Select::make('service_id')
+                    ->label('Servicio del catálogo (opcional)')
+                    ->options(fn () => Service::query()->where('activo', true)
+                        ->orderBy('orden')->orderBy('nombre')->pluck('nombre', 'id'))
+                    ->searchable()
+                    ->helperText('Enlaza esta entrada con un servicio de la membresía.'),
                 Forms\Components\TextInput::make('provider')->label('Proveedor')
                     ->placeholder('Ej: Dr. Salinas, Fisio Roldán, Kinvoo Sessions')
                     ->maxLength(180),
                 Forms\Components\DatePicker::make('valid_until')
                     ->label('Vigencia hasta (solo pólizas)')
                     ->helperText('Rellenar solo si es una póliza o seguro.'),
+                Forms\Components\Toggle::make('is_active')
+                    ->label('Activa')
+                    ->helperText('Apaga para archivar sin borrar.')
+                    ->default(true),
                 Forms\Components\Textarea::make('notes')->label('Notas')
                     ->rows(3)->columnSpanFull(),
             ])->columns(2),
@@ -91,6 +102,10 @@ class WellnessEntryResource extends Resource
                     ->searchable()->placeholder('—'),
                 Tables\Columns\TextColumn::make('valid_until')->label('Vigencia')
                     ->date('d/m/Y')->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('service.nombre')->label('Servicio')
+                    ->placeholder('—')->toggleable(),
+                Tables\Columns\IconColumn::make('is_active')->label('Activa')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('createdByAdmin.name')->label('Registró')
                     ->placeholder('—')->toggleable(isToggledHiddenByDefault: true),
             ])

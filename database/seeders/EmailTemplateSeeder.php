@@ -312,6 +312,32 @@ class EmailTemplateSeeder extends Seeder
                 'outro' => '¿Podrás asistir? Confírmanos para reservarte el cupo:',
                 'placeholders_hint' => ['nombre', 'titulo', 'fecha'],
             ],
+            // Feedback Karla 27-ago: el aviso de baja de membresía tampoco pasaba
+            // por plantilla — usaba un blade dedicado. Ahora también editable.
+            [
+                'key' => 'aviso_baja_membresia',
+                'description' => 'Al usuario cuando cancela su suscripción.',
+                'subject' => 'Confirmación de baja — Kinvoo',
+                'greeting' => 'Hola {{nombre}},',
+                'body' => 'Recibimos tu solicitud de baja. Tu acceso a Kinvoo se mantiene hasta el final del periodo que ya pagaste.'."\n\n".'Si fue un error o quieres volver, puedes reactivar tu suscripción cuando gustes:',
+                'action_label' => 'Reactivar mi suscripción',
+                'action_url_hint' => 'url:/membresias',
+                'outro' => 'Gracias por haber sido parte de Kinvoo.',
+                'placeholders_hint' => ['nombre'],
+            ],
+            // Feedback Karla 27-ago: el reset de contraseña salía en textos por
+            // defecto de Laravel (no editables). Ahora también pasa por plantilla.
+            [
+                'key' => 'reset_password',
+                'description' => 'Al usuario cuando pide restablecer su contraseña.',
+                'subject' => 'Restablece tu contraseña de Kinvoo',
+                'greeting' => 'Hola {{nombre}},',
+                'body' => 'Recibiste este correo porque solicitaste restablecer la contraseña de tu cuenta.',
+                'action_label' => 'Restablecer contraseña',
+                'action_url_hint' => 'signed:password.reset (URL firmada · viene del código)',
+                'outro' => 'Este enlace expirará en {{minutos}} minutos. Si no solicitaste este cambio, puedes ignorar este correo — no se hará ningún cambio en tu cuenta.',
+                'placeholders_hint' => ['nombre', 'minutos'],
+            ],
         ];
 
         // firstOrCreate (NO updateOrCreate): así un re-seed en cada deploy NO

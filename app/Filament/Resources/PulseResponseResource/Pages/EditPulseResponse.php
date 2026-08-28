@@ -4,9 +4,9 @@ namespace App\Filament\Resources\PulseResponseResource\Pages;
 
 use App\Filament\Resources\PulseResponseResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ViewRecord;
+use Filament\Resources\Pages\EditRecord;
 
-class ViewPulseResponse extends ViewRecord
+class EditPulseResponse extends EditRecord
 {
     protected static string $resource = PulseResponseResource::class;
 
@@ -17,7 +17,7 @@ class ViewPulseResponse extends ViewRecord
                 ->label('← Volver al listado')
                 ->color('gray')
                 ->url(static::getResource()::getUrl('index')),
-            Actions\EditAction::make(),
+            Actions\DeleteAction::make(),
         ];
     }
 }

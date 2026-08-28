@@ -36,32 +36,29 @@ class WallController extends Controller
             ->latest()
             ->paginate(12);
 
-        return view('wall.comunidad', ['posts' => $posts]);
+        // Feedback Karla 27-ago: "Mis momentos" y "Comunidad" se unifican en
+        // esta vista. Si el user es estudio con benefit `comunidad_publicar`,
+        // le pasamos sus propios posts + el flag para pintar el form.
+        $puedePublicar = $user && $user->esContratante() && $user->hasBenefit('comunidad_publicar');
+        // Últimos 20 propios (con estado de moderación). Antes /mis-momentos
+        // paginaba 20 — mantenemos ese tope para no perder acceso a viejos.
+        $misPosts = $puedePublicar
+            ? WallPost::where('user_id', $user->id)->latest()->limit(20)->get()
+            : collect();
+
+        return view('wall.comunidad', [
+            'posts'        => $posts,
+            'puedePublicar' => $puedePublicar,
+            'misPosts'     => $misPosts,
+        ]);
     }
 
-    /** El estudio ve sus propios posts + estado de moderación.
-     *  MED-I11/D · Un coach que llegue por link viejo recibía 403 seco.
-     *  Ahora redirect claro al dashboard con status. */
+    /** Feedback Karla 27-ago: /mis-momentos ahora redirige a /comunidad (vista
+     *  unificada). Se conserva la ruta y su nombre para no romper links viejos
+     *  ni notificaciones enviadas antes del cambio. */
     public function misMomentos(Request $request)
     {
-        $user = $request->user();
-        if (! $user->esContratante()) {
-            return redirect()->route('dashboard')
-                ->with('status', 'mis-momentos-solo-estudios');
-        }
-        // Sólo el estudio CON membresía puede publicar → si free llega aquí,
-        // upsell claro en vez de mostrar la UI con botón que rebota.
-        if (! $user->hasBenefit('comunidad_publicar')) {
-            return redirect()->route('membresias.index')
-                ->with('status', 'plan-necesario-momentos');
-        }
-
-        $posts = WallPost::query()
-            ->where('user_id', $user->id)
-            ->latest()
-            ->paginate(20);
-
-        return view('wall.mis-momentos', ['posts' => $posts]);
+        return redirect()->route('wall.comunidad');
     }
 
     /** Estudio sube un momento (queda pending hasta que admin apruebe).
@@ -82,15 +79,18 @@ class WallController extends Controller
             // HIGH-27 · dimensions se aplica sólo a IMÁGENES (Laravel ignora
             // la regla para videos). Tope superior evita fotos gigantes que
             // matan la memoria del móvil y sirve de proxy para videos ultra-4K.
+            // Feedback Karla 27-ago: subimos el peso máximo a 100 MB para
+            // aceptar clips de clases más largas. Alineado con el `.user.ini`
+            // publicado en public/ (upload_max_filesize=128M / post=130M).
             'media_file' => ['required', 'file',
                 'mimes:mp4,webm,mov,m4v,jpg,jpeg,png,webp',
-                'max:25600',
+                'max:102400',
                 'dimensions:min_width=200,min_height=200,max_width=4096,max_height=4096',
             ],
         ], [
             'caption.required'    => 'Escribe una frase — no necesitas más.',
             'media_file.required' => 'Sube una foto o un video corto para compartir el momento.',
-            'media_file.max'      => 'El archivo pesa más de 25 MB. Prueba con un video más corto.',
+            'media_file.max'      => 'El archivo pesa más de 100 MB. Prueba con un video más corto.',
             'media_file.dimensions' => 'La imagen debe medir entre 200 y 4096 px de ancho y alto.',
         ]);
 
@@ -109,7 +109,9 @@ class WallController extends Controller
         ]);
         AuditLog::record($user, $post, 'wall_post_created');
 
-        return redirect()->route('wall.mis-momentos')->with('status', 'momento-enviado');
+        // wall.mis-momentos ya redirige a wall.comunidad tras el rediseño
+        // 27-ago; apuntamos directo para evitar el hop de 302 extra.
+        return redirect()->route('wall.comunidad')->with('status', 'momento-enviado');
     }
 
     /** Estudio archiva su propio momento. Admin usa Filament para moderar.

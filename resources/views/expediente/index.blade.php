@@ -81,6 +81,31 @@
             @endforeach
         </div>
 
+        {{-- Servicios del plan (antes vivía en /mis-servicios; unificado aquí
+             por petición Karla 27-ago). Si el coach no tiene plan con servicios,
+             la sección no se renderiza. --}}
+        @if (($misServicios ?? collect())->isNotEmpty())
+            <div class="mt-10 flex flex-wrap items-baseline justify-between gap-3">
+                <h3 class="font-serif text-lg font-medium text-ink">{{ __('Servicios de tu membresía') }}</h3>
+                <a href="{{ route('servicios.index') }}" class="text-sm font-medium text-sage underline hover:text-ink">
+                    {{ __('Solicitar un servicio') }} →
+                </a>
+            </div>
+            <ul class="mt-3 grid gap-3 sm:grid-cols-2">
+                @foreach ($misServicios as $srv)
+                    <li class="flex items-center gap-3 rounded-2xl border border-line bg-white p-4">
+                        <span class="text-2xl" aria-hidden="true">{{ $srv->icono ?: '✨' }}</span>
+                        <div class="min-w-0">
+                            <p class="font-medium text-ink">{{ $srv->nombre }}</p>
+                            @if ($srv->descripcion)
+                                <p class="mt-0.5 text-xs text-warmgray line-clamp-2">{{ $srv->descripcion }}</p>
+                            @endif
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+
         {{-- Charlas y capacitaciones a las que ha asistido. --}}
         <h3 class="mt-10 font-serif text-lg font-medium text-ink">
             {{ landing('expediente_charlas_titulo') }}

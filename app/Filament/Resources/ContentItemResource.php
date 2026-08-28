@@ -62,12 +62,12 @@ class ContentItemResource extends Resource
                         ContentItem::TYPE_DOCUMENT => ['application/pdf'],
                         default => null,
                     })
-                    // maxSize alineado con el PHP típico compartido (upload_max_filesize=40M
-                    // en Hostinger). Antes decía 50MB pero PHP rechazaba silenciosamente los
-                    // archivos entre 40-50MB. Ajustable si el server aumenta el límite.
-                    ->maxSize(40960)
+                    // Feedback Karla 27-ago: 40 MB no alcanzaba para clases.
+                    // Subido a 128 MB (default Hostinger Business con el `.user.ini`
+                    // que Kinvoo publica en public/). Para clases largas conviene YouTube.
+                    ->maxSize(131072)
                     ->afterStateUpdated(fn (Forms\Set $set) => $set('file_disk', 'local'))
-                    ->helperText('Hasta 40 MB. Para videos largos conviene una URL de YouTube/Vimeo (los servidores limitan el tamaño de subida).')
+                    ->helperText('Hasta 128 MB. Para clases largas (más de 15 min) recomendamos subirlas a YouTube o Vimeo (privadas o no listadas) y pegar el link en el campo de URL externa — es más rápido y no consume espacio del servidor.')
                     ->visible(fn (Forms\Get $get) => in_array($get('type'), [
                         ContentItem::TYPE_VIDEO, ContentItem::TYPE_IMAGE,
                         ContentItem::TYPE_AUDIO, ContentItem::TYPE_DOCUMENT,

@@ -47,19 +47,11 @@
                                     {{ __('Comunidad') }}
                                 </x-nav-link>
                             @endif
-                            @if ($u->hasBenefit('mis_beneficios'))
-                                <x-nav-link :href="route('beneficios.index')" :active="request()->routeIs('beneficios.*','respaldo.*','pulso.coach')">
-                                    {{ __('Mis beneficios') }}
-                                </x-nav-link>
-                            @endif
-                            @if ($u->hasBenefit('expediente_propio'))
-                                <x-nav-link :href="route('expediente.index')" :active="request()->routeIs('expediente.*')">
+                            {{-- Feedback Karla 27-ago: unificado en un solo tab "Expediente"
+                                 que engloba beneficios + servicios (sub-secciones dentro). --}}
+                            @if ($u->hasBenefit('expediente_propio') || $u->hasBenefit('mis_beneficios'))
+                                <x-nav-link :href="route('expediente.index')" :active="request()->routeIs('expediente.*','beneficios.*','servicios.*','respaldo.*','pulso.coach')">
                                     {{ __('Expediente') }}
-                                </x-nav-link>
-                            @endif
-                            @if ($u->serviciosIncluidos()->isNotEmpty())
-                                <x-nav-link :href="route('servicios.index')" :active="request()->routeIs('servicios.*')">
-                                    {{ __('Mis servicios') }}
                                 </x-nav-link>
                             @endif
                         @endif
@@ -83,16 +75,12 @@
                             <x-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.index','contenido.show')">
                                 {{ __('Desarrollo') }}
                             </x-nav-link>
-                            {{-- Petición cliente (ago-2026): "Mi desarrollo" del estudio
-                                 se reemplaza por "Mis momentos" (wall). El catálogo formal
-                                 de desarrollo lo administra Kinvoo desde Filament admin. --}}
-                            @if ($u->hasBenefit('comunidad_publicar'))
-                                <x-nav-link :href="route('wall.mis-momentos')" :active="request()->routeIs('wall.mis-momentos')">
-                                    {{ __('Mis momentos') }}
-                                </x-nav-link>
-                            @endif
-                            @if ($u->hasBenefit('comunidad_ver'))
-                                <x-nav-link :href="route('wall.comunidad')" :active="request()->routeIs('wall.comunidad')">
+                            {{-- Feedback Karla 27-ago: "Mis momentos" y "Comunidad" se
+                                 unifican en un solo tab "Comunidad". Publicar/ver conviven
+                                 en la misma vista (wall.comunidad) — controlada por benefit
+                                 gates a nivel de acciones dentro de la vista. --}}
+                            @if ($u->hasBenefit('comunidad_ver') || $u->hasBenefit('comunidad_publicar'))
+                                <x-nav-link :href="route('wall.comunidad')" :active="request()->routeIs('wall.comunidad','wall.mis-momentos')">
                                     {{ __('Comunidad') }}
                                 </x-nav-link>
                             @endif
@@ -101,11 +89,8 @@
                                     {{ __('Mi equipo') }}
                                 </x-nav-link>
                             @endif
-                            @if ($u->serviciosIncluidos()->isNotEmpty())
-                                <x-nav-link :href="route('servicios.index')" :active="request()->routeIs('servicios.*')">
-                                    {{ __('Mis servicios') }}
-                                </x-nav-link>
-                            @endif
+                            {{-- "Mis servicios" del estudio se muestra dentro de
+                                 /mi-membresia. Se quitó del menú por petición Karla. --}}
                         @endif
                     @endif
                 </div>
@@ -210,19 +195,10 @@
                             {{ __('Comunidad') }}
                         </x-responsive-nav-link>
                     @endif
-                    @if ($u->hasBenefit('mis_beneficios'))
-                        <x-responsive-nav-link :href="route('beneficios.index')" :active="request()->routeIs('beneficios.*','respaldo.*','pulso.coach')">
-                            {{ __('Mis beneficios') }}
-                        </x-responsive-nav-link>
-                    @endif
-                    @if ($u->hasBenefit('expediente_propio'))
-                        <x-responsive-nav-link :href="route('expediente.index')" :active="request()->routeIs('expediente.*')">
-                            {{ __('Mi expediente de cuidado') }}
-                        </x-responsive-nav-link>
-                    @endif
-                    @if ($u->serviciosIncluidos()->isNotEmpty())
-                        <x-responsive-nav-link :href="route('servicios.index')" :active="request()->routeIs('servicios.*')">
-                            {{ __('Mis servicios') }}
+                    {{-- Feedback Karla 27-ago: menú unificado — un solo tab "Expediente". --}}
+                    @if ($u->hasBenefit('expediente_propio') || $u->hasBenefit('mis_beneficios'))
+                        <x-responsive-nav-link :href="route('expediente.index')" :active="request()->routeIs('expediente.*','beneficios.*','servicios.*','respaldo.*','pulso.coach')">
+                            {{ __('Expediente') }}
                         </x-responsive-nav-link>
                     @endif
                 @endif
@@ -247,15 +223,9 @@
                     <x-responsive-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.index','contenido.show')">
                         {{ __('Desarrollo y capacitaciones') }}
                     </x-responsive-nav-link>
-                    {{-- HIGH-7 · Gates hasBenefit iguales al desktop para
-                         no exponer al estudio free items a los que va a chocar. --}}
-                    @if ($u->hasBenefit('comunidad_publicar'))
-                        <x-responsive-nav-link :href="route('wall.mis-momentos')" :active="request()->routeIs('wall.mis-momentos')">
-                            {{ __('Mis momentos') }}
-                        </x-responsive-nav-link>
-                    @endif
-                    @if ($u->hasBenefit('comunidad_ver'))
-                        <x-responsive-nav-link :href="route('wall.comunidad')" :active="request()->routeIs('wall.comunidad')">
+                    {{-- Feedback Karla 27-ago: mis-momentos + comunidad unificados. --}}
+                    @if ($u->hasBenefit('comunidad_ver') || $u->hasBenefit('comunidad_publicar'))
+                        <x-responsive-nav-link :href="route('wall.comunidad')" :active="request()->routeIs('wall.comunidad','wall.mis-momentos')">
                             {{ __('Comunidad') }}
                         </x-responsive-nav-link>
                     @endif
@@ -267,11 +237,6 @@
                     @if ($u->hasBenefit('gestion_equipo'))
                         <x-responsive-nav-link :href="route('equipo.index')" :active="request()->routeIs('equipo.*','pulso.estudio')">
                             {{ __('Mi equipo') }}
-                        </x-responsive-nav-link>
-                    @endif
-                    @if ($u->serviciosIncluidos()->isNotEmpty())
-                        <x-responsive-nav-link :href="route('servicios.index')" :active="request()->routeIs('servicios.*')">
-                            {{ __('Mis servicios') }}
                         </x-responsive-nav-link>
                     @endif
                 @endif

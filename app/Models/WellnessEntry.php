@@ -23,13 +23,19 @@ class WellnessEntry extends Model
 
     protected $fillable = [
         'professional_user_id', 'created_by_admin_id', 'type', 'occurred_on',
-        'provider', 'notes', 'valid_until',
+        'provider', 'notes', 'valid_until', 'is_active', 'service_id',
     ];
 
     protected $casts = [
         'occurred_on' => 'date',
         'valid_until' => 'date',
+        'is_active'   => 'boolean',
     ];
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
+    }
 
     public function professional(): BelongsTo
     {

@@ -77,8 +77,25 @@
                     @else
                         <ul class="mt-3 space-y-2">
                             @foreach ($o->applications as $app)
+                                @php
+                                    // Feedback Karla 27-ago: el nombre del coach debe abrir su perfil público
+                                    // para poder revisarlo antes de decidir sobre la postulación.
+                                    $perfilCoach = $app->professional?->professionalProfile;
+                                    $slugCoach = $perfilCoach?->slug;
+                                @endphp
                                 <li class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line/60 px-3 py-2 text-sm">
-                                    <span>{{ $app->professional?->name }} — <em class="text-warmgray">{{ $app->created_at->translatedFormat('d M') }}</em></span>
+                                    <span>
+                                        @if ($slugCoach)
+                                            <a href="{{ route('talento.show', $slugCoach) }}"
+                                               class="font-medium text-sage underline hover:text-ink"
+                                               target="_blank" rel="noopener">
+                                                {{ $app->professional->name }} ↗
+                                            </a>
+                                        @else
+                                            {{ $app->professional?->name }}
+                                        @endif
+                                        — <em class="text-warmgray">{{ $app->created_at->translatedFormat('d M') }}</em>
+                                    </span>
                                     <form method="POST" action="{{ route('ofertas.postulacion.estado', $app) }}" class="flex items-center gap-2">
                                         @csrf
                                         {{-- Auto-guarda al cambiar el estado. Antes había que pulsar "Guardar"

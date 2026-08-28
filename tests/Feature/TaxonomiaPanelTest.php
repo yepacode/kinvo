@@ -36,10 +36,13 @@ class TaxonomiaPanelTest extends TestCase
             ->assertStatus(200)
             ->assertSee('NASM-CPT');
 
+        // Con el seeder ampliado (48 ubicaciones MX, feedback Karla 27-ago) la
+        // primera página puede no incluir "Guadalajara" — buscamos a "México"
+        // que aparece en la columna `pais` de TODAS las filas (siempre presente).
         $this->actingAs($this->owner())
             ->get('/admin/locations')
             ->assertStatus(200)
-            ->assertSee('Guadalajara');
+            ->assertSee('México');
     }
 
     public function test_no_admin_no_accede_al_panel(): void

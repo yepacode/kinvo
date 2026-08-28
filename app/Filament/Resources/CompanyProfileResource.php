@@ -24,7 +24,7 @@ class CompanyProfileResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
     protected static ?string $navigationGroup = 'Fase 2 · Producto';
     protected static ?string $modelLabel = 'estudio';
-    protected static ?string $pluralModelLabel = 'Estudios (cupos, notas)';
+    protected static ?string $pluralModelLabel = 'Estudios';
     protected static ?int $navigationSort = 25;
 
     public static function canCreate(): bool
@@ -35,54 +35,120 @@ class CompanyProfileResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('company_name')
-                ->label('Nombre del estudio')
-                ->disabled()
-                ->dehydrated(false),
-            Forms\Components\Placeholder::make('user_email')
-                ->label('Correo del dueño')
-                ->content(fn (?CompanyProfile $record) => $record?->user?->email ?? '—'),
-            Forms\Components\TextInput::make('max_coach_slots')
-                ->label('Cupos de coaches asignados')
-                ->helperText(fn (?CompanyProfile $record) => 'Máximo de coaches activos que puede tener este estudio. Deja vacío = sin límite.'
-                    .($record ? ' Coaches activos actualmente: '.\App\Models\TeamMember::where('contractor_user_id', $record->user_id)
-                        ->where('status', \App\Models\TeamMember::STATUS_ACTIVE)->count() : ''))
-                ->numeric()
-                ->minValue(0)
-                ->maxValue(9999)
-                // MED-H7 · Advertir si el nuevo tope queda por debajo de
-                // coaches activos. No los saca automáticamente (evita
-                // decisiones destructivas silenciosas): sólo bloquea el guardado
-                // hasta que el admin ajuste (o convenza al estudio de remover
-                // manualmente algunos coaches antes de bajar el cupo).
-                ->rules([
-                    function (\Filament\Forms\Get $get) {
-                        return function (string $attr, $value, \Closure $fail) use ($get) {
-                            if ($value === null || $value === '') return;
-                            // Filament pasa el record en el livewire state; obtenemos el user_id
-                            // desde la ruta actual (edit) para contar activos reales.
-                            $userId = request()->route('record');
-                            if (! $userId) return;
-                            $profile = \App\Models\CompanyProfile::where('slug', $userId)->first();
-                            if (! $profile) return;
-                            $activos = \App\Models\TeamMember::where('contractor_user_id', $profile->user_id)
-                                ->where('status', \App\Models\TeamMember::STATUS_ACTIVE)
-                                ->count();
-                            if ((int) $value < $activos) {
-                                $fail("Este estudio tiene {$activos} coaches activos — no puedes bajar el cupo a {$value}. Pide al estudio que remueva coaches primero.");
-                            }
-                        };
-                    },
-                ]),
-            Forms\Components\Textarea::make('admin_notes')
-                ->label('Nota interna del admin')
-                ->helperText('Solo visible para el admin. Sirve para llevar contexto del estudio. El estudio NO ve este campo.')
-                ->maxLength(2000)
-                ->rows(3),
-            Forms\Components\Placeholder::make('wellness_notes_ro')
-                ->label('Nota del estudio sobre su equipo (solo lectura)')
-                ->content(fn (?CompanyProfile $record) => $record?->wellness_notes ?: '—')
-                ->extraAttributes(['class' => 'text-sm text-warmgray']),
+            // Petición Karla 27-ago: el admin necesita poder EDITAR el perfil
+            // del estudio (antes casi todo estaba solo lectura). Reestructurado
+            // en 4 secciones editables + 1 solo lectura para la nota que el
+            // estudio deja de su propio equipo (esa sigue siendo del estudio,
+            // el admin la lee pero no la escribe).
+            Forms\Components\Section::make('Identidad del estudio')
+                ->description('Datos básicos que aparecen en el perfil público.')
+                ->schema([
+                    Forms\Components\TextInput::make('company_name')
+                        ->label('Nombre del estudio')
+                        ->required()
+                        ->maxLength(180),
+                    Forms\Components\Placeholder::make('user_email')
+                        ->label('Correo del dueño (no editable)')
+                        ->content(fn (?CompanyProfile $record) => $record?->user?->email ?? '—'),
+                    Forms\Components\TextInput::make('sector')
+                        ->label('Sector')
+                        ->placeholder('Ej: Estudio boutique, Gimnasio, Marca')
+                        ->maxLength(120),
+                    Forms\Components\TextInput::make('website')
+                        ->label('Sitio web')
+                        ->url()
+                        ->prefix('https://')
+                        ->maxLength(200),
+                    Forms\Components\Textarea::make('disciplines_text')
+                        ->label('Disciplinas que ofrece')
+                        ->placeholder('Ej: Yoga, Pilates, HIIT, Barré')
+                        ->rows(2)
+                        ->columnSpanFull(),
+                    Forms\Components\Textarea::make('description')
+                        ->label('Descripción / bio del estudio')
+                        ->rows(4)
+                        ->maxLength(2000)
+                        ->columnSpanFull(),
+                ])->columns(2),
+
+            Forms\Components\Section::make('Ubicación (México)')
+                ->schema([
+                    Forms\Components\Select::make('estado')
+                        ->label('Estado')
+                        ->options(array_combine(CompanyProfile::ESTADOS_MX, CompanyProfile::ESTADOS_MX))
+                        ->searchable(),
+                    Forms\Components\TextInput::make('colonia')
+                        ->label('Colonia')
+                        ->maxLength(120),
+                    Forms\Components\TextInput::make('address')
+                        ->label('Dirección')
+                        ->maxLength(220)
+                        ->columnSpanFull(),
+                    Forms\Components\TextInput::make('postal_code')
+                        ->label('C.P.')
+                        ->maxLength(10),
+                    Forms\Components\Toggle::make('show_address')
+                        ->label('Mostrar dirección exacta en el perfil público'),
+                ])->columns(2)->collapsible(),
+
+            Forms\Components\Section::make('Contacto')
+                ->schema([
+                    Forms\Components\TextInput::make('contact_name')
+                        ->label('Persona de contacto')
+                        ->maxLength(120),
+                    Forms\Components\TextInput::make('contact_phone')
+                        ->label('Teléfono de contacto')
+                        ->tel()
+                        ->maxLength(30),
+                    Forms\Components\TextInput::make('contact_email')
+                        ->label('Correo de contacto')
+                        ->email()
+                        ->maxLength(180)
+                        ->columnSpanFull(),
+                ])->columns(2)->collapsible()->collapsed(),
+
+            Forms\Components\Section::make('Membresía y notas internas')
+                ->schema([
+                    Forms\Components\TextInput::make('max_coach_slots')
+                        ->label('Cupos de coaches asignados')
+                        ->helperText(fn (?CompanyProfile $record) => 'Máximo de coaches activos que puede tener este estudio. Deja vacío = sin límite.'
+                            .($record ? ' Coaches activos actualmente: '.\App\Models\TeamMember::where('contractor_user_id', $record->user_id)
+                                ->where('status', \App\Models\TeamMember::STATUS_ACTIVE)->count() : ''))
+                        ->numeric()
+                        ->minValue(0)
+                        ->maxValue(9999)
+                        // MED-H7 · Advertir si el nuevo tope queda por debajo de
+                        // coaches activos. Bloquea el guardado; el admin debe pedirle
+                        // al estudio que remueva coaches antes de bajar el cupo.
+                        ->rules([
+                            function () {
+                                return function (string $attr, $value, \Closure $fail) {
+                                    if ($value === null || $value === '') return;
+                                    $userId = request()->route('record');
+                                    if (! $userId) return;
+                                    $profile = \App\Models\CompanyProfile::where('slug', $userId)->first();
+                                    if (! $profile) return;
+                                    $activos = \App\Models\TeamMember::where('contractor_user_id', $profile->user_id)
+                                        ->where('status', \App\Models\TeamMember::STATUS_ACTIVE)
+                                        ->count();
+                                    if ((int) $value < $activos) {
+                                        $fail("Este estudio tiene {$activos} coaches activos — no puedes bajar el cupo a {$value}. Pide al estudio que remueva coaches primero.");
+                                    }
+                                };
+                            },
+                        ]),
+                    Forms\Components\Textarea::make('admin_notes')
+                        ->label('Nota interna del admin')
+                        ->helperText('Solo visible para el admin. El estudio NO ve este campo.')
+                        ->maxLength(2000)
+                        ->rows(3)
+                        ->columnSpanFull(),
+                    Forms\Components\Placeholder::make('wellness_notes_ro')
+                        ->label('Nota del estudio sobre su equipo (solo lectura)')
+                        ->content(fn (?CompanyProfile $record) => $record?->wellness_notes ?: '—')
+                        ->extraAttributes(['class' => 'text-sm text-warmgray'])
+                        ->columnSpanFull(),
+                ])->columns(2),
         ]);
     }
 

@@ -4,7 +4,9 @@
     </x-slot>
 
     <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-        <x-back-link :href="route('beneficios.index')" :value="__('← Mis beneficios')" />
+        {{-- Tras el rediseño 27-ago el coach ya no llega a Respaldo desde
+             "Mis beneficios" (unificado en Expediente); volvemos ahí. --}}
+        <x-back-link :href="route('expediente.index')" :value="__('← Expediente')" />
 
         <x-guia-inline :titulo="landing('respaldo_guia_titulo')" tono="beige">
             <p>{{ landing('respaldo_guia_body') }}</p>

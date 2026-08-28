@@ -78,7 +78,7 @@
                 <label for="colonia" class="block text-sm font-medium text-ink">{{ __('Colonia (opcional)') }}</label>
                 <input id="colonia" name="colonia" type="text" maxlength="120"
                        value="{{ old('colonia', $oferta->colonia) }}"
-                       placeholder="{{ __('Ej: Roma Norte, Chapinero, Palermo...') }}"
+                       placeholder="{{ __('Ej: Roma Norte, Polanco, Del Valle...') }}"
                        class="mt-1 w-full min-h-[44px] rounded-xl border border-line px-3 py-2 text-sm">
                 <p class="mt-1 text-xs text-warmgray">{{ __('Ayuda al coach a ubicar tu estudio de forma más precisa.') }}</p>
             </div>

@@ -18,15 +18,19 @@
         </x-guia-inline>
 
         @forelse ($postulaciones as $p)
-            <div class="mb-4 rounded-2xl border border-line bg-white p-5">
+            {{-- Feedback Karla 27-ago: la card entera debe llevar al detalle de
+                 la OFERTA (antes solo el título era link, el resto de la caja
+                 no se sentía clickeable). --}}
+            <a href="{{ route('ofertas.show', $p->offer->slug) }}"
+               class="group mb-4 block rounded-2xl border border-line bg-white p-5 transition hover:border-sage hover:shadow-sm">
                 <div class="flex flex-wrap items-start justify-between gap-2">
-                    <a href="{{ route('ofertas.show', $p->offer->slug) }}" class="min-w-0">
-                        <h3 class="font-serif text-lg font-medium text-ink hover:text-sage">{{ $p->offer->title }}</h3>
+                    <div class="min-w-0">
+                        <h3 class="font-serif text-lg font-medium text-ink group-hover:text-sage">{{ $p->offer->title }}</h3>
                         <p class="text-sm text-warmgray">
                             {{ $p->offer->contractor?->name }}
                             @if ($p->offer->location) · {{ $p->offer->location->ciudad }} @endif
                         </p>
-                    </a>
+                    </div>
                     <span class="rounded-full px-3 py-1 text-xs font-medium
                                  {{ match($p->status) {
                                     'accepted' => 'bg-sage/20 text-sage',
@@ -44,7 +48,7 @@
                         · {{ __('Actualizada:') }} {{ $p->status_changed_at->translatedFormat('d M Y') }}
                     @endif
                 </p>
-            </div>
+            </a>
         @empty
             <div class="rounded-2xl border border-line bg-white px-6 py-12 text-center">
                 <p class="text-warmgray">{{ landing('mis_postulaciones_empty') }}</p>

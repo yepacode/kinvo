@@ -43,11 +43,10 @@ class PulseResponseResource extends Resource
                     ->mapWithKeys(fn (User $u) => [$u->id => $u->companyProfile?->company_name ?: $u->name]))
                 ->searchable()->required()
                 ->helperText('¿A qué estudio corresponde esta evaluación?'),
-            Forms\Components\Select::make('user_id')
-                ->label('Coach (opcional)')
-                ->options(fn () => User::query()->where('nivel', RolUsuario::Professional)
-                    ->orderBy('name')->pluck('name', 'id'))
-                ->searchable()->placeholder('Sin coach — nota general del estudio'),
+            // Petición cliente (27-ago): el campo Coach se quitó del form.
+            // El Pulso es del ESTUDIO (la gente evalúa al estudio, no al coach).
+            // Las respuestas viejas con user_id conservan el dato; nuevas se guardan
+            // sin coach (columna nullable desde la migración 2026_08_20_130000).
             Forms\Components\Select::make('rating')
                 ->label('Calificación')
                 ->options([1 => '1 ★', 2 => '2 ★', 3 => '3 ★', 4 => '4 ★', 5 => '5 ★'])
@@ -101,6 +100,7 @@ class PulseResponseResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
             ]);
     }
 
@@ -110,6 +110,7 @@ class PulseResponseResource extends Resource
             'index'  => Pages\ListPulseResponses::route('/'),
             'create' => Pages\CreatePulseResponse::route('/create'),
             'view'   => Pages\ViewPulseResponse::route('/{record}'),
+            'edit'   => Pages\EditPulseResponse::route('/{record}/edit'),
         ];
     }
 }
