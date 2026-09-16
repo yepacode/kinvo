@@ -31,6 +31,15 @@ Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
 // Selector de idioma (guarda cookie `locale` y vuelve a la vista anterior).
 Route::post('/idioma/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
 
+// Keepalive del token CSRF: el layout hace fetch a esta ruta cada 15 min para
+// renovar el meta[name=csrf-token] y todos los inputs _token visibles, y así
+// evitar los 419 "Page Expired" que reportó Karla (feedback 16-sep). Devuelve
+// el token actual sin regenerarlo (regenerar aquí invalidaría formularios ya
+// abiertos en otras pestañas).
+Route::get('/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+})->name('csrf.token');
+
 // Membresías (planes públicos).
 Route::get('/membresias', [MembresiaController::class, 'index'])->name('membresias.index');
 

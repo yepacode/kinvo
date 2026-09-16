@@ -32,7 +32,12 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    // Feedback Karla 16-sep: la sesión de 2 h expiraba mientras Karla llenaba
+    // un formulario largo y el submit devolvía 419. Subimos el default a 8 h
+    // para que el token CSRF sobreviva la jornada; el keepalive del layout
+    // renueva el token cada 15 min si el user sigue activo (idle timeout real
+    // sigue siendo un problema del session driver, no del CSRF).
+    'lifetime' => (int) env('SESSION_LIFETIME', 480),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 

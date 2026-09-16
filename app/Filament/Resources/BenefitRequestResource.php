@@ -26,7 +26,17 @@ class BenefitRequestResource extends Resource
     protected static ?string $pluralModelLabel = 'Respaldos';
     protected static ?int $navigationSort = 30;
 
+    // Feedback Karla 16-sep: quitar módulo Respaldos del admin (no lo usa).
+    // No borramos ni el resource ni la tabla — sólo lo sacamos del nav para
+    // preservar los datos históricos y poder reactivar sin migrar de vuelta.
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function canViewAny(): bool
     {
         return false;
     }

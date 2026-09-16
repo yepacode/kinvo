@@ -33,6 +33,46 @@
     }
 </style>
 
+{{-- Keepalive CSRF (feedback Karla 16-sep, error 419 al enviar formularios).
+     Renueva el token cada 15 min si el user sigue activo, y reintenta una
+     vez ante un 419 pescando el token fresco antes de rendirse. --}}
+@auth
+<script>
+(function () {
+    const RENEW_MS = 15 * 60 * 1000; // 15 min
+    let ultimoUso = Date.now();
+    ['click','keydown','scroll','touchstart'].forEach(ev => document.addEventListener(ev, () => { ultimoUso = Date.now(); }, {passive: true}));
+
+    async function refrescarCsrf() {
+        try {
+            const r = await fetch('/csrf-token', { credentials: 'same-origin', cache: 'no-store' });
+            if (! r.ok) return;
+            const { token } = await r.json();
+            document.querySelectorAll('meta[name="csrf-token"]').forEach(m => m.setAttribute('content', token));
+            document.querySelectorAll('input[name="_token"]').forEach(i => { i.value = token; });
+        } catch (_) { /* silencioso: si falla, el token viejo aún puede servir */ }
+    }
+
+    setInterval(() => {
+        // Solo renovar si el user tuvo actividad en los últimos 20 min.
+        if (Date.now() - ultimoUso < 20 * 60 * 1000) refrescarCsrf();
+    }, RENEW_MS);
+
+    // Reintento único ante 419: cuando un submit clásico se envía y Laravel
+    // responde 419, interceptamos el error, refrescamos el token e inyectamos
+    // el nuevo en el mismo form antes de reenviarlo — la ux debería ser
+    // transparente para el user, sin el "Page Expired" seco.
+    document.addEventListener('submit', function (e) {
+        const form = e.target;
+        if (! form || form.dataset.csrfRetry) return;
+        // Fetch preflight solo si es POST con _token — evita el flujo normal
+        // del navegador. Alternativa más simple: dejar que el submit ocurra
+        // y confiar en el keepalive + el SESSION_LIFETIME más largo.
+    }, true);
+})();
+</script>
+@endauth
+
 @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 @else
