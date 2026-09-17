@@ -53,6 +53,10 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                // Feedback Karla 17-sep: tras logout admin manda a /login
+                // (frontend) en vez de dejar en /admin/login, donde el coach
+                // y el estudio no pueden entrar.
+                \App\Http\Middleware\RedirectAdminLogoutToFrontend::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

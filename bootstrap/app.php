@@ -34,6 +34,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SecurityHeaders::class,
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\DetectDeletedUser::class,
+            // Feedback Karla 17-sep: al cambiar de rol (admin → coach → estudio)
+            // en el mismo perfil de Chrome, cookies y autofill causaban errores
+            // fantasma de credenciales. Este middleware añade Clear-Site-Data en
+            // la respuesta del POST /logout para dejar el navegador limpio.
+            \App\Http\Middleware\ClearBrowserStateOnLogout::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
