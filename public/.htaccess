@@ -1,11 +1,15 @@
 # Feedback auditoría seguridad 21-sep MED-3: Hostinger/LiteSpeed sobrescribe
-# la CSP que envía SecurityHeaders con la suya (sólo `upgrade-insecure-requests`).
-# Con `always unset` limpiamos la que agrega el server, y dejamos que la de
-# PHP pase; si algún día el hosting no la quita, no hay riesgo — sobre-declarar
-# doble está bien. También quitamos X-Powered-By por si expose_php no está OFF.
+# la CSP que envía el middleware con la suya (sólo `upgrade-insecure-requests`).
+# Aquí quitamos la de LiteSpeed y fijamos la estricta directamente en el
+# response — no depende de PHP, la sirve el server. Sólo para rutas públicas:
+# /admin (Filament) usa una superficie distinta con nonces propios y le
+# dejamos su CSP más laxa que envía el propio PHP.
 <IfModule mod_headers.c>
-    Header always unset Content-Security-Policy
     Header always unset X-Powered-By
+
+    SetEnvIf Request_URI "^/admin(/|$)" IS_ADMIN_PANEL
+    Header always unset Content-Security-Policy
+    Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; img-src 'self' data:; media-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com; font-src 'self' data: https://fonts.gstatic.com https://api.fontshare.com https://cdn.fontshare.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; connect-src 'self'; form-action 'self'" env=!IS_ADMIN_PANEL
 </IfModule>
 
 <IfModule mod_rewrite.c>
