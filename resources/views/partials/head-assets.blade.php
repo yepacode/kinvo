@@ -58,16 +58,19 @@
         if (Date.now() - ultimoUso < 20 * 60 * 1000) refrescarCsrf();
     }, RENEW_MS);
 
-    // Reintento único ante 419: cuando un submit clásico se envía y Laravel
-    // responde 419, interceptamos el error, refrescamos el token e inyectamos
-    // el nuevo en el mismo form antes de reenviarlo — la ux debería ser
-    // transparente para el user, sin el "Page Expired" seco.
+    // Renovar también justo antes de que el user envíe cualquier form clásico
+    // POST/PUT/DELETE: garantiza que _token está fresco justo en el submit
+    // (además del keepalive de 15 min). No interceptamos el submit — sólo
+    // sobrescribimos el input _token con el token vigente. Si el user acaba
+    // de estar activo, el meta ya está actualizado por el keepalive; si no,
+    // este blindaje evita el "Page Expired" ocasional al reactivarse tras
+    // horas de inactividad.
     document.addEventListener('submit', function (e) {
         const form = e.target;
-        if (! form || form.dataset.csrfRetry) return;
-        // Fetch preflight solo si es POST con _token — evita el flujo normal
-        // del navegador. Alternativa más simple: dejar que el submit ocurra
-        // y confiar en el keepalive + el SESSION_LIFETIME más largo.
+        if (! form || form.tagName !== 'FORM') return;
+        const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (! metaToken) return;
+        form.querySelectorAll('input[name="_token"]').forEach(i => { i.value = metaToken; });
     }, true);
 })();
 </script>

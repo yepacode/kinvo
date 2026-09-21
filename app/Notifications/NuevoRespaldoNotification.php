@@ -52,7 +52,7 @@ class NuevoRespaldoNotification extends Notification
             ],
             'titulo'      => 'Nuevo Respaldo: '.$this->tipoLabel().' — '.($this->request->user?->name ?? __('Coach')),
             'mensaje'     => $this->request->preferred_slot ?: __('(sin preferencia horaria)'),
-            'url'         => route('filament.admin.resources.benefit-requests.index', absolute: false),
+            'url'         => route('filament.admin.resources.users.index', absolute: false),
             'request_id'  => $this->request->id,
         ];
     }
@@ -72,7 +72,7 @@ class NuevoRespaldoNotification extends Notification
             $coach = $this->request->user?->name ?? __('Un coach');
             $prefiere = $this->request->preferred_slot ?: '';
             $nota = $this->request->note ?: '';
-            $url = url(route('filament.admin.resources.benefit-requests.index', absolute: false));
+            $url = url(route('filament.admin.resources.users.index', absolute: false));
 
             // Editable desde el panel (plantilla respaldo_nuevo_admin).
             $t = \App\Models\EmailTemplate::render('respaldo_nuevo_admin',

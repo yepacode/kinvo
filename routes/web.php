@@ -35,10 +35,11 @@ Route::post('/idioma/{locale}', [LocaleController::class, 'switch'])->name('loca
 // renovar el meta[name=csrf-token] y todos los inputs _token visibles, y así
 // evitar los 419 "Page Expired" que reportó Karla (feedback 16-sep). Devuelve
 // el token actual sin regenerarlo (regenerar aquí invalidaría formularios ya
-// abiertos en otras pestañas).
+// abiertos en otras pestañas). Auth+throttle: solo los usuarios logueados lo
+// necesitan; el throttle evita bloat de la tabla `sessions` por hits anónimos.
 Route::get('/csrf-token', function () {
     return response()->json(['token' => csrf_token()]);
-})->name('csrf.token');
+})->middleware(['auth', 'throttle:60,1'])->name('csrf.token');
 
 // Membresías (planes públicos).
 Route::get('/membresias', [MembresiaController::class, 'index'])->name('membresias.index');

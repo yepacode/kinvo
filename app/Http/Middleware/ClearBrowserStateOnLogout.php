@@ -32,7 +32,11 @@ class ClearBrowserStateOnLogout
         $esLogout = $request->isMethod('POST')
             && ($path === '/logout' || $path === '/admin/logout');
 
-        if ($esLogout) {
+        // Solo enviar la cabecera si el logout fue exitoso (< 400). Un 419
+        // (CSRF inválido) o un 500 no debe borrar el navegador del user — la
+        // sesión servidor no se invalidó y el user seguiría "adentro" pero
+        // sin cookies, quedando en un limbo confuso.
+        if ($esLogout && $response->getStatusCode() < 400) {
             // Comillas dobles alrededor de cada directiva, separadas por coma.
             // Ver https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Clear-Site-Data
             $response->headers->set('Clear-Site-Data', '"cookies", "storage", "cache"');

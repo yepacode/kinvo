@@ -53,6 +53,15 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                // Feedback Karla 17-sep: Filament NO pasa por el grupo `web`
+                // de Laravel — sus rutas se cargan con su propio middleware
+                // stack (ver vendor/filament/filament/routes/web.php). Sin
+                // este orden, ClearBrowserStateOnLogout registrado global en
+                // bootstrap/app.php cubría solo /logout del frontend y NO
+                // /admin/logout. Se declara acá primero (envoltura externa)
+                // para que la cabecera Clear-Site-Data se conserve en la
+                // respuesta final que devuelve RedirectAdminLogoutToFrontend.
+                \App\Http\Middleware\ClearBrowserStateOnLogout::class,
                 // Feedback Karla 17-sep: tras logout admin manda a /login
                 // (frontend) en vez de dejar en /admin/login, donde el coach
                 // y el estudio no pueden entrar.
@@ -60,6 +69,15 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            // Feedback Karla 16-sep: el keepalive CSRF vive en head-assets del
+            // layout público (@auth), pero el panel Filament tiene su propio
+            // layout — sin este renderHook Karla seguiría viendo 419 al enviar
+            // formularios largos del panel. Se inyecta como <script defer> en
+            // el <head>, con la misma lógica del keepalive del frontend.
+            ->renderHook(
+                'panels::head.end',
+                fn (): string => view('partials.csrf-keepalive-filament')->render(),
+            );
     }
 }

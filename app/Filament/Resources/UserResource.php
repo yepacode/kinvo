@@ -305,11 +305,16 @@ class UserResource extends Resource
                 // de vida, Bolsa de trabajo, Desarrollo). Sólo estado manual —
                 // Kinvoo no ejecuta ni agenda ningún beneficio.
                 Tables\Actions\Action::make('beneficios')
-                    ->label('Beneficios (apagador)')
+                    // Defensa en profundidad: aunque el panel completo ya está
+                    // gateado por canAccessPanel() (solo Admin), un authorize
+                    // explícito impide que un segundo panel expuesto a otro
+                    // rol en el futuro herede esta acción por accidente.
+                    ->authorize(fn () => auth()->user()?->esAdmin() ?? false)
+                    ->label(__('Beneficios (apagador)'))
                     ->icon('heroicon-o-bolt')
                     ->color('warning')
-                    ->modalHeading(fn (User $u) => 'Beneficios de '.$u->name)
-                    ->modalDescription('Prende un beneficio sólo cuando el trámite con el proveedor esté resuelto. El miembro ve "Activo" cuando está prendido y "Pendiente" cuando está apagado.')
+                    ->modalHeading(fn (User $u) => __('Beneficios de :nombre', ['nombre' => $u->name]))
+                    ->modalDescription(__('Prende un beneficio sólo cuando el trámite con el proveedor esté resuelto. El miembro ve "Activo" cuando está prendido y "Pendiente" cuando está apagado.'))
                     ->modalWidth('lg')
                     ->form(function (User $u) {
                         $estados = $u->benefitStates()->get()->keyBy(fn ($s) => $s->benefit_key->value);
@@ -324,46 +329,54 @@ class UserResource extends Resource
                                 ->inline(false);
                         }
                         $campos[] = \Filament\Forms\Components\Textarea::make('admin_notes')
-                            ->label('Nota interna del admin (opcional)')
-                            ->helperText('Sólo el admin la ve. Se guarda igual en todos los beneficios que se toquen esta vez.')
+                            ->label(__('Nota interna del admin (opcional)'))
+                            ->helperText(__('Sólo el admin la ve. Se guarda igual en todos los beneficios que se toquen esta vez.'))
                             ->rows(2)
                             ->maxLength(1000);
                         return $campos;
                     })
                     ->action(function (User $u, array $data) {
-                        $ahora = now();
-                        $cambios = [];
-                        foreach (\App\Enums\BenefitKey::todos() as $k) {
-                            $nuevoActivo = (bool) ($data['activo_'.$k->value] ?? false);
-                            $estado = \App\Models\MemberBenefitState::firstOrNew([
-                                'user_id'     => $u->id,
-                                'benefit_key' => $k->value,
-                            ]);
-                            $anterior = (bool) $estado->activo;
-                            if ($anterior === $nuevoActivo && ! filled($data['admin_notes'] ?? null)) {
-                                continue; // sin cambio real, no tocamos
+                        // Envolver los 4 saves + AuditLog en una transacción:
+                        // si el 3º save() explota no queremos dejar la mitad
+                        // de los beneficios cambiados y ninguna traza en la
+                        // bitácora — o va todo o no va nada.
+                        $cambios = \Illuminate\Support\Facades\DB::transaction(function () use ($u, $data) {
+                            $ahora = now();
+                            $cambios = [];
+                            foreach (\App\Enums\BenefitKey::todos() as $k) {
+                                $nuevoActivo = (bool) ($data['activo_'.$k->value] ?? false);
+                                $estado = \App\Models\MemberBenefitState::firstOrNew([
+                                    'user_id'     => $u->id,
+                                    'benefit_key' => $k->value,
+                                ]);
+                                $anterior = (bool) $estado->activo;
+                                if ($anterior === $nuevoActivo && ! filled($data['admin_notes'] ?? null)) {
+                                    continue;
+                                }
+                                $estado->activo = $nuevoActivo;
+                                if ($nuevoActivo && ! $anterior) {
+                                    $estado->activated_at = $ahora;
+                                } elseif (! $nuevoActivo && $anterior) {
+                                    $estado->deactivated_at = $ahora;
+                                }
+                                if (filled($data['admin_notes'] ?? null)) {
+                                    $estado->admin_notes = $data['admin_notes'];
+                                }
+                                $estado->changed_by_admin_id = auth()->id();
+                                $estado->save();
+                                $cambios[$k->value] = ['antes' => $anterior, 'despues' => $nuevoActivo];
                             }
-                            $estado->activo = $nuevoActivo;
-                            if ($nuevoActivo && ! $anterior) {
-                                $estado->activated_at = $ahora;
-                            } elseif (! $nuevoActivo && $anterior) {
-                                $estado->deactivated_at = $ahora;
+                            if ($cambios) {
+                                \App\Models\AuditLog::record(auth()->user(), $u,
+                                    'member_benefits_updated',
+                                    old: [], new: $cambios);
                             }
-                            if (filled($data['admin_notes'] ?? null)) {
-                                $estado->admin_notes = $data['admin_notes'];
-                            }
-                            $estado->changed_by_admin_id = auth()->id();
-                            $estado->save();
-                            $cambios[$k->value] = ['antes' => $anterior, 'despues' => $nuevoActivo];
-                        }
-                        if ($cambios) {
-                            \App\Models\AuditLog::record(auth()->user(), $u,
-                                'member_benefits_updated',
-                                old: [], new: $cambios);
-                        }
+                            return $cambios;
+                        });
+
                         \Filament\Notifications\Notification::make()
-                            ->title($cambios ? 'Beneficios actualizados' : 'Sin cambios')
-                            ->body($cambios ? count($cambios).' beneficio(s) modificado(s).' : 'No detectamos cambios.')
+                            ->title($cambios ? __('Beneficios actualizados') : __('Sin cambios'))
+                            ->body($cambios ? __(':n beneficio(s) modificado(s).', ['n' => count($cambios)]) : __('No detectamos cambios.'))
                             ->success()->send();
                     }),
                 Tables\Actions\Action::make('rechazar')

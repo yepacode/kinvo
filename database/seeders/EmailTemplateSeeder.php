@@ -121,7 +121,7 @@ class EmailTemplateSeeder extends Seeder
                 'greeting' => 'Hola equipo Kinvoo,',
                 'body' => "{{coach}} pidió una sesión de **{{tipo}}**.\n\n**Prefiere:** {{preferred_slot}}\n**Nota:** {{note}}",
                 'action_label' => 'Agendar en el panel',
-                'action_url_hint' => '/admin/benefit-requests',
+                'action_url_hint' => '/admin/users',
                 'outro' => 'Al confirmar la fecha, el coach recibirá el aviso automáticamente.',
                 'placeholders_hint' => ['coach', 'tipo', 'preferred_slot', 'note'],
             ],
