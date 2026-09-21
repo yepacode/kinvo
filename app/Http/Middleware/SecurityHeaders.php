@@ -19,6 +19,14 @@ class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
+        // Feedback auditoría seguridad 21-sep MED-1/LOW-1: bloquear APIs del
+        // navegador que no usamos y quitar la firma de PHP. Complementa el
+        // `expose_php = Off` que en Hostinger vive en php.ini (a nivel host).
+        $response->headers->set(
+            'Permissions-Policy',
+            'geolocation=(), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()'
+        );
+        $response->headers->remove('X-Powered-By');
 
         // HSTS solo sobre HTTPS (producción); nunca en local para no bloquear http.
         if ($request->secure()) {

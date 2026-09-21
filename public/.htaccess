@@ -1,3 +1,13 @@
+# Feedback auditoría seguridad 21-sep MED-3: Hostinger/LiteSpeed sobrescribe
+# la CSP que envía SecurityHeaders con la suya (sólo `upgrade-insecure-requests`).
+# Con `always unset` limpiamos la que agrega el server, y dejamos que la de
+# PHP pase; si algún día el hosting no la quita, no hay riesgo — sobre-declarar
+# doble está bien. También quitamos X-Powered-By por si expose_php no está OFF.
+<IfModule mod_headers.c>
+    Header always unset Content-Security-Policy
+    Header always unset X-Powered-By
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
