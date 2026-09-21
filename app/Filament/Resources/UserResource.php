@@ -300,6 +300,72 @@ class UserResource extends Resource
                             new: ['estado' => EstadoUsuario::Activo->value]);
                         $u->notify(new \App\Notifications\PerfilEmpresaAprobadoNotification());
                     }),
+                // Feedback Karla 21-sep · "Requerimiento del apagador": el admin
+                // maneja on/off por miembro × subservicio (Telemedicina, Seguro
+                // de vida, Bolsa de trabajo, Desarrollo). Sólo estado manual —
+                // Kinvoo no ejecuta ni agenda ningún beneficio.
+                Tables\Actions\Action::make('beneficios')
+                    ->label('Beneficios (apagador)')
+                    ->icon('heroicon-o-bolt')
+                    ->color('warning')
+                    ->modalHeading(fn (User $u) => 'Beneficios de '.$u->name)
+                    ->modalDescription('Prende un beneficio sólo cuando el trámite con el proveedor esté resuelto. El miembro ve "Activo" cuando está prendido y "Pendiente" cuando está apagado.')
+                    ->modalWidth('lg')
+                    ->form(function (User $u) {
+                        $estados = $u->benefitStates()->get()->keyBy(fn ($s) => $s->benefit_key->value);
+                        $campos = [];
+                        foreach (\App\Enums\BenefitKey::todos() as $k) {
+                            $estado = $estados->get($k->value);
+                            $proveedor = $k->proveedor() ? ' — proveedor: '.$k->proveedor() : ' — Kinvoo';
+                            $campos[] = \Filament\Forms\Components\Toggle::make('activo_'.$k->value)
+                                ->label($k->icono().' '.$k->label())
+                                ->helperText('Pilar '.$k->pilar().$proveedor)
+                                ->default($estado?->activo ?? false)
+                                ->inline(false);
+                        }
+                        $campos[] = \Filament\Forms\Components\Textarea::make('admin_notes')
+                            ->label('Nota interna del admin (opcional)')
+                            ->helperText('Sólo el admin la ve. Se guarda igual en todos los beneficios que se toquen esta vez.')
+                            ->rows(2)
+                            ->maxLength(1000);
+                        return $campos;
+                    })
+                    ->action(function (User $u, array $data) {
+                        $ahora = now();
+                        $cambios = [];
+                        foreach (\App\Enums\BenefitKey::todos() as $k) {
+                            $nuevoActivo = (bool) ($data['activo_'.$k->value] ?? false);
+                            $estado = \App\Models\MemberBenefitState::firstOrNew([
+                                'user_id'     => $u->id,
+                                'benefit_key' => $k->value,
+                            ]);
+                            $anterior = (bool) $estado->activo;
+                            if ($anterior === $nuevoActivo && ! filled($data['admin_notes'] ?? null)) {
+                                continue; // sin cambio real, no tocamos
+                            }
+                            $estado->activo = $nuevoActivo;
+                            if ($nuevoActivo && ! $anterior) {
+                                $estado->activated_at = $ahora;
+                            } elseif (! $nuevoActivo && $anterior) {
+                                $estado->deactivated_at = $ahora;
+                            }
+                            if (filled($data['admin_notes'] ?? null)) {
+                                $estado->admin_notes = $data['admin_notes'];
+                            }
+                            $estado->changed_by_admin_id = auth()->id();
+                            $estado->save();
+                            $cambios[$k->value] = ['antes' => $anterior, 'despues' => $nuevoActivo];
+                        }
+                        if ($cambios) {
+                            \App\Models\AuditLog::record(auth()->user(), $u,
+                                'member_benefits_updated',
+                                old: [], new: $cambios);
+                        }
+                        \Filament\Notifications\Notification::make()
+                            ->title($cambios ? 'Beneficios actualizados' : 'Sin cambios')
+                            ->body($cambios ? count($cambios).' beneficio(s) modificado(s).' : 'No detectamos cambios.')
+                            ->success()->send();
+                    }),
                 Tables\Actions\Action::make('rechazar')
                     ->label('Rechazar')
                     ->icon('heroicon-o-x-circle')

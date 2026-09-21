@@ -47,39 +47,37 @@
             </form>
         </div>
 
-        {{-- 4 tarjetas de beneficios (Telemedicina / Fisio / Seguro / Desarrollo). --}}
-        <div class="grid gap-4 sm:grid-cols-2">
-            @php
-                $iconos = [
-                    'telemedicina' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v6a4 4 0 0 0 8 0V3M6 21v-3a6 6 0 0 1 12 0v3"/><circle cx="12" cy="14" r="1.5"/></svg>',
-                    'fisioterapia' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v4M5 12h4l3-1 3 1h4M8 22l4-8 4 8"/></svg>',
-                    'seguro'       => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>',
-                    'desarrollo'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a6 6 0 0 0-4 10.5c1 1 1.5 2 1.5 3.5h5c0-1.5.5-2.5 1.5-3.5A6 6 0 0 0 12 2z"/></svg>',
-                ];
-                $colorIcono = ['telemedicina'=>'text-info-500 sm:text-blue-500', 'fisioterapia'=>'text-amber-600', 'seguro'=>'text-sage', 'desarrollo'=>'text-amber-500'];
-                $badgeStyle = [
-                    'success' => 'bg-sage/15 text-sage',
-                    'info'    => 'bg-blue-50 text-blue-600',
-                    'gray'    => 'bg-cream text-warmgray',
-                ];
-            @endphp
-            @foreach ($beneficios as $key => $b)
-                <div class="flex items-start justify-between gap-3 rounded-2xl border border-line bg-white p-5 {{ $b['activo'] ? '' : 'opacity-90' }}">
-                    <div class="flex min-w-0 items-start gap-3">
-                        <div class="h-8 w-8 shrink-0 {{ $colorIcono[$key] ?? 'text-sage' }}">
-                            {!! $iconos[$key] ?? '' !!}
-                        </div>
+        {{-- Feedback Karla 21-sep · "Requerimiento del apagador":
+             los 4 beneficios de la membresía Esencial se agrupan por pilar
+             (Cuidado / Crecimiento / Oportunidades). Cada uno se ve Activo o
+             Pendiente según el switch manual del admin — Kinvoo no ejecuta ni
+             agenda ninguno; el trámite real vive con el proveedor (1DOC3,
+             Thona, o el equipo Kinvoo para los internos). --}}
+        @php
+            $badgeStyle = [
+                'success' => 'bg-sage/15 text-sage',
+                'gray'    => 'bg-cream text-warmgray',
+            ];
+            $porPilar = collect($beneficios)->groupBy('pilar');
+        @endphp
+        @foreach ($porPilar as $pilar => $items)
+            <h3 class="{{ $loop->first ? 'mb-3' : 'mt-8 mb-3' }} font-serif text-lg font-medium text-ink">
+                {{ __('Pilar :pilar', ['pilar' => $pilar]) }}
+            </h3>
+            <div class="grid gap-4 sm:grid-cols-2">
+                @foreach ($items as $key => $b)
+                    <div class="flex items-start justify-between gap-3 rounded-2xl border border-line bg-white p-5 {{ $b['activo'] ? '' : 'opacity-95' }}">
                         <div class="min-w-0">
                             <p class="font-medium text-ink">{{ $b['titulo'] }}</p>
                             <p class="mt-1 text-xs text-warmgray">{{ $b['subtitulo'] }}</p>
                         </div>
+                        <span class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium {{ $badgeStyle[$b['badgeColor']] }}">
+                            {{ $b['badge'] }}
+                        </span>
                     </div>
-                    <span class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium {{ $badgeStyle[$b['badgeColor']] }}">
-                        {{ $b['badge'] }}
-                    </span>
-                </div>
-            @endforeach
-        </div>
+                @endforeach
+            </div>
+        @endforeach
 
         {{-- Servicios del plan (antes vivía en /mis-servicios; unificado aquí
              por petición Karla 27-ago). Si el coach no tiene plan con servicios,

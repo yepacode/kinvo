@@ -44,38 +44,29 @@ class WellnessController extends Controller
         $desarrolloEsteMes = \App\Models\ContentView::where('user_id', $user->id)
             ->where('viewed_at', '>=', now()->startOfMonth())->count();
 
-        $beneficios = [
-            'telemedicina' => [
-                'titulo'    => __('Telemedicina'),
-                'subtitulo' => $nombreEstudio ? __('Vía :estudio', ['estudio' => $nombreEstudio]) : __('Consultas médicas a distancia'),
-                'activo'    => $user->hasBenefit('respaldo_telemed'),
-                'badge'     => $user->hasBenefit('respaldo_telemed') ? __('Activo') : __('No incluido'),
-                'badgeColor'=> $user->hasBenefit('respaldo_telemed') ? 'success' : 'gray',
-            ],
-            'fisioterapia' => [
-                'titulo'    => __('Fisioterapia'),
-                'subtitulo' => __('Disponible en Plus'),
-                'activo'    => $user->hasBenefit('respaldo_fisio'),
-                'badge'     => $user->hasBenefit('respaldo_fisio') ? __('Activo') : __('No incluido'),
-                'badgeColor'=> $user->hasBenefit('respaldo_fisio') ? 'success' : 'gray',
-            ],
-            'seguro' => [
-                'titulo'    => __('Seguro'),
-                'subtitulo' => $nombreEstudio ? __('Vía :estudio', ['estudio' => $nombreEstudio]) : __('Póliza personal'),
-                'activo'    => (bool) $polizaVigente,
-                'badge'     => $polizaVigente ? __('Vigente') : __('Sin póliza'),
-                'badgeColor'=> $polizaVigente ? 'success' : 'gray',
-            ],
-            'desarrollo' => [
-                'titulo'    => __('Desarrollo'),
-                'subtitulo' => __('Charlas y capacitaciones'),
-                'activo'    => $desarrolloEsteMes > 0,
-                'badge'     => $desarrolloEsteMes > 0
-                    ? __(':n este mes', ['n' => $desarrolloEsteMes])
-                    : __('0 este mes'),
-                'badgeColor'=> $desarrolloEsteMes > 0 ? 'info' : 'gray',
-            ],
-        ];
+        // Feedback Karla 21-sep · "Requerimiento del apagador":
+        // los 4 beneficios de la membresía Esencial (Telemedicina, Seguro de
+        // vida, Bolsa de trabajo, Desarrollo) se muestran con el estado que el
+        // admin prendió manualmente. Sin agenda, sin lógica automática:
+        // Activo (prendido) o Pendiente (apagado / nunca tocado).
+        $estadosBeneficios = $user->benefitStates()->get()
+            ->keyBy(fn ($e) => $e->benefit_key->value);
+        $beneficios = [];
+        foreach (\App\Enums\BenefitKey::todos() as $k) {
+            $activo = (bool) ($estadosBeneficios->get($k->value)?->activo);
+            $beneficios[$k->value] = [
+                'titulo'      => $k->icono().' '.__($k->label()),
+                'subtitulo'   => $activo
+                    ? ($k->proveedor()
+                        ? __('Vía :proveedor', ['proveedor' => $k->proveedor()])
+                        : __('Kinvoo'))
+                    : __($k->copyPendiente()),
+                'pilar'       => $k->pilar(),
+                'activo'      => $activo,
+                'badge'       => $activo ? __('Activo') : __('Pendiente'),
+                'badgeColor'  => $activo ? 'success' : 'gray',
+            ];
+        }
 
         // Charlas y capacitaciones a las que ha asistido:
         //   1) WellnessEntry type=talk (cargadas por admin)

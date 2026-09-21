@@ -324,6 +324,27 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
         return $this->hasOne(ProfessionalProfile::class);
     }
 
+    /**
+     * Feedback Karla 21-sep · "Requerimiento del apagador".
+     * Estado on/off de cada subservicio de la membresía Esencial. El admin
+     * los prende cuando el trámite con el proveedor (1DOC3 / Thona / interno)
+     * está listo; el miembro los ve "Activo" o "Pendiente".
+     */
+    public function benefitStates(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\MemberBenefitState::class);
+    }
+
+    /**
+     * Estado (activo|false) de UN subservicio. Falsy si el admin no lo ha
+     * tocado nunca — comportamiento por defecto: "pendiente".
+     */
+    public function tieneBeneficioActivo(\App\Enums\BenefitKey $key): bool
+    {
+        return (bool) $this->benefitStates
+            ->firstWhere('benefit_key', $key)?->activo;
+    }
+
     public function saves(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Save::class);
