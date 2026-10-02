@@ -81,35 +81,10 @@
                 </div>
             @endif
 
-            {{-- H3 · petición cliente: calificación (1-5) + campo de texto libre. --}}
-            @php $cp = auth()->user()->companyProfile; @endphp
-            <form method="POST" action="{{ route('equipo.bienestar.nota') }}" class="mt-6 border-t border-line/60 pt-5">
-                @csrf
-                @if (session('status') === 'bienestar-guardado')
-                    <p class="mb-3 rounded-lg border border-sage/40 bg-sage/10 px-3 py-2 text-sm text-ink">{{ __('Guardado. Podrás actualizar tu evaluación cuando quieras.') }}</p>
-                @endif
-                <label class="block text-sm font-medium text-ink">{{ landing('equipo_eval_pregunta') }}</label>
-                <div class="mt-2 flex items-center gap-3" role="radiogroup" aria-label="{{ __('Calificación de bienestar') }}">
-                    @for ($i = 1; $i <= 5; $i++)
-                        <label class="cursor-pointer text-2xl leading-none">
-                            <input type="radio" name="wellness_rating" value="{{ $i }}"
-                                   @checked((int) old('wellness_rating', $cp?->wellness_rating) === $i)
-                                   class="peer sr-only">
-                            <span class="text-line peer-checked:text-yellow-500 hover:text-yellow-500">★</span>
-                        </label>
-                    @endfor
-                    <span class="text-xs text-warmgray">{{ __('1 = por mejorar · 5 = excelente') }}</span>
-                </div>
-                <div class="mt-4">
-                    <label for="wellness_notes" class="block text-sm font-medium text-ink">{{ __('Notas u observaciones (opcional)') }}</label>
-                    <textarea id="wellness_notes" name="wellness_notes" rows="3" maxlength="2000"
-                              placeholder="{{ __('Ej: renovar pólizas en agosto, agendar sesión de fisio grupal, etc.') }}"
-                              class="mt-1 w-full rounded-xl border border-line px-3 py-2 text-sm">{{ old('wellness_notes', $cp?->wellness_notes) }}</textarea>
-                </div>
-                <div class="mt-3 flex justify-end">
-                    <button type="submit" class="min-h-[44px] rounded-full bg-sage px-5 py-2 text-sm font-semibold text-cream">{{ __('Guardar evaluación') }}</button>
-                </div>
-            </form>
+            {{-- Feedback Karla 01-10-2026: el estudio NO evalúa bienestar.
+                 El bienestar es responsabilidad del coach (quien lo registra en
+                 su expediente). Removida la pregunta "¿Cómo evalúas el bienestar
+                 de tu equipo este período?" y el formulario asociado. --}}
         </section>
 
         {{-- Invitar --}}

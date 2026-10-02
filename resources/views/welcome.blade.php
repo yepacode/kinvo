@@ -11,7 +11,10 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ url('/') }}">
 <meta property="og:image" content="{{ landing_image('seo_og_image', 'img/landing/hero.jpg') }}">
-<link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+{{-- Feedback Karla 01-10-2026 · Audit 02-10: simplificado. --}}
+<link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+<link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+<meta name="theme-color" content="#5C7A5F">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
@@ -24,7 +27,7 @@
     'name' => landing('brand_name'),
     'description' => landing('seo_description'),
     'url' => url('/'),
-    'logo' => asset('favicon.svg'),
+    'logo' => asset('favicon.png'),
     'email' => 'hola@gokinvoo.com',
 ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
 </script>

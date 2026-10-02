@@ -1,4 +1,10 @@
-<x-public-layout :title="landing('membership_title').' · Kinvoo'" :description="landing('membership_body')">
+@php
+    // Feedback Karla 01-10-2026: título del tab coherente con el estado.
+    $__tabTitle = (auth()->check() && ! auth()->user()->esAdmin() && auth()->user()->tieneMembresiaActiva())
+        ? __('Mi membresía').' · Kinvoo'
+        : landing('membership_title').' · Kinvoo';
+@endphp
+<x-public-layout :title="$__tabTitle" :description="landing('membership_body')">
     <div class="mx-auto max-w-5xl px-6 py-14 sm:py-20">
         @if (session('status') === 'membresia-requerida')
             <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-lime/40 bg-lime/10 px-5 py-4 text-center text-sm text-ink">
@@ -89,15 +95,10 @@
             @endphp
             @if ($__misServicios->isNotEmpty())
                 <section class="mx-auto mb-14 max-w-3xl rounded-3xl border border-sage/40 bg-sage/5 p-6 sm:p-8">
-                    <div class="flex flex-wrap items-baseline justify-between gap-3">
-                        <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Tu membresía actual') }}</h2>
-                        <a href="{{ route('servicios.index') }}"
-                           class="text-sm font-medium text-sage underline hover:text-ink">
-                            {{ __('Solicitar un servicio') }} →
-                        </a>
-                    </div>
+                    {{-- Feedback Karla 01-10-2026: se quitó "Solicitar un servicio". --}}
+                    <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Tu membresía actual') }}</h2>
                     <p class="mt-2 text-sm text-warmgray">
-                        {{ __('Estos son los servicios que incluye tu plan. Solicita el que necesites cuando quieras.') }}
+                        {{ __('Estos son los beneficios que incluye tu plan. Kinvoo refleja el estado prendido/apagado de cada uno; los trámites de alta se gestionan directamente con cada proveedor.') }}
                     </p>
                     <ul class="mt-4 grid gap-3 sm:grid-cols-2">
                         @foreach ($__misServicios as $__servicio)
@@ -116,24 +117,81 @@
             @endif
         @endauth
 
-        <header class="mx-auto max-w-2xl text-center">
-            <p class="text-xs font-medium uppercase tracking-[0.24em] text-sage">{{ landing('membership_eyebrow') }}</p>
-            <h1 class="mt-3 font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl">{{ landing('membership_title') }}</h1>
-            <p class="mt-4 text-warmgray">{{ landing('membership_body') }}</p>
-        </header>
+        @php
+            $__u = auth()->user();
+            $__membresiaActiva = $__u && ! $__u->esAdmin() && $__u->tieneMembresiaActiva();
+            $__planActual = $__membresiaActiva ? $__u->membershipPlan : null;
+        @endphp
+
+        {{-- Feedback Karla 01-10-2026: si el usuario YA tiene membresía activa,
+             no mostramos "Elige tu membresía"; mostramos un card de confirmación.
+             Audit 02-10: ancho unificado a max-w-3xl para empatar con "Tu
+             membresía actual" de arriba. H1 bajado a h2 (jerarquía correcta
+             con el h2 de arriba). CTA con @default (link al dashboard) para no
+             dejar margen huérfano si el user no es profesional ni contratante.
+             Fallback del nombre de plan cambiado a "Mi plan" para no mentir
+             con "Plan Esencial" cuando el plan real sea otro o esté borrado. --}}
+        @if ($__membresiaActiva)
+            <section class="mx-auto max-w-3xl rounded-3xl border border-sage/40 bg-sage/5 px-8 py-10 text-center shadow-sm">
+                <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sage/15 text-sage">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-8 w-8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                </div>
+                <p class="text-xs font-medium uppercase tracking-[0.24em] text-sage">{{ __('Membresía activa') }}</p>
+                {{-- Audit 02-10b: cuando no hay planes a elegir, el nombre del
+                     plan activo ES el h1 principal de la página (el layout
+                     público no emite h1 propio). "Tu membresía actual" arriba
+                     queda como h2 subordinada. --}}
+                <h1 class="mt-3 font-serif text-3xl font-medium tracking-tight text-ink sm:text-4xl">
+                    {{ $__planActual?->nombre ?? __('Mi plan') }}
+                </h1>
+                <p class="mt-4 text-warmgray">
+                    {{ __('Todo listo. Tu plan está activo — nosotros nos encargamos del resto.') }}
+                </p>
+                @if ($__u->membership_expires_at)
+                    <p class="mt-2 text-sm text-warmgray">
+                        {{ __('Vigente hasta el :fecha', ['fecha' => $__u->membership_expires_at->translatedFormat('d \d\e F \d\e Y')]) }}
+                    </p>
+                @endif
+                <div class="mt-6 flex flex-wrap justify-center gap-3">
+                    @if ($__u->esProfesional())
+                        <a href="{{ route('expediente.index') }}" class="rounded-full border border-sage/60 bg-white px-5 py-2 text-sm font-medium text-ink hover:bg-sage/10">
+                            {{ __('Ver mi expediente') }}
+                        </a>
+                    @elseif ($__u->esContratante())
+                        <a href="{{ route('talento.index') }}" class="rounded-full border border-sage/60 bg-white px-5 py-2 text-sm font-medium text-ink hover:bg-sage/10">
+                            {{ __('Ir al directorio de talento') }}
+                        </a>
+                    @else
+                        <a href="{{ url('/dashboard') }}" class="rounded-full border border-sage/60 bg-white px-5 py-2 text-sm font-medium text-ink hover:bg-sage/10">
+                            {{ __('Ir a mi panel') }}
+                        </a>
+                    @endif
+                </div>
+            </section>
+        @else
+            <header class="mx-auto max-w-2xl text-center">
+                <p class="text-xs font-medium uppercase tracking-[0.24em] text-sage">{{ landing('membership_eyebrow') }}</p>
+                <h1 class="mt-3 font-serif text-4xl font-medium tracking-tight text-ink sm:text-5xl">{{ landing('membership_title') }}</h1>
+                <p class="mt-4 text-warmgray">{{ landing('membership_body') }}</p>
+            </header>
+        @endif
 
         @php
             // H6 · sólo mostrar los planes que aplican al rol del usuario.
             // Anónimos y admin ven ambos grupos (marketing / gestión).
-            $__u = auth()->user();
             $grupos = [];
             $verIndividual = ! $__u || $__u->esAdmin() || $__u->esProfesional();
             $verEstudio    = ! $__u || $__u->esAdmin() || $__u->esContratante();
-            if ($verIndividual) {
-                $grupos[] = ['titulo' => landing('membership_individual_title'), 'planes' => $individuales];
-            }
-            if ($verEstudio) {
-                $grupos[] = ['titulo' => landing('membership_studio_title'), 'planes' => $estudios];
+            // Si ya tiene membresía activa, no listamos ningún plan.
+            if (! $__membresiaActiva) {
+                if ($verIndividual) {
+                    $grupos[] = ['titulo' => landing('membership_individual_title'), 'planes' => $individuales];
+                }
+                if ($verEstudio) {
+                    $grupos[] = ['titulo' => landing('membership_studio_title'), 'planes' => $estudios];
+                }
             }
         @endphp
 

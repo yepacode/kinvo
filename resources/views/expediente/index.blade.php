@@ -80,14 +80,12 @@
         @endforeach
 
         {{-- Servicios del plan (antes vivía en /mis-servicios; unificado aquí
-             por petición Karla 27-ago). Si el coach no tiene plan con servicios,
-             la sección no se renderiza. --}}
+             por petición Karla 27-ago). El link "Solicitar un servicio" se
+             quitó por feedback 01-10-2026: Kinvoo no gestiona solicitudes,
+             solo refleja estado prendido/apagado del apagador. --}}
         @if (($misServicios ?? collect())->isNotEmpty())
-            <div class="mt-10 flex flex-wrap items-baseline justify-between gap-3">
+            <div class="mt-10">
                 <h3 class="font-serif text-lg font-medium text-ink">{{ __('Servicios de tu membresía') }}</h3>
-                <a href="{{ route('servicios.index') }}" class="text-sm font-medium text-sage underline hover:text-ink">
-                    {{ __('Solicitar un servicio') }} →
-                </a>
             </div>
             <ul class="mt-3 grid gap-3 sm:grid-cols-2">
                 @foreach ($misServicios as $srv)

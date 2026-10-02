@@ -265,9 +265,11 @@ Route::middleware(['auth', 'cuenta.activa', 'nocache'])->group(function () {
     Route::post('/mi-equipo/invitar', [TeamController::class, 'invitar'])
         ->middleware('throttle:10,1')->name('equipo.invitar');
     Route::post('/mi-equipo/{miembro}/remover', [TeamController::class, 'remover'])->name('equipo.remover');
-    // H3 · nota + calificación de bienestar del estudio.
-    Route::post('/mi-equipo/bienestar/nota', [TeamController::class, 'guardarNotaBienestar'])
-        ->middleware('throttle:20,1')->name('equipo.bienestar.nota');
+    // Feedback Karla 01-10-2026: la ruta POST /mi-equipo/bienestar/nota se
+    // retiró porque el estudio ya no evalúa bienestar (lo registra el coach
+    // en su propio expediente). El form del lado del estudio se quitó en
+    // equipo/index.blade.php y la ruta huérfana se elimina acá para no dejar
+    // un endpoint sin UI accesible.
     Route::post('/invitaciones/{miembro}/aceptar', [TeamController::class, 'aceptar'])->name('equipo.aceptar');
     Route::post('/invitaciones/{miembro}/rechazar', [TeamController::class, 'rechazar'])->name('equipo.rechazar');
 });

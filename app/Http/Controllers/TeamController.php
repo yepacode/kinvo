@@ -248,47 +248,10 @@ class TeamController extends Controller
         return back()->with('status', 'invitacion-rechazada');
     }
 
-    /**
-     * POST /mi-equipo/bienestar/nota — guarda calificación 1-5 + nota libre
-     * del estudio sobre el bienestar de su equipo (H3 · petición cliente).
-     */
-    public function guardarNotaBienestar(Request $request): RedirectResponse
-    {
-        $user = $request->user();
-        abort_unless($user->esContratante(), 403);
-
-        // H6 · gate free/paid: la evaluación de bienestar sólo se desbloquea
-        // cuando el estudio paga por los servicios de cuidado de su equipo.
-        // Usamos el helper centralizado para mantener consistencia con la matriz.
-        if (! $user->hasBenefit('panel_bienestar')) {
-            return redirect()->route('membresias.index')
-                ->with('status', 'plan-necesario-bienestar');
-        }
-
-        $data = $request->validate([
-            'wellness_rating' => ['nullable', 'integer', 'between:1,5'],
-            'wellness_notes'  => ['nullable', 'string', 'max:2000'],
-        ]);
-
-        $profile = $user->companyProfile()->firstOrCreate([], [
-            'company_name' => $user->name,
-        ]);
-
-        // HIGH-20 · Solo actualizar los campos que EFECTIVAMENTE vinieron en
-        // la request. Antes hacer $data[key] ?? null convertía el campo no
-        // enviado en null — si el estudio guardaba solo la nota, la
-        // calificación desaparecía y viceversa. Ahora es un update parcial.
-        $updates = [];
-        foreach (['wellness_rating', 'wellness_notes'] as $k) {
-            if ($request->has($k)) {
-                $updates[$k] = $data[$k] ?? null;
-            }
-        }
-        if ($updates) {
-            $profile->update($updates);
-        }
-        AuditLog::record($user, $profile, 'wellness_note_updated', new: $updates);
-
-        return back()->with('status', 'bienestar-guardado');
-    }
+    // Feedback Karla 01-10-2026: el método guardarNotaBienestar y la ruta
+    // equipo.bienestar.nota se retiraron porque el estudio ya no evalúa el
+    // bienestar de su equipo (eso lo reporta el coach en su propio expediente).
+    // Las columnas wellness_rating y wellness_notes en company_profiles se
+    // mantienen por histórico; se leen en CompanyProfileResource (admin) como
+    // placeholder read-only para auditoría de datos previos.
 }

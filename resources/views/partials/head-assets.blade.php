@@ -1,7 +1,13 @@
 {{-- Fuentes de marca + CSS. Si hay build de Vite se usa; si no (App Control bloquea
      los binarios nativos localmente), se cae a Tailwind v4 por CDN + Alpine para DEV. --}}
 
-<link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+{{-- Feedback Karla 01-10-2026: logo real en lugar de la "K" placeholder.
+     Audit 02-10: simplificado — un solo <link rel="icon"> apuntando al PNG
+     de 256px (el navegador escala a 16/32); apple-touch-icon para iOS;
+     el "shortcut icon" legacy de IE se removió. --}}
+<link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+<link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+<meta name="theme-color" content="#5C7A5F">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

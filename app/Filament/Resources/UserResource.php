@@ -350,7 +350,13 @@ class UserResource extends Resource
                                     'benefit_key' => $k->value,
                                 ]);
                                 $anterior = (bool) $estado->activo;
-                                if ($anterior === $nuevoActivo && ! filled($data['admin_notes'] ?? null)) {
+                                // Audit 02-10 · consistencia con ApagadorBeneficios:
+                                // antes el OR con filled(admin_notes) hacía que una
+                                // nota sin toggles tocados generara 4 filas idénticas
+                                // en AuditLog y la notificación mentía con
+                                // "4 beneficios modificados". Ahora la nota solo se
+                                // adhiere a los beneficios que SÍ cambian.
+                                if ($anterior === $nuevoActivo) {
                                     continue;
                                 }
                                 $estado->activo = $nuevoActivo;
