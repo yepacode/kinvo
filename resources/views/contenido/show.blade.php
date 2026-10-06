@@ -5,15 +5,38 @@
 
     <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
         <div class="rounded-2xl border border-line bg-white p-6 sm:p-8">
-            @php $recurso = $item->archivoUrl(); @endphp
+            @php
+                $recurso = $item->archivoUrl();
+                // Detectar YouTube / Vimeo y convertir a URL embed. El caso
+                // del cliente (06-10): el admin pegaba links de YouTube en el
+                // campo URL del contenido tipo video, y el <video> HTML5 no
+                // sabe reproducir URLs de YouTube — necesita iframe embed.
+                $embedUrl = null;
+                if ($item->type === 'video' && $recurso) {
+                    if (preg_match('~(?:youtu\.be/|youtube\.com/(?:watch\?v=|embed/|shorts/|v/))([A-Za-z0-9_-]{11})~', $recurso, $m)) {
+                        $embedUrl = 'https://www.youtube.com/embed/'.$m[1].'?rel=0';
+                    } elseif (preg_match('~vimeo\.com/(?:video/)?(\d+)~', $recurso, $m)) {
+                        $embedUrl = 'https://player.vimeo.com/video/'.$m[1];
+                    }
+                }
+            @endphp
 
-            @if ($item->type === 'video' && $recurso)
-                {{-- Feedback Karla 06-10-2026 ("no reproduce contenido"): player
-                     con <source> explícito (más tolerante que src directo) +
-                     fallback de descarga si el navegador no puede decodificar +
-                     mensaje de error on-screen si falla el load.
-                     IMPORTANTE: usar x-on:error (no @error) porque @error es
-                     directive de Blade para $errors->has(). --}}
+            @if ($item->type === 'video' && $embedUrl)
+                {{-- Feedback Karla 06-10-2026 ("no reproduce contenido"): el
+                     admin pegó el link de YouTube en el campo URL del contenido
+                     tipo video. El <video> HTML5 no reproduce YouTube; se usa
+                     iframe embed. --}}
+                <div class="mb-6 aspect-video overflow-hidden rounded-xl bg-black">
+                    <iframe src="{{ $embedUrl }}"
+                            class="h-full w-full"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen></iframe>
+                </div>
+            @elseif ($item->type === 'video' && $recurso)
+                {{-- Archivo mp4/webm propio del admin (no YouTube). Player con
+                     <source> explícito + fallback de descarga. Usa x-on:error
+                     (no @error porque @error es directive de Blade). --}}
                 <div class="mb-6 aspect-video overflow-hidden rounded-xl bg-black" x-data="{ err: false }">
                     <video controls playsinline preload="metadata" class="h-full w-full" x-show="!err"
                            x-on:error="err = true">

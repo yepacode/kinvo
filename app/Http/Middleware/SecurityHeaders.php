@@ -42,7 +42,11 @@ class SecurityHeaders
                 "default-src 'self'",
                 "base-uri 'self'",
                 "frame-ancestors 'self'",
-                "img-src 'self' data:",
+                // Permite embeds de YouTube/Vimeo en los videos del admin
+                // (feedback 06-10-2026: el admin pega links de YouTube en
+                // contenidos tipo video y la vista los convierte a iframe).
+                "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
+                "img-src 'self' https: data:",
                 "media-src 'self'",
                 "object-src 'none'",
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com",
