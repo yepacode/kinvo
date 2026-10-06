@@ -4,7 +4,20 @@
         {{ landing('forgot_body') }}
     </p>
 
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    {{-- Feedback Karla 06-10-2026 ("no se puede cambiar la contraseña"): el
+         flash de confirmación era un texto delgado y pasaba desapercibido.
+         Ahora: card verde grande + instrucciones claras (revisa spam, link
+         vence en 60 min, correo de origen). --}}
+    @if (session('status'))
+        <div class="mb-6 rounded-2xl border border-sage/40 bg-sage/10 p-5 text-sm text-ink">
+            <p class="font-semibold text-sage">✓ {{ session('status') }}</p>
+            <ul class="mt-3 list-disc space-y-1 pl-5 text-warmgray">
+                <li>{{ __('Revisa también la carpeta de SPAM o Promociones de tu correo.') }}</li>
+                <li>{{ __('El enlace expira en 60 minutos.') }}</li>
+                <li>{{ __('El correo llega desde hola@gokinvoo.com.') }}</li>
+            </ul>
+        </div>
+    @endif
 
     <form method="POST" action="{{ route('password.email') }}">
         @csrf

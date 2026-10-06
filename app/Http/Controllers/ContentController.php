@@ -129,13 +129,48 @@ class ContentController extends Controller
         // MIME real (auditoría ago-2026): derivamos el Content-Type del contenido
         // del archivo, no de la extensión. Si el archivo es un JPEG con extensión
         // .png (o al revés), el navegador antes lo dibujaba negro/roto.
+        // Feedback Karla 06-10-2026 (reporte "no reproduce contenido"): extendido
+        // también para el disco public — algunos videos subidos desde el admin
+        // llegaban con mimetype genérico y el navegador no los interpretaba.
         $mime = null;
-        if ($disco === 'local' && function_exists('finfo_open')) {
+        if (function_exists('finfo_open')) {
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime = finfo_file($finfo, $storage->path($content->file_path)) ?: null;
+            if ($disco === 'local') {
+                $mime = finfo_file($finfo, $storage->path($content->file_path)) ?: null;
+            } else {
+                // En disk public tenemos path físico accesible vía path()
+                try { $mime = finfo_file($finfo, $storage->path($content->file_path)) ?: null; }
+                catch (\Throwable $e) { $mime = null; }
+            }
             finfo_close($finfo);
         }
-        $headers = $mime ? ['Content-Type' => $mime] : [];
+
+        // Fallback por extensión para los MIMEs críticos de reproducción.
+        if (! $mime) {
+            $ext = strtolower(pathinfo($content->file_path, PATHINFO_EXTENSION));
+            $mime = match ($ext) {
+                'mp4' => 'video/mp4', 'webm' => 'video/webm', 'mov' => 'video/quicktime',
+                'm4v' => 'video/x-m4v', 'ogv' => 'video/ogg',
+                'mp3' => 'audio/mpeg', 'wav' => 'audio/wav', 'ogg' => 'audio/ogg',
+                'm4a' => 'audio/mp4', 'aac' => 'audio/aac',
+                'pdf' => 'application/pdf',
+                'jpg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp',
+                default => 'application/octet-stream',
+            };
+        }
+
+        // Feedback Karla 06-10-2026: para que el <video> pueda hacer seek /
+        // reproducir correctamente desde LiteSpeed, enviamos headers explícitos:
+        // Accept-Ranges para streaming, Content-Disposition inline (no forzar
+        // descarga), cache privado para no retener contenido sensible en proxies.
+        $filename = basename($content->file_path);
+        $headers = [
+            'Content-Type' => $mime,
+            'Accept-Ranges' => 'bytes',
+            'Content-Disposition' => 'inline; filename="'.addslashes($filename).'"',
+            'Cache-Control' => 'private, max-age=3600',
+            'X-Content-Type-Options' => 'nosniff',
+        ];
 
         if ($disco === 'local') {
             return response()->file($storage->path($content->file_path), $headers);

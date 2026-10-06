@@ -29,6 +29,25 @@
     </x-slot>
 
     <div class="mx-auto max-w-3xl px-6 py-10">
+        {{-- Feedback Karla 06-10-2026: botón de vuelta para que el estudio
+             regrese a sus oportunidades/postulantes sin usar "Atrás" del
+             navegador. Para coach autenticado, lleva al directorio. Para
+             anónimos no mostramos nada (perfil público). --}}
+        @auth
+            @php $__u = auth()->user(); @endphp
+            @if ($__u->esContratante())
+                <a href="{{ route('ofertas.mis-ofertas') }}"
+                   class="mb-6 inline-flex items-center gap-1 text-sm font-medium text-sage hover:text-ink">
+                    ← {{ __('Volver a mis oportunidades') }}
+                </a>
+            @elseif ($__u->esProfesional())
+                <a href="{{ route('talento.index') }}"
+                   class="mb-6 inline-flex items-center gap-1 text-sm font-medium text-sage hover:text-ink">
+                    ← {{ __('Volver al directorio') }}
+                </a>
+            @endif
+        @endauth
+
         @if (session('status') === 'contacto-enviado')
             <div class="mb-6 rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm text-sage">
                 ✓ {{ __('Tu mensaje fue enviado a :name. Te contactará al correo que dejaste.', ['name' => $profile->user->name]) }}

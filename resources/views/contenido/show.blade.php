@@ -8,13 +8,39 @@
             @php $recurso = $item->archivoUrl(); @endphp
 
             @if ($item->type === 'video' && $recurso)
-                <div class="mb-6 aspect-video overflow-hidden rounded-xl bg-black">
-                    <video src="{{ $recurso }}" controls playsinline preload="metadata" class="h-full w-full"></video>
+                {{-- Feedback Karla 06-10-2026 ("no reproduce contenido"): player
+                     con <source> explícito (más tolerante que src directo) +
+                     fallback de descarga si el navegador no puede decodificar +
+                     mensaje de error on-screen si falla el load. --}}
+                <div class="mb-6 aspect-video overflow-hidden rounded-xl bg-black" x-data="{ err: false }">
+                    <video controls playsinline preload="metadata" class="h-full w-full" x-show="!err"
+                           @error="err = true" @stalled.once="console.warn('video stalled')">
+                        <source src="{{ $recurso }}" type="video/mp4">
+                        <source src="{{ $recurso }}" type="video/webm">
+                        {{ __('Tu navegador no soporta la reproducción directa.') }}
+                    </video>
+                    <div x-show="err" x-cloak class="flex h-full w-full flex-col items-center justify-center gap-3 p-6 text-center text-white">
+                        <p>{{ __('No pudimos reproducir el video acá. Puedes descargarlo y abrirlo en tu dispositivo:') }}</p>
+                        <a href="{{ $recurso }}" download
+                           class="inline-flex items-center gap-2 rounded-full bg-sage px-5 py-2 text-sm font-semibold text-cream">
+                            ⬇ {{ __('Descargar video') }}
+                        </a>
+                    </div>
                 </div>
             @elseif ($item->type === 'image' && $recurso)
                 <img src="{{ $recurso }}" alt="{{ $item->title }}" class="mb-6 w-full rounded-xl">
             @elseif ($item->type === 'audio' && $recurso)
-                <audio src="{{ $recurso }}" controls class="mb-6 w-full"></audio>
+                <div class="mb-6" x-data="{ err: false }">
+                    <audio controls class="w-full" x-show="!err" @error="err = true">
+                        <source src="{{ $recurso }}" type="audio/mpeg">
+                        <source src="{{ $recurso }}" type="audio/mp4">
+                        <source src="{{ $recurso }}" type="audio/ogg">
+                        {{ __('Tu navegador no soporta la reproducción.') }}
+                    </audio>
+                    <div x-show="err" x-cloak class="rounded-xl border border-line bg-cream/40 p-4 text-center text-sm text-warmgray">
+                        <a href="{{ $recurso }}" download class="font-semibold text-sage underline">⬇ {{ __('Descargar audio') }}</a>
+                    </div>
+                </div>
             @elseif ($item->type === 'document' && $recurso)
                 <a href="{{ $recurso }}" target="_blank" rel="noopener"
                    class="mb-6 inline-flex items-center gap-2 rounded-full bg-sage px-5 py-2 text-sm font-semibold text-cream">

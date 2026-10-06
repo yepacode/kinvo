@@ -86,10 +86,13 @@
                                 <li class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line/60 px-3 py-2 text-sm">
                                     <span>
                                         @if ($slugCoach)
+                                            {{-- Feedback Karla 06-10-2026: antes abría en pestaña nueva
+                                                 y el estudio perdía el contexto; ahora usa la misma
+                                                 pestaña y el perfil muestra un botón "Volver a mis
+                                                 oportunidades" (ver talento/show.blade.php). --}}
                                             <a href="{{ route('talento.show', $slugCoach) }}"
-                                               class="font-medium text-sage underline hover:text-ink"
-                                               target="_blank" rel="noopener">
-                                                {{ $app->professional->name }} ↗
+                                               class="font-medium text-sage underline hover:text-ink">
+                                                {{ $app->professional->name }}
                                             </a>
                                         @else
                                             {{ $app->professional?->name }}
