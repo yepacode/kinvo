@@ -33,6 +33,19 @@ class MercadoPagoGateway implements SubscriptionGateway
     {
         // Configuración lazy: si no hay token, el SDK no se toca. Los 3
         // métodos abortan explícitamente cuando falta el token.
+        $this->aplicarToken();
+    }
+
+    /**
+     * Relee el token de la config y lo aplica al SDK. Se llama en cada
+     * operación (vía guardConfigured) y no sólo en el constructor porque
+     * desde 06-10-2026 el token puede cambiar en caliente desde
+     * /admin/configuracion-pagos; como el gateway está registrado como
+     * singleton, un token leído una sola vez se quedaría obsoleto dentro
+     * del mismo request en que el admin lo actualiza.
+     */
+    private function aplicarToken(): void
+    {
         $token = config('billing.mercadopago.access_token');
         if ($token) {
             MercadoPagoConfig::setAccessToken($token);
@@ -108,7 +121,7 @@ class MercadoPagoGateway implements SubscriptionGateway
         $secret = config('billing.mercadopago.webhook_secret');
         if (! $secret) {
             throw new \RuntimeException(
-                'MERCADOPAGO_WEBHOOK_SECRET no está configurado en .env. Consíguelo en MercadoPago → Tu aplicación → Webhooks → Secret firma.'
+                'Falta el Secret de firma del webhook de MercadoPago. Captúralo en /admin/configuracion-pagos (o en MERCADOPAGO_WEBHOOK_SECRET del .env). Lo obtienes en MercadoPago → Tu aplicación → Webhooks → Secret de firma.'
             );
         }
 
@@ -209,8 +222,11 @@ class MercadoPagoGateway implements SubscriptionGateway
     {
         if (! config('billing.mercadopago.access_token')) {
             throw new \RuntimeException(
-                'MERCADOPAGO_ACCESS_TOKEN no está configurado en .env. Consíguelo en MercadoPago → Tu aplicación → Credenciales de producción/prueba.'
+                'Falta el Access Token de MercadoPago. Captúralo en /admin/configuracion-pagos (o en MERCADOPAGO_ACCESS_TOKEN del .env). Lo obtienes en MercadoPago → Tu aplicación → Credenciales de producción.'
             );
         }
+
+        // Reaplica por si el token cambió desde el panel en este mismo request.
+        $this->aplicarToken();
     }
 }
