@@ -11,10 +11,12 @@
                 {{-- Feedback Karla 06-10-2026 ("no reproduce contenido"): player
                      con <source> explícito (más tolerante que src directo) +
                      fallback de descarga si el navegador no puede decodificar +
-                     mensaje de error on-screen si falla el load. --}}
+                     mensaje de error on-screen si falla el load.
+                     IMPORTANTE: usar x-on:error (no @error) porque @error es
+                     directive de Blade para $errors->has(). --}}
                 <div class="mb-6 aspect-video overflow-hidden rounded-xl bg-black" x-data="{ err: false }">
                     <video controls playsinline preload="metadata" class="h-full w-full" x-show="!err"
-                           @error="err = true" @stalled.once="console.warn('video stalled')">
+                           x-on:error="err = true">
                         <source src="{{ $recurso }}" type="video/mp4">
                         <source src="{{ $recurso }}" type="video/webm">
                         {{ __('Tu navegador no soporta la reproducción directa.') }}
@@ -31,7 +33,7 @@
                 <img src="{{ $recurso }}" alt="{{ $item->title }}" class="mb-6 w-full rounded-xl">
             @elseif ($item->type === 'audio' && $recurso)
                 <div class="mb-6" x-data="{ err: false }">
-                    <audio controls class="w-full" x-show="!err" @error="err = true">
+                    <audio controls class="w-full" x-show="!err" x-on:error="err = true">
                         <source src="{{ $recurso }}" type="audio/mpeg">
                         <source src="{{ $recurso }}" type="audio/mp4">
                         <source src="{{ $recurso }}" type="audio/ogg">
