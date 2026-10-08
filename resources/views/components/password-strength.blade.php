@@ -44,6 +44,21 @@
             </li>
         </template>
     </ul>
+
+    {{-- Feedback Karla 08-10-2026: este medidor solo revisa la FORMA de la
+         contraseña; el servidor además la compara contra filtraciones públicas.
+         Eso hacía que la barra dijera "excelente" y al guardar saliera
+         "apareció en una filtración" — contradictorio y frustrante. Este botón
+         genera una al azar, que por construcción no está en ninguna filtración
+         y cumple todos los criterios. Se copia también al campo de confirmación
+         si existe, para no obligar a teclearla dos veces. --}}
+    <div class="flex flex-wrap items-center gap-2 pt-1">
+        <button type="button" x-on:click="generar()"
+                class="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink transition hover:border-sage hover:text-sage">
+            🎲 {{ __('Generar contraseña segura') }}
+        </button>
+        <span x-show="generada" x-cloak class="text-xs text-sage" x-text="'{{ __('Lista. Guárdala en un lugar seguro.') }}'"></span>
+    </div>
 </div>
 
 <script>
@@ -60,12 +75,58 @@
                 'symbol' => __('Un símbolo (! @ # $ % & *)'),
             ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!},
             checks: { length: false, upper: false, lower: false, number: false, symbol: false },
+            generada: false,
             init() {
                 const input = document.getElementById('{{ $for }}');
                 if (! input) return;
                 input.addEventListener('input', (e) => this.update(e.target.value));
                 // Si el campo llegó ya con valor (por old() tras validación fallida), evaluar.
                 if (input.value) this.update(input.value);
+            },
+            /**
+             * Arma una contraseña de 16 caracteres con crypto.getRandomValues
+             * (no Math.random, que es predecible). Garantiza al menos uno de
+             * cada tipo colocándolos primero y barajando después.
+             */
+            generar() {
+                const may = 'ABCDEFGHJKLMNPQRSTUVWXYZ';   // sin I ni O
+                const min = 'abcdefghijkmnpqrstuvwxyz';   // sin l ni o
+                const num = '23456789';                   // sin 0 ni 1
+                const sim = '!@#$%&*';
+                const todo = may + min + num + sim;
+                const azar = (set, n = 1) => {
+                    const buf = new Uint32Array(n);
+                    crypto.getRandomValues(buf);
+                    return Array.from(buf, (x) => set[x % set.length]).join('');
+                };
+                const base = (azar(may) + azar(min) + azar(num) + azar(sim) + azar(todo, 12)).split('');
+                // Barajado Fisher-Yates para que el patrón no sea siempre
+                // "mayúscula, minúscula, número, símbolo, resto".
+                const mez = new Uint32Array(base.length);
+                crypto.getRandomValues(mez);
+                for (let i = base.length - 1; i > 0; i--) {
+                    const j = mez[i] % (i + 1);
+                    [base[i], base[j]] = [base[j], base[i]];
+                }
+                const pwd = base.join('');
+
+                const input = document.getElementById('{{ $for }}');
+                if (input) {
+                    // Setter nativo + evento input: así React/Alpine y cualquier
+                    // listener del formulario se enteran del cambio.
+                    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+                    setter.call(input, pwd);
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.type = 'text'; // mostrarla para que la pueda copiar
+                }
+                const conf = document.getElementById('{{ $for }}_confirmation');
+                if (conf) {
+                    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+                    setter.call(conf, pwd);
+                    conf.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                this.update(pwd);
+                this.generada = true;
             },
             update(v) {
                 this.value = v;

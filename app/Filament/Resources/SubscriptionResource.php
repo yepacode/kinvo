@@ -112,7 +112,48 @@ class SubscriptionResource extends Resource
                         ->when($data['desde'] ?? null, fn ($q, $d) => $q->whereDate('current_period_end', '>=', $d))
                         ->when($data['hasta'] ?? null, fn ($q, $d) => $q->whereDate('current_period_end', '<=', $d))),
             ])
-            ->actions([])         // read-only: sin EditAction
+            ->actions([
+                // Feedback Karla 08-10-2026: el panel era 100% read-only, así
+                // que una suscripción atascada (p. ej. un checkout que nunca
+                // se confirmó) no se podía desbloquear desde ningún lado —
+                // ni el usuario ni el admin. Esta acción permite liberarla.
+                // No llama a la pasarela: solo marca el registro local, porque
+                // una INCOMPLETE nunca llegó a cobrar nada.
+                Tables\Actions\Action::make('cancelar')
+                    ->authorize(fn () => auth()->user()?->esAdmin() ?? false)
+                    ->label('Cancelar')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Subscription $r) => in_array($r->status, [
+                        Subscription::STATUS_INCOMPLETE,
+                        Subscription::STATUS_ACTIVE,
+                        Subscription::STATUS_TRIALING,
+                    ], true))
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Subscription $r) => 'Cancelar suscripción de '.($r->user?->name ?? '—'))
+                    ->modalDescription(fn (Subscription $r) => $r->status === Subscription::STATUS_INCOMPLETE
+                        ? 'Este intento de pago nunca se completó. Al cancelarlo, la persona podrá volver a suscribirse de inmediato.'
+                        : 'La suscripción quedará cancelada en Kinvoo. Si el cobro recurrente sigue activo en la pasarela, cancélalo también ahí.')
+                    ->modalSubmitActionLabel('Cancelar suscripción')
+                    ->action(function (Subscription $r) {
+                        $antes = $r->status;
+                        $r->forceFill([
+                            'status' => Subscription::STATUS_CANCELED,
+                            'canceled_at' => now(),
+                        ])->save();
+
+                        \App\Models\AuditLog::record(
+                            auth()->user(), $r, 'subscription_canceled_by_admin',
+                            old: ['status' => $antes],
+                            new: ['status' => Subscription::STATUS_CANCELED],
+                        );
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Suscripción cancelada')
+                            ->body('La persona ya puede volver a suscribirse.')
+                            ->success()->send();
+                    }),
+            ])
             ->bulkActions([]);    // read-only: sin DeleteBulkAction
     }
 

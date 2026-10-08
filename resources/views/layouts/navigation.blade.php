@@ -41,11 +41,15 @@
                             <x-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.*')">
                                 {{ landing('nav_coach_desarrollo') }}
                             </x-nav-link>
-                            {{-- Matriz: enlaces coach paid — muestro si tiene beneficio. --}}
+                            {{-- Matriz: enlaces coach paid. Feedback Karla 08-10-2026:
+                                 si no tiene el beneficio ya no se ocultan — se muestran
+                                 con candado y llevan a /membresias. --}}
                             @if ($u->hasBenefit('comunidad_ver'))
                                 <x-nav-link :href="route('wall.comunidad')" :active="request()->routeIs('wall.comunidad')">
                                     {{ __('Comunidad') }}
                                 </x-nav-link>
+                            @else
+                                <x-nav-link-bloqueado>{{ __('Comunidad') }}</x-nav-link-bloqueado>
                             @endif
                             {{-- Feedback Karla 27-ago: unificado en un solo tab "Expediente"
                                  que engloba beneficios + servicios (sub-secciones dentro). --}}
@@ -53,6 +57,8 @@
                                 <x-nav-link :href="route('expediente.index')" :active="request()->routeIs('expediente.*','beneficios.*','servicios.*','respaldo.*','pulso.coach')">
                                     {{ __('Expediente') }}
                                 </x-nav-link>
+                            @else
+                                <x-nav-link-bloqueado>{{ __('Expediente') }}</x-nav-link-bloqueado>
                             @endif
                         @endif
                     @elseif ($u->esContratante())
@@ -186,19 +192,28 @@
                     <x-responsive-nav-link :href="route('contenido.index')" :active="request()->routeIs('contenido.*')">
                         {{ __('Desarrollo y capacitaciones') }}
                     </x-responsive-nav-link>
-                    {{-- HIGH-7 · Alinear el menú móvil con el desktop:
-                         gates por hasBenefit para NO mostrar items paid al coach free.
-                         Antes se mostraba "Mi expediente" al free y al hacer click
-                         chocaba con un redirect a /membresias → mala UX. --}}
+                    {{-- Feedback Karla 08-10-2026: antes (HIGH-7) estos ítems se
+                         ocultaban al coach sin membresía para evitar el redirect
+                         seco a /membresias. Karla pidió lo contrario: que se vean
+                         con candado, para que sepa qué incluye la membresía, y que
+                         el candado sea el que lleve a contratarla. --}}
                     @if ($u->hasBenefit('comunidad_ver'))
                         <x-responsive-nav-link :href="route('wall.comunidad')" :active="request()->routeIs('wall.comunidad')">
                             {{ __('Comunidad') }}
+                        </x-responsive-nav-link>
+                    @else
+                        <x-responsive-nav-link :href="route('membresias.index')" :active="false">
+                            🔒 {{ __('Comunidad') }}
                         </x-responsive-nav-link>
                     @endif
                     {{-- Feedback Karla 27-ago: menú unificado — un solo tab "Expediente". --}}
                     @if ($u->hasBenefit('expediente_propio') || $u->hasBenefit('mis_beneficios'))
                         <x-responsive-nav-link :href="route('expediente.index')" :active="request()->routeIs('expediente.*','beneficios.*','servicios.*','respaldo.*','pulso.coach')">
                             {{ __('Expediente') }}
+                        </x-responsive-nav-link>
+                    @else
+                        <x-responsive-nav-link :href="route('membresias.index')" :active="false">
+                            🔒 {{ __('Expediente') }}
                         </x-responsive-nav-link>
                     @endif
                 @endif

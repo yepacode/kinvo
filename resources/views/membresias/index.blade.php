@@ -84,38 +84,13 @@
             @endif
         @endauth
 
-        {{-- Feedback Karla 27-ago: si el user tiene membresía activa, mostramos
-             una tarjeta con "Tu membresía actual" + los servicios que su plan
-             incluye. Antes esto vivía en /mis-servicios (link del menú) y Karla
-             pidió consolidarlo aquí. --}}
-        @auth
-            @php
-                $__u = auth()->user();
-                $__misServicios = ! $__u->esAdmin() ? $__u->serviciosIncluidos() : collect();
-            @endphp
-            @if ($__misServicios->isNotEmpty())
-                <section class="mx-auto mb-14 max-w-3xl rounded-3xl border border-sage/40 bg-sage/5 p-6 sm:p-8">
-                    {{-- Feedback Karla 01-10-2026: se quitó "Solicitar un servicio". --}}
-                    <h2 class="font-serif text-2xl font-medium text-ink">{{ __('Tu membresía actual') }}</h2>
-                    <p class="mt-2 text-sm text-warmgray">
-                        {{ __('Estos son los beneficios que incluye tu plan. Kinvoo refleja el estado prendido/apagado de cada uno; los trámites de alta se gestionan directamente con cada proveedor.') }}
-                    </p>
-                    <ul class="mt-4 grid gap-3 sm:grid-cols-2">
-                        @foreach ($__misServicios as $__servicio)
-                            <li class="flex items-center gap-3 rounded-2xl border border-line bg-white p-4">
-                                <span class="text-2xl" aria-hidden="true">{{ $__servicio->icono ?: '✨' }}</span>
-                                <div class="min-w-0">
-                                    <p class="font-medium text-ink">{{ $__servicio->nombre }}</p>
-                                    @if ($__servicio->descripcion)
-                                        <p class="mt-0.5 text-xs text-warmgray line-clamp-2">{{ $__servicio->descripcion }}</p>
-                                    @endif
-                                </div>
-                            </li>
-                        @endforeach
-                    </ul>
-                </section>
-            @endif
-        @endauth
+        {{-- Feedback Karla 08-10-2026: aquí se listaban los servicios del plan
+             ("Tu membresía actual" con las tarjetas de Telemedicina, Nutrición,
+             Psicología…). Karla pidió quitarlo textualmente: "no debería
+             aparecer tu membresía actual, esto no es lo que incluye… nada más
+             si la tiene o no activa". El detalle de cada beneficio vive en el
+             Expediente del coach, que es donde el apagador muestra su estado
+             real; esta página solo responde si hay membresía o no. --}}
 
         @php
             $__u = auth()->user();
