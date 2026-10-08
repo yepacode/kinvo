@@ -1,5 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" rx="16" fill="#5C7A5F"/>
-  <text x="32" y="45" font-family="Georgia, 'Times New Roman', serif" font-size="40" font-weight="500"
-        text-anchor="middle" fill="#F7F4EE">K</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Isotipo Kinvoo (las dos "o" del wordmark). Entregado por Karla 08-10-2026.
+       Vectorial para que se vea nítido lo mismo a 16px en la pestaña que a
+       512px en el icono de escritorio. Proporciones tomadas del original:
+       radio exterior 23, grosor de anillo 9, separación entre centros 40. -->
+  <rect width="100" height="100" rx="22" fill="#F7F4EE"/>
+  <g fill="none" stroke="#1C1C1A" stroke-width="9">
+    <circle cx="30" cy="50" r="18.5"/>
+    <circle cx="70" cy="50" r="18.5"/>
+  </g>
 </svg>

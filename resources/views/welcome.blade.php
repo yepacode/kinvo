@@ -11,10 +11,11 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ url('/') }}">
 <meta property="og:image" content="{{ landing_image('seo_og_image', 'img/landing/hero.jpg') }}">
-{{-- Feedback Karla 01-10-2026 · Audit 02-10: simplificado. --}}
+{{-- Feedback Karla 08-10-2026: isotipo real de Kinvoo. SVG primero (vectorial). --}}
+<link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-<meta name="theme-color" content="#5C7A5F">
+<meta name="theme-color" content="#F7F4EE">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin>

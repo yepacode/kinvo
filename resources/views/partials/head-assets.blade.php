@@ -1,13 +1,14 @@
 {{-- Fuentes de marca + CSS. Si hay build de Vite se usa; si no (App Control bloquea
      los binarios nativos localmente), se cae a Tailwind v4 por CDN + Alpine para DEV. --}}
 
-{{-- Feedback Karla 01-10-2026: logo real en lugar de la "K" placeholder.
-     Audit 02-10: simplificado — un solo <link rel="icon"> apuntando al PNG
-     de 256px (el navegador escala a 16/32); apple-touch-icon para iOS;
-     el "shortcut icon" legacy de IE se removió. --}}
+{{-- Feedback Karla 08-10-2026: isotipo real de Kinvoo (las dos "o" del
+     wordmark) en lugar de la "K" placeholder. El SVG va primero porque es
+     vectorial y se ve nítido igual a 16px en la pestaña que a 512px; el PNG
+     queda como respaldo para navegadores que no admiten SVG como icono. --}}
+<link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-<meta name="theme-color" content="#5C7A5F">
+<meta name="theme-color" content="#F7F4EE">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
