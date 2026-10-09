@@ -4,10 +4,19 @@
 {{-- Feedback Karla 08-10-2026: isotipo real de Kinvoo (las dos "o" del
      wordmark) en lugar de la "K" placeholder. El SVG va primero porque es
      vectorial y se ve nítido igual a 16px en la pestaña que a 512px; el PNG
-     queda como respaldo para navegadores que no admiten SVG como icono. --}}
-<link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-<link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
-<link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+     queda como respaldo para navegadores que no admiten SVG como icono.
+
+     El ?v= es el timestamp del archivo: Chrome guarda los favicons en una
+     caché propia que ni siquiera se limpia con Ctrl+Shift+R, así que sin
+     esto la gente seguía viendo el icono viejo tras desplegar uno nuevo.
+     Al cambiar el archivo cambia el timestamp y el navegador lo trata
+     como otro recurso. --}}
+@php
+    $iconVer = fn (string $f) => asset($f).'?v='.(@filemtime(public_path($f)) ?: 1);
+@endphp
+<link rel="icon" type="image/svg+xml" href="{{ $iconVer('favicon.svg') }}">
+<link rel="icon" type="image/png" href="{{ $iconVer('favicon.png') }}">
+<link rel="apple-touch-icon" href="{{ $iconVer('apple-touch-icon.png') }}">
 <meta name="theme-color" content="#F7F4EE">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -62,9 +62,10 @@ class CheckoutController extends Controller
             return back()->with('status', 'plan-no-es-para-tu-rol');
         }
 
-        // Blindaje: no permitir suscripción a plan sin precio real (mientras el
-        // cliente no cargue precios, `precio` es null → cobraría el fallback $199).
-        if (blank($plan->precio) || (float) $plan->precio <= 0) {
+        // Un plan sin precio capturado está a medio configurar: no se puede
+        // contratar. `scopeContratable` ya lo oculta del listado, así que aquí
+        // sólo llegan quienes forzaron la URL.
+        if ($plan->sinPrecio()) {
             return back()->with('status', 'plan-sin-precio');
         }
 
@@ -122,6 +123,14 @@ class CheckoutController extends Controller
                     'canceled_at' => now(),
                 ]);
 
+            // Plan gratuito: no hay nada que cobrar, así que se activa aquí
+            // mismo en vez de mandar a la pasarela (que rechazaría un importe
+            // de 0). Antes estos planes se mostraban pero no se podían
+            // contratar: el usuario acababa en "escríbenos y te ayudamos".
+            if ($plan->esGratuito()) {
+                return $this->activarPlanGratuito($user, $plan);
+            }
+
             $url = $this->gateway->createCheckoutUrl(
                 $user,
                 $plan,
@@ -140,6 +149,45 @@ class CheckoutController extends Controller
         } finally {
             $lock->release();
         }
+    }
+
+    /**
+     * Activa un plan de precio 0 sin pasar por la pasarela.
+     *
+     * Deja la suscripción ACTIVE y la membresía del usuario al día, igual que
+     * haría el webhook de un cobro real, para que el resto del sistema
+     * (beneficios, gates del menú, expediente) no tenga que distinguir entre
+     * un plan gratuito y uno pagado.
+     */
+    private function activarPlanGratuito($user, Plan $plan): RedirectResponse
+    {
+        $hasta = $plan->periodo === 'year' ? now()->addYear() : now()->addMonth();
+
+        DB::transaction(function () use ($user, $plan, $hasta) {
+            Subscription::create([
+                'user_id'              => $user->id,
+                'plan_id'              => $plan->id,
+                'provider'             => 'gratuito',
+                'status'               => Subscription::STATUS_ACTIVE,
+                'current_period_start' => now(),
+                'current_period_end'   => $hasta,
+            ]);
+
+            // membership_* no son mass-assignable a propósito (evitar
+            // escalado de privilegios desde un request), de ahí el forceFill.
+            $user->forceFill([
+                'membership_plan_id'    => $plan->id,
+                'membership_expires_at' => $hasta,
+            ])->save();
+
+            AuditLog::record($user, $user, 'plan_gratuito_activado', new: [
+                'plan_id'     => $plan->id,
+                'plan_nombre' => $plan->nombre,
+                'vigente_hasta' => $hasta->toDateString(),
+            ]);
+        });
+
+        return redirect()->route('membresias.index')->with('status', 'plan-gratuito-activado');
     }
 
     /** GET /suscripcion/exitosa — pantalla de "gracias, tu suscripción está activándose". */

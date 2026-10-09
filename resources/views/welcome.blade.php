@@ -11,10 +11,15 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ url('/') }}">
 <meta property="og:image" content="{{ landing_image('seo_og_image', 'img/landing/hero.jpg') }}">
-{{-- Feedback Karla 08-10-2026: isotipo real de Kinvoo. SVG primero (vectorial). --}}
-<link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-<link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
-<link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+{{-- Feedback Karla 08-10-2026: isotipo real de Kinvoo. SVG primero (vectorial).
+     El ?v= con el timestamp evita que Chrome siga mostrando el icono viejo
+     desde su caché de favicons, que no se limpia con un refresco normal. --}}
+@php
+    $iconVer = fn (string $f) => asset($f).'?v='.(@filemtime(public_path($f)) ?: 1);
+@endphp
+<link rel="icon" type="image/svg+xml" href="{{ $iconVer('favicon.svg') }}">
+<link rel="icon" type="image/png" href="{{ $iconVer('favicon.png') }}">
+<link rel="apple-touch-icon" href="{{ $iconVer('apple-touch-icon.png') }}">
 <meta name="theme-color" content="#F7F4EE">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

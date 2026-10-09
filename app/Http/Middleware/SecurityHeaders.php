@@ -53,7 +53,11 @@ class SecurityHeaders
                 "font-src 'self' data: https://fonts.gstatic.com https://api.fontshare.com https://cdn.fontshare.com",
                 // 'unsafe-eval' es necesario para Alpine.js (evalúa x-show/@click con Function()).
                 "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
-                "connect-src 'self'",
+                // pwnedpasswords: el medidor de contraseñas avisa en vivo si la
+                // elegida está en una filtración, que es lo mismo que valida el
+                // servidor al guardar. Va por k-anonymity (se envían 5 caracteres
+                // del hash SHA-1, nunca la contraseña).
+                "connect-src 'self' https://api.pwnedpasswords.com",
                 "form-action 'self'",
             ]);
             $response->headers->set('Content-Security-Policy', $csp);

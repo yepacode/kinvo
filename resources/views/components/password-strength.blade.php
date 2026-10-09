@@ -45,13 +45,20 @@
         </template>
     </ul>
 
-    {{-- Feedback Karla 08-10-2026: este medidor solo revisa la FORMA de la
-         contraseña; el servidor además la compara contra filtraciones públicas.
-         Eso hacía que la barra dijera "excelente" y al guardar saliera
-         "apareció en una filtración" — contradictorio y frustrante. Este botón
-         genera una al azar, que por construcción no está en ninguna filtración
-         y cumple todos los criterios. Se copia también al campo de confirmación
-         si existe, para no obligar a teclearla dos veces. --}}
+    {{-- Aviso de filtración en vivo. El servidor rechaza estas contraseñas al
+         guardar; mostrarlo aquí evita que el usuario descubra el problema
+         recién al pulsar el botón. --}}
+    <div x-show="filtrada" x-cloak
+         class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <span aria-hidden="true">⚠️</span>
+        {{ __('Esta contraseña aparece en filtraciones públicas de otros sitios. No es culpa tuya, pero elige otra — o genera una con el botón de abajo.') }}
+    </div>
+
+    {{-- Feedback Karla 08-10-2026: botón para generar una contraseña al azar.
+         Por construcción no está en ninguna filtración y cumple todos los
+         criterios, así que resuelve el caso sin que el usuario tenga que
+         adivinar qué le molesta al validador. Se copia también al campo de
+         confirmación para no teclearla dos veces. --}}
     <div class="flex flex-wrap items-center gap-2 pt-1">
         <button type="button" x-on:click="generar()"
                 class="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink transition hover:border-sage hover:text-sage">
@@ -76,6 +83,9 @@
             ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!},
             checks: { length: false, upper: false, lower: false, number: false, symbol: false },
             generada: false,
+            filtrada: false,   // aparece en alguna filtración pública conocida
+            turno: 0,          // descarta respuestas de consultas ya superadas
+            debounce: null,
             init() {
                 const input = document.getElementById('{{ $for }}');
                 if (! input) return;
@@ -138,6 +148,45 @@
                     number: /[0-9]/.test(v),
                     symbol: /[^A-Za-z0-9]/.test(v),
                 };
+                this.revisarFiltraciones(v);
+            },
+            /**
+             * Comprueba la contraseña contra filtraciones públicas MIENTRAS se
+             * escribe, que es la misma validación que hace el servidor al
+             * guardar. Sin esto el medidor decía "excelente" y después el
+             * servidor rechazaba la contraseña: el usuario no entendía por qué.
+             *
+             * Usa k-anonymity: se envían sólo los 5 primeros caracteres del
+             * hash SHA-1, nunca la contraseña ni el hash completo. El servicio
+             * devuelve todos los hashes que empiezan igual y la comparación
+             * final ocurre aquí, en el navegador.
+             */
+            async revisarFiltraciones(v) {
+                if (v.length < 8 || !window.crypto?.subtle) {
+                    this.filtrada = false;
+                    return;
+                }
+                const miTurno = ++this.turno;   // descarta respuestas viejas
+                clearTimeout(this.debounce);
+                this.debounce = setTimeout(async () => {
+                    try {
+                        const datos = new TextEncoder().encode(v);
+                        const buf = await crypto.subtle.digest('SHA-1', datos);
+                        const hash = Array.from(new Uint8Array(buf))
+                            .map((b) => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+                        const prefijo = hash.slice(0, 5);
+                        const resto = hash.slice(5);
+
+                        const r = await fetch('https://api.pwnedpasswords.com/range/' + prefijo);
+                        if (!r.ok) return;                 // sin red: no estorbar
+                        const txt = await r.text();
+                        if (miTurno !== this.turno) return; // ya se escribió otra cosa
+
+                        this.filtrada = txt.split('\n').some((linea) => linea.split(':')[0].trim() === resto);
+                    } catch (e) {
+                        this.filtrada = false;              // ante la duda, no bloquear
+                    }
+                }, 450);
             },
             get score() {
                 return Object.values(this.checks).filter(Boolean).length;

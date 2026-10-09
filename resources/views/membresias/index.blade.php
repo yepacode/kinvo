@@ -57,6 +57,10 @@
             <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-sage/40 bg-sage/10 px-5 py-4 text-center text-sm text-ink">
                 {{ __('Ya tienes una suscripción activa. Cancélala desde tu panel antes de contratar otra.') }}
             </div>
+        @elseif (session('status') === 'plan-gratuito-activado')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-sage/40 bg-sage/10 px-5 py-4 text-center text-sm text-ink">
+                {{ __('Listo, tu plan quedó activo. No hay nada que pagar.') }}
+            </div>
         @elseif (session('status') === 'plan-sin-precio')
             <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-yellow-200 bg-yellow-50 px-5 py-4 text-center text-sm text-ink">
                 {{ __('Este plan aún no tiene precio configurado. Escríbenos y te ayudamos a contratarlo.') }}
@@ -184,7 +188,11 @@
                             <h3 class="font-serif text-xl font-medium text-ink">{{ $plan->nombre }}</h3>
 
                             <p class="mt-2 text-ink">
-                                @if (! is_null($plan->precio))
+                                @if ($plan->esGratuito())
+                                    {{-- 08-10-2026: un plan en 0 mostraba "$0 MXN / Mensual",
+                                         que se lee como un error de captura. --}}
+                                    <span class="text-2xl font-semibold">{{ __('Sin costo') }}</span>
+                                @elseif (! is_null($plan->precio))
                                     <span class="text-2xl font-semibold">${{ number_format($plan->precio, 0) }}</span>
                                     <span class="text-sm text-warmgray">{{ $plan->moneda }} / {{ __($plan->periodoLabel()) }}</span>
                                 @else
@@ -217,9 +225,12 @@
                                 $user = auth()->user();
                                 $planIndividual = $plan->audiencia === 'individual';
                                 $planEstudio = $plan->audiencia === 'estudio';
-                                $tienePrecio = filled($plan->precio) && (float) $plan->precio > 0;
+                                // 08-10-2026: antes un plan en 0 no era contratable y el
+                                // botón salía deshabilitado con "Plan sin precio". Ahora
+                                // los gratuitos se activan al momento.
+                                $contratable = ! $plan->sinPrecio();
                                 $cuentaLista = $user && ($user->esAdmin() || $user->estaActivo());
-                                $puedeSuscribirse = $user && $tienePrecio && $cuentaLista
+                                $puedeSuscribirse = $user && $contratable && $cuentaLista
                                     && (($planIndividual && $user->esProfesional())
                                      || ($planEstudio && $user->esContratante()));
                             @endphp
@@ -229,7 +240,7 @@
                                     @csrf
                                     <button type="submit"
                                             class="w-full inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition {{ $plan->destacado ? 'bg-sage text-cream hover:bg-ink' : 'border border-line text-ink hover:border-sage hover:text-sage' }}">
-                                        {{ landing('membresia_cta_suscribirme') }}
+                                        {{ $plan->esGratuito() ? __('Activar sin costo') : landing('membresia_cta_suscribirme') }}
                                     </button>
                                 </form>
                             @elseif (! $user)
@@ -245,7 +256,7 @@
                                         $mensajeDeshab = __('Los admins no se suscriben');
                                     } elseif (! $cuentaLista) {
                                         $mensajeDeshab = __('Tu cuenta está en revisión');
-                                    } elseif (! $tienePrecio) {
+                                    } elseif (! $contratable) {
                                         $mensajeDeshab = __('Plan sin precio — escríbenos');
                                     } elseif ($planIndividual) {
                                         $mensajeDeshab = __('Solo para perfiles de talento');
