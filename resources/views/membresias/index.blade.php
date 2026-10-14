@@ -65,6 +65,22 @@
             <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-yellow-200 bg-yellow-50 px-5 py-4 text-center text-sm text-ink">
                 {{ __('Este plan aún no tiene precio configurado. Escríbenos y te ayudamos a contratarlo.') }}
             </div>
+        @elseif (session('status') === 'pasarela-no-disponible')
+            {{-- Antes esto era una pantalla blanca de error 500: la pasarela
+                 rechazaba la operación y ni la persona ni Kinvoo se enteraban
+                 de por qué. El motivo técnico sólo se le muestra a quien
+                 administra, que es quien puede hacer algo con él. --}}
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+                <p class="text-center font-medium">
+                    {{ __('No pudimos abrir la pasarela de pago en este momento. No se te cobró nada. Vuelve a intentarlo en unos minutos — si sigue igual, escríbenos y lo resolvemos.') }}
+                </p>
+                @if (session('pasarela_motivo'))
+                    <p class="mt-3 border-t border-red-200 pt-3 text-xs text-red-800">
+                        <span class="font-semibold">{{ __('Detalle para el equipo:') }}</span>
+                        <span class="font-mono">{{ session('pasarela_motivo') }}</span>
+                    </p>
+                @endif
+            </div>
         @elseif (session('status') === 'admin-no-suscribe')
             <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-sage/40 bg-sage/10 px-5 py-4 text-center text-sm text-ink">
                 {{ __('Como administradora gestionas los planes, no te suscribes a ellos.') }}

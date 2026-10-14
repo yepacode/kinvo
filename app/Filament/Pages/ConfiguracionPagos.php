@@ -65,6 +65,45 @@ class ConfiguracionPagos extends Page implements HasForms
     {
         return $form
             ->schema([
+                // Si la pasarela rechazó el último intento de cobro, el motivo
+                // se enseña aquí arriba. Antes ese dato sólo existía en el log
+                // del servidor, así que desde el panel "no deja pagar" no tenía
+                // ninguna explicación visible.
+                Forms\Components\Section::make(__('Último rechazo de la pasarela'))
+                    ->icon('heroicon-o-exclamation-triangle')
+                    ->visible(fn () => \App\Support\FalloDePasarela::ultimo() !== null)
+                    ->schema([
+                        Forms\Components\Placeholder::make('ultimo_fallo')
+                            ->hiddenLabel()
+                            ->content(function () {
+                                $f = \App\Support\FalloDePasarela::ultimo();
+                                if (! $f) {
+                                    return '';
+                                }
+                                $ctx = $f['contexto'] ?? [];
+
+                                return new \Illuminate\Support\HtmlString(
+                                    '<p class="text-sm text-danger-600 font-medium">'.e($f['motivo']).'</p>'
+                                    .'<p class="mt-2 text-xs text-gray-500">'
+                                    .e(__('Cuando: :cuando', ['cuando' => $f['cuando'] ?? '—'])).' · '
+                                    .e(__('Plan: :plan', ['plan' => $ctx['plan'] ?? '—'])).' · '
+                                    .e(__('Persona: :quien', ['quien' => $ctx['usuario'] ?? '—']))
+                                    .'</p>'
+                                );
+                            }),
+
+                        Forms\Components\Actions::make([
+                            Forms\Components\Actions\Action::make('limpiar_fallo')
+                                ->label(__('Ya está resuelto, ocultar'))
+                                ->color('gray')
+                                ->action(function () {
+                                    \App\Support\FalloDePasarela::limpiar();
+                                    $this->form->fill($this->form->getState(afterValidate: false));
+                                    Notification::make()->title(__('Aviso ocultado'))->success()->send();
+                                }),
+                        ]),
+                    ]),
+
                 Forms\Components\Section::make(__('Pasarela activa'))
                     ->description(__('Elige con qué procesador se cobran las membresías. "Simulada" no mueve dinero real: sirve para probar el flujo completo sin cobrar.'))
                     ->schema([

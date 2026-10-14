@@ -265,8 +265,19 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
         } else {
             // Sin suscripción vigente. Sólo retiramos la membresía si vino de
             // una suscripción de esta persona; si no, es un alta manual.
+            //
+            // Las INCOMPLETE quedan fuera a propósito: son el apunte que se
+            // hace ANTES de mandar a la pasarela y nunca concedieron nada.
+            // Contarlas tenía un efecto feo: alguien con membresía vigente que
+            // pulsara "Suscribirme" en su mismo plan creaba una INCOMPLETE y
+            // ésta hacía creer que la membresía venía de una suscripción, así
+            // que se la retirábamos en el acto — perdía el acceso por intentar
+            // renovar.
             $vinoDeSuscripcion = $this->membership_plan_id !== null
-                && $this->subscriptions()->where('plan_id', $this->membership_plan_id)->exists();
+                && $this->subscriptions()
+                    ->where('plan_id', $this->membership_plan_id)
+                    ->where('status', '!=', Subscription::STATUS_INCOMPLETE)
+                    ->exists();
 
             if (! $vinoDeSuscripcion) {
                 return false;

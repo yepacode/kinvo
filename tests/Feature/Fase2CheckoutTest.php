@@ -390,4 +390,86 @@ class Fase2CheckoutTest extends TestCase
 
         $this->assertFalse($user->refresh()->tieneMembresiaActiva());
     }
+
+    /**
+     * Regresión · 14-10-2026 (fallo propio del arreglo de la mañana).
+     *
+     * Quien ya tenía membresía y pulsaba "Suscribirme" en SU MISMO plan creaba
+     * una suscripción INCOMPLETE. La sincronización contaba esa INCOMPLETE
+     * como "la membresía vino de una suscripción" y, al no haber ninguna
+     * vigente, se la retiraba en el acto: perdía el acceso por intentar
+     * renovar.
+     */
+    public function test_intentar_renovar_no_retira_la_membresia_vigente(): void
+    {
+        $user = $this->contratante();
+        $plan = $this->planEstudio();
+
+        $user->forceFill([
+            'membership_plan_id' => $plan->id,
+            'membership_expires_at' => now()->addMonths(3),
+        ])->save();
+
+        // Un intento de pago nuevo sobre el mismo plan.
+        Subscription::create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'provider' => 'fake',
+            'status' => Subscription::STATUS_INCOMPLETE,
+        ]);
+
+        $user->refresh();
+        $this->assertTrue($user->tieneMembresiaActiva(), 'la membresía no se toca por un intento sin completar');
+        $this->assertSame($plan->id, $user->membership_plan_id);
+    }
+
+    /**
+     * Regresión · reporte de Karla 14-10-2026.
+     *
+     * Cuando la pasarela rechazaba la creación de la suscripción, la persona
+     * se topaba con una pantalla blanca de error 500 y el motivo quedaba
+     * enterrado en el log del servidor. Ahora vuelve a la página con un aviso
+     * y el motivo queda guardado para verlo desde el panel.
+     */
+    public function test_si_la_pasarela_falla_no_revienta_la_pagina(): void
+    {
+        $user = $this->contratante();
+        $plan = $this->planEstudio();
+
+        \App\Support\FalloDePasarela::limpiar();
+
+        $this->app->bind(\App\Services\Billing\SubscriptionGateway::class, fn () => new class implements \App\Services\Billing\SubscriptionGateway
+        {
+            public function name(): string
+            {
+                return 'fake';
+            }
+
+            public function createCheckoutUrl(\App\Models\User $user, \App\Models\Plan $plan, string $successUrl, string $cancelUrl): string
+            {
+                throw new \RuntimeException('auto_recurring.transaction_amount invalid');
+            }
+
+            public function cancelSubscription(string $id): void {}
+
+            public function verifyWebhook(string $payload, string $firma): array
+            {
+                return ['type' => 'ignored', 'data' => ['object' => []]];
+            }
+        });
+
+        $r = $this->actingAs($user)->post(route('billing.start', $plan));
+
+        $r->assertRedirect();
+        $r->assertSessionHas('status', 'pasarela-no-disponible');
+
+        // El intento quedó cerrado: se puede reintentar sin arrastrar basura.
+        $this->assertSame(0, Subscription::where('user_id', $user->id)
+            ->where('status', Subscription::STATUS_INCOMPLETE)->count());
+
+        // Y el motivo real quedó registrado para que se vea en el panel.
+        $fallo = \App\Support\FalloDePasarela::ultimo();
+        $this->assertNotNull($fallo);
+        $this->assertStringContainsString('transaction_amount', $fallo['motivo']);
+    }
 }

@@ -11,6 +11,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Notifications\CobroExitosoNotification;
 use App\Services\Billing\SubscriptionGateway;
+use App\Support\FalloDePasarela;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -117,12 +118,40 @@ class CheckoutController extends Controller
                 return $this->activarPlanGratuito($user, $plan);
             }
 
-            $url = $this->gateway->createCheckoutUrl(
-                $user,
-                $plan,
-                successUrl: route('billing.exitosa'),
-                cancelUrl: route('billing.fallida'),
-            );
+            // Si la pasarela rechaza la operación, el usuario veía una página
+            // blanca de error 500 y el motivo real se quedaba enterrado en el
+            // log del servidor — invisible para quien administra Kinvoo. Un
+            // "Suscribirme" no puede reventar en blanco: se recoge el motivo,
+            // se guarda para el panel y se le dice algo claro a la persona.
+            try {
+                $url = $this->gateway->createCheckoutUrl(
+                    $user,
+                    $plan,
+                    successUrl: route('billing.exitosa'),
+                    cancelUrl: route('billing.fallida'),
+                );
+            } catch (\Throwable $e) {
+                $motivo = $this->motivoDeLaPasarela($e);
+                report($e);
+
+                FalloDePasarela::registrar($motivo, [
+                    'plan_id'   => $plan->id,
+                    'plan'      => $plan->nombre,
+                    'usuario'   => $user->email,
+                    'gateway'   => $this->gateway->name(),
+                    'excepcion' => $e::class,
+                ]);
+
+                // El intento anotado no llegó a ninguna parte: lo cerramos para
+                // que no quede basura ni bloquee el siguiente reintento.
+                Subscription::where('user_id', $user->id)
+                    ->where('status', Subscription::STATUS_INCOMPLETE)
+                    ->update(['status' => Subscription::STATUS_CANCELED, 'canceled_at' => now()]);
+
+                return back()
+                    ->with('status', 'pasarela-no-disponible')
+                    ->with('pasarela_motivo', $user->esAdmin() ? $motivo : null);
+            }
 
             AuditLog::record($user, $user, 'checkout_started', new: [
                 'plan_id'    => $plan->id,
@@ -135,6 +164,34 @@ class CheckoutController extends Controller
         } finally {
             $lock->release();
         }
+    }
+
+    /**
+     * Saca el motivo legible de un fallo de la pasarela.
+     *
+     * MercadoPago no pone la causa real en el mensaje de la excepción: la
+     * manda en el cuerpo de la respuesta (`message` + `cause[]`). Sin esto,
+     * el log sólo decía "api error" y no había forma de saber qué rechazó.
+     */
+    private function motivoDeLaPasarela(\Throwable $e): string
+    {
+        if ($e instanceof \MercadoPago\Exceptions\MPApiException) {
+            $cuerpo = $e->getApiResponse()->getContent() ?? [];
+
+            $partes = array_filter([
+                $cuerpo['message'] ?? $cuerpo['error'] ?? null,
+                ...array_map(
+                    fn ($c) => is_array($c) ? ($c['description'] ?? $c['message'] ?? null) : (string) $c,
+                    $cuerpo['cause'] ?? []
+                ),
+            ]);
+
+            $texto = $partes ? implode(' · ', array_unique($partes)) : $e->getMessage();
+
+            return 'MercadoPago ('.$e->getStatusCode().'): '.$texto;
+        }
+
+        return $e->getMessage() ?: $e::class;
     }
 
     /**
