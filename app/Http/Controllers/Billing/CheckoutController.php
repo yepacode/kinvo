@@ -198,8 +198,16 @@ class CheckoutController extends Controller
                     ->where('status', Subscription::STATUS_INCOMPLETE)
                     ->update(['status' => Subscription::STATUS_CANCELED, 'canceled_at' => now()]);
 
+                // Si el rechazo es algo que la persona puede resolver —su
+                // cuenta de MercadoPago es de otro país, por ejemplo— se lo
+                // decimos a ella, en su idioma. Si es cosa nuestra, el
+                // mensaje genérico y el detalle al panel.
+                $paraElla = FalloDePasarela::mensajeParaLaPersona($e);
+
                 return back()
-                    ->with('status', 'pasarela-no-disponible')
+                    ->with('status', $paraElla ? 'pasarela-rechazo-explicable' : 'pasarela-no-disponible')
+                    ->with('pasarela_mensaje', $paraElla)
+                    ->with('pasarela_referencia', $rastro->referencia())
                     ->with('pasarela_motivo', $user->esAdmin() ? $motivo : null);
             }
 

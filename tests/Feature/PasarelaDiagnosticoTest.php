@@ -266,4 +266,85 @@ class PasarelaDiagnosticoTest extends TestCase
         $this->assertFalse($this->plan(['nombre' => 'Gratis', 'precio' => 0])->porDebajoDelMinimo());
         $this->assertFalse($this->plan(['nombre' => 'A consultar', 'precio' => null])->porDebajoDelMinimo());
     }
+
+    /**
+     * Regresión · diagnóstico 14-10-2026.
+     *
+     * MercadoPago rechazó un cobro real con «Payer is associated with a
+     * different site»: la cuenta de MercadoPago de ese correo estaba
+     * registrada en otro país. Enseñarle eso tal cual a un coach no le dice
+     * nada ni le deja arreglarlo; la pasarela habla en inglés y en su jerga.
+     */
+    public function test_el_rechazo_se_traduce_a_algo_que_la_persona_entiende(): void
+    {
+        $user = $this->contratante();
+        $plan = $this->plan();
+
+        $this->app->bind(\App\Services\Billing\SubscriptionGateway::class, fn () => new class implements \App\Services\Billing\SubscriptionGateway
+        {
+            public function name(): string
+            {
+                return 'fake';
+            }
+
+            public function createCheckoutUrl(\App\Models\User $user, \App\Models\Plan $plan, string $successUrl, string $cancelUrl): string
+            {
+                throw new \RuntimeException('Payer is associated with a different site');
+            }
+
+            public function cancelSubscription(string $id): void {}
+
+            public function verifyWebhook(string $payload, string $firma): array
+            {
+                return ['type' => 'ignored', 'data' => ['object' => []]];
+            }
+        });
+
+        $r = $this->actingAs($user)
+            ->from(route('membresias.index'))
+            ->post(route('billing.start', $plan));
+
+        $r->assertRedirect(route('membresias.index'));
+        $r->assertSessionHas('status', 'pasarela-rechazo-explicable');
+
+        $mensaje = session('pasarela_mensaje');
+        $this->assertNotNull($mensaje);
+        $this->assertStringContainsString('otro país', $mensaje);
+        $this->assertStringNotContainsString('different site', $mensaje);
+
+        // Y la página lo enseña, sin jerga de la pasarela.
+        $this->followRedirects($r)->assertSee('otro país', escape: false);
+    }
+
+    /** Un fallo que la persona no puede resolver sigue con el aviso genérico. */
+    public function test_un_fallo_interno_no_se_le_explica_a_la_persona(): void
+    {
+        $user = $this->contratante();
+        $plan = $this->plan();
+
+        $this->app->bind(\App\Services\Billing\SubscriptionGateway::class, fn () => new class implements \App\Services\Billing\SubscriptionGateway
+        {
+            public function name(): string
+            {
+                return 'fake';
+            }
+
+            public function createCheckoutUrl(\App\Models\User $user, \App\Models\Plan $plan, string $successUrl, string $cancelUrl): string
+            {
+                throw new \RuntimeException('Invalid field -> auto_recurring.currency_id');
+            }
+
+            public function cancelSubscription(string $id): void {}
+
+            public function verifyWebhook(string $payload, string $firma): array
+            {
+                return ['type' => 'ignored', 'data' => ['object' => []]];
+            }
+        });
+
+        $this->actingAs($user)->post(route('billing.start', $plan))
+            ->assertSessionHas('status', 'pasarela-no-disponible');
+
+        $this->assertNull(session('pasarela_mensaje'));
+    }
 }

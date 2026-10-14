@@ -4,6 +4,7 @@ namespace App\Support;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Guarda el último rechazo de la pasarela para poder verlo desde el panel.
@@ -52,6 +53,38 @@ class FalloDePasarela
         }
 
         return $e->getMessage() ?: $e::class;
+    }
+
+    /**
+     * Traduce el rechazo a algo que la persona que intenta pagar pueda
+     * entender y resolver por su cuenta. Devuelve null cuando el problema es
+     * nuestro (configuración, plan mal capturado) y no hay nada que ella
+     * pueda hacer: en ese caso se le da el mensaje genérico y el detalle va
+     * al panel.
+     *
+     * MercadoPago contesta en inglés y en su propia jerga. «Payer is
+     * associated with a different site» es, en cristiano, que la cuenta de
+     * MercadoPago de ese correo está registrada en otro país — pasa de
+     * verdad, y sin traducirlo la persona no tiene forma de saber qué hacer.
+     */
+    public static function mensajeParaLaPersona(\Throwable $e): ?string
+    {
+        $texto = Str::lower(self::motivo($e));
+
+        return match (true) {
+            str_contains($texto, 'different site'),
+            str_contains($texto, 'invalid users involved') => __('La cuenta de MercadoPago de tu correo está registrada en otro país, y por eso no puede suscribirse aquí. Prueba con un correo distinto, o paga con tarjeta eligiendo "Sin cuenta de Mercado Pago" en la pantalla de pago.'),
+
+            str_contains($texto, 'cannot pay an amount lower') => __('El importe de este plan está por debajo del mínimo que acepta MercadoPago. Ya avisamos al equipo de Kinvoo; elige otro plan mientras tanto.'),
+
+            str_contains($texto, 'payer_email') => __('No pudimos usar tu correo para el cobro. Revisa que el correo de tu cuenta esté bien escrito en "Mi cuenta".'),
+
+            str_contains($texto, 'collector'),
+            str_contains($texto, 'cannot be the same') => __('No puedes suscribirte con la misma cuenta de MercadoPago que recibe los cobros. Usa otro correo.'),
+
+            // Cualquier otra cosa es asunto nuestro, no suyo.
+            default => null,
+        };
     }
 
     public static function registrar(string $motivo, array $contexto = []): void

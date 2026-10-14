@@ -69,6 +69,19 @@
             <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-yellow-200 bg-yellow-50 px-5 py-4 text-center text-sm text-ink">
                 {{ __('Este plan no se puede contratar ahora mismo: su precio está por debajo del mínimo que admite la pasarela de pago. Ya avisamos al equipo de Kinvoo. Elige otro plan o escríbenos.') }}
             </div>
+        @elseif (session('status') === 'pasarela-rechazo-explicable')
+            {{-- La pasarela rechazó por algo que la persona SÍ puede resolver.
+                 Se lo decimos con sus palabras, no con las de MercadoPago. --}}
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-yellow-300 bg-yellow-50 px-5 py-4 text-sm text-ink">
+                <p class="text-center font-medium">{{ session('pasarela_mensaje') }}</p>
+                <p class="mt-2 text-center text-xs text-warmgray">{{ __('No se te cobró nada.') }}</p>
+                @if (session('pasarela_motivo'))
+                    <p class="mt-3 border-t border-yellow-200 pt-3 text-xs text-yellow-900">
+                        <span class="font-semibold">{{ __('Detalle para el equipo:') }}</span>
+                        <span class="font-mono">{{ session('pasarela_motivo') }}</span>
+                    </p>
+                @endif
+            </div>
         @elseif (session('status') === 'pasarela-no-disponible')
             {{-- Antes esto era una pantalla blanca de error 500: la pasarela
                  rechazaba la operación y ni la persona ni Kinvoo se enteraban
@@ -78,6 +91,11 @@
                 <p class="text-center font-medium">
                     {{ __('No pudimos abrir la pasarela de pago en este momento. No se te cobró nada. Vuelve a intentarlo en unos minutos — si sigue igual, escríbenos y lo resolvemos.') }}
                 </p>
+                @if (session('pasarela_referencia'))
+                    <p class="mt-2 text-center text-xs text-red-600">
+                        {{ __('Si nos escribes, dinos esta referencia: :ref', ['ref' => session('pasarela_referencia')]) }}
+                    </p>
+                @endif
                 @if (session('pasarela_motivo'))
                     <p class="mt-3 border-t border-red-200 pt-3 text-xs text-red-800">
                         <span class="font-semibold">{{ __('Detalle para el equipo:') }}</span>
