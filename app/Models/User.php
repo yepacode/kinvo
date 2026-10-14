@@ -211,6 +211,82 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
             && $this->membership_expires_at->gte(now());
     }
 
+    /**
+     * ¿Hay una suscripción por la que ya está pagando? Es lo único que debe
+     * impedir contratar otra, y la misma pregunta que se hace el checkout.
+     *
+     * La página de membresías la usa para decidir si muestra los botones, así
+     * que botón y backend no pueden volver a contradecirse: si el checkout
+     * aceptaría el pago, el botón está ahí.
+     */
+    public function tieneSuscripcionEnCurso(): bool
+    {
+        return $this->subscriptions()->enCurso()->exists();
+    }
+
+    /**
+     * Recalcula `membership_plan_id` / `membership_expires_at` a partir de las
+     * suscripciones. ÚNICO lugar que escribe esos dos campos a raíz de un
+     * cambio de suscripción.
+     *
+     * Antes cada flujo los escribía por su cuenta y los que cancelaban
+     * (el botón del panel, el webhook de la pasarela) se los saltaban: la
+     * suscripción quedaba "Cancelada" pero la persona seguía viendo
+     * "MEMBRESÍA ACTIVA" y la web no le ofrecía ningún plan. Dos verdades
+     * distintas sobre lo mismo. Ahora sólo hay una y se recalcula sola:
+     * `SubscriptionObserver` llama aquí después de cada guardado.
+     *
+     * Una membresía puesta a mano desde el panel (sin suscripción detrás) se
+     * respeta: sólo se retira lo que una suscripción concedió.
+     */
+    public function sincronizarMembresia(): bool
+    {
+        $vigentes = $this->subscriptions()->vigentes()->get();
+
+        // La que caduca más tarde manda; un periodo sin fecha (prueba) gana.
+        $mejor = $vigentes->sortByDesc(
+            fn (Subscription $s) => $s->current_period_end?->getTimestamp() ?? PHP_INT_MAX
+        )->first();
+
+        if ($mejor) {
+            $hasta = $mejor->current_period_end;
+
+            // Si la membresía a mano llega más lejos que la suscripción, no la
+            // recortamos: el panel la puso a propósito.
+            if ($this->membership_expires_at && $hasta && $this->membership_expires_at->gt($hasta)
+                && $this->membership_plan_id === $mejor->plan_id) {
+                return false;
+            }
+
+            $nuevos = [
+                'membership_plan_id' => $mejor->plan_id ?? $this->membership_plan_id,
+                'membership_expires_at' => $hasta ?? $this->membership_expires_at ?? now()->addMonth(),
+            ];
+        } else {
+            // Sin suscripción vigente. Sólo retiramos la membresía si vino de
+            // una suscripción de esta persona; si no, es un alta manual.
+            $vinoDeSuscripcion = $this->membership_plan_id !== null
+                && $this->subscriptions()->where('plan_id', $this->membership_plan_id)->exists();
+
+            if (! $vinoDeSuscripcion) {
+                return false;
+            }
+
+            $nuevos = ['membership_plan_id' => null, 'membership_expires_at' => null];
+        }
+
+        $cambia = (int) $this->membership_plan_id !== (int) $nuevos['membership_plan_id']
+            || (string) $this->membership_expires_at !== (string) $nuevos['membership_expires_at'];
+
+        if (! $cambia) {
+            return false;
+        }
+
+        $this->forceFill($nuevos)->save();
+
+        return true;
+    }
+
     /** @var \Illuminate\Support\Collection<int, int>|null memo por request */
     protected ?\Illuminate\Support\Collection $planesServiciosCache = null;
 

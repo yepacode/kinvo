@@ -46,5 +46,9 @@ class AppServiceProvider extends ServiceProvider
 
         // M8 · Auditoría legal: registra login/logout/register/failed en AuditLog.
         Event::subscribe(\App\Listeners\AuditAuthEvents::class);
+
+        // La membresía del usuario se recalcula sola tras cualquier cambio de
+        // suscripción, para que no haya dos verdades sobre el mismo acceso.
+        \App\Models\Subscription::observe(\App\Observers\SubscriptionObserver::class);
     }
 }

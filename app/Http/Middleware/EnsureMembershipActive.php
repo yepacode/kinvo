@@ -29,34 +29,12 @@ class EnsureMembershipActive
             return $next($request);
         }
 
-        // ¿Tiene alguna suscripción vigente?
-        // - active/trialing: SÍ (independiente del period_end, que puede estar
-        //   sin llenarse durante el trial).
-        // - past_due/canceled: solo si `current_period_end` NO es null y aún
-        //   no venció. Sin este guard, una sub past_due sin period_end da
-        //   acceso permanente (Seguridad MED-2).
-        $vigente = Subscription::where('user_id', $user->id)
-            ->where(function ($q) {
-                $q->where(function ($q1) {
-                    $q1->whereIn('status', [
-                        Subscription::STATUS_ACTIVE,
-                        Subscription::STATUS_TRIALING,
-                    ])
-                    ->where(function ($qq) {
-                        $qq->whereNull('current_period_end')
-                           ->orWhere('current_period_end', '>=', now());
-                    });
-                })
-                ->orWhere(function ($q2) {
-                    $q2->whereIn('status', [
-                        Subscription::STATUS_PAST_DUE,
-                        Subscription::STATUS_CANCELED,
-                    ])
-                    ->whereNotNull('current_period_end')
-                    ->where('current_period_end', '>=', now());
-                });
-            })
-            ->exists();
+        // ¿Tiene alguna suscripción vigente? La regla ya no se escribe aquí:
+        // vive en `Subscription::scopeVigentes` y la comparten el modelo, el
+        // observer que mantiene la membresía y este middleware. Tenerla
+        // duplicada era el origen de que el panel y la web contestaran
+        // distinto sobre el mismo usuario.
+        $vigente = Subscription::where('user_id', $user->id)->vigentes()->exists();
 
         // Fallback a la lógica Fase 1 (membership_expires_at) para no romper
         // usuarios ya activos vía panel manual.

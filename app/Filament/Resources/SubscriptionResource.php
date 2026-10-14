@@ -135,22 +135,49 @@ class SubscriptionResource extends Resource
                         ? 'Este intento de pago nunca se completó. Al cancelarlo, la persona podrá volver a suscribirse de inmediato.'
                         : 'La suscripción quedará cancelada en Kinvoo. Si el cobro recurrente sigue activo en la pasarela, cancélalo también ahí.')
                     ->modalSubmitActionLabel('Cancelar suscripción')
-                    ->action(function (Subscription $r) {
+                    // Cancelar y cortar el acceso son dos cosas distintas: quien
+                    // pagó el mes lo conserva, pero una prueba o un plan sin costo
+                    // no tienen nada que conservar. Antes no había forma de
+                    // retirar el acceso desde el panel.
+                    ->form(fn (Subscription $r) => [
+                        \Filament\Forms\Components\Toggle::make('cortar_acceso')
+                            ->label('Cortar el acceso de inmediato')
+                            ->helperText('Sin marcar, conserva el acceso hasta el final del periodo ya pagado.')
+                            ->default($r->status === Subscription::STATUS_INCOMPLETE
+                                || ($r->plan?->esGratuito() ?? false)),
+                    ])
+                    ->action(function (Subscription $r, array $data) {
                         $antes = $r->status;
-                        $r->forceFill([
+                        $cortar = (bool) ($data['cortar_acceso'] ?? false);
+
+                        $cambios = [
                             'status' => Subscription::STATUS_CANCELED,
                             'canceled_at' => now(),
-                        ])->save();
+                            'ends_at' => $cortar ? now() : $r->current_period_end,
+                        ];
+                        // Es `current_period_end` lo que decide si sigue vigente,
+                        // así que para cortar hay que cerrarlo aquí.
+                        if ($cortar) {
+                            $cambios['current_period_end'] = now();
+                        }
+
+                        // El save dispara SubscriptionObserver, que recalcula la
+                        // membresía del usuario. Por eso aquí no se toca
+                        // users.membership_*: tener dos sitios escribiéndolo es
+                        // justo lo que dejaba "MEMBRESÍA ACTIVA" tras cancelar.
+                        $r->forceFill($cambios)->save();
 
                         \App\Models\AuditLog::record(
                             auth()->user(), $r, 'subscription_canceled_by_admin',
                             old: ['status' => $antes],
-                            new: ['status' => Subscription::STATUS_CANCELED],
+                            new: ['status' => Subscription::STATUS_CANCELED, 'acceso_cortado' => $cortar],
                         );
 
                         \Filament\Notifications\Notification::make()
                             ->title('Suscripción cancelada')
-                            ->body('La persona ya puede volver a suscribirse.')
+                            ->body($cortar
+                                ? 'Acceso retirado. La persona ya puede volver a suscribirse.'
+                                : 'Conserva el acceso hasta el final del periodo y ya puede volver a suscribirse.')
                             ->success()->send();
                     }),
             ])

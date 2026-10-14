@@ -98,7 +98,13 @@
 
         @php
             $__u = auth()->user();
+            // Dos preguntas distintas, que antes se confundían en una:
+            //   ¿tiene acceso ahora?        -> tieneMembresiaActiva()
+            //   ¿puede contratar un plan?   -> ! tieneSuscripcionEnCurso()
+            // Quien cancela conserva el acceso que pagó, pero vuelve a poder
+            // contratar; con una sola pregunta se quedaba sin ninguna de las dos.
             $__membresiaActiva = $__u && ! $__u->esAdmin() && $__u->tieneMembresiaActiva();
+            $__suscripcionEnCurso = $__u && ! $__u->esAdmin() && $__u->tieneSuscripcionEnCurso();
             $__planActual = $__membresiaActiva ? $__u->membershipPlan : null;
         @endphp
 
@@ -126,7 +132,14 @@
                     {{ $__planActual?->nombre ?? __('Mi plan') }}
                 </h1>
                 <p class="mt-4 text-warmgray">
-                    {{ __('Todo listo. Tu plan está activo — nosotros nos encargamos del resto.') }}
+                    @if ($__suscripcionEnCurso)
+                        {{ __('Todo listo. Tu plan está activo — nosotros nos encargamos del resto.') }}
+                    @else
+                        {{-- Cancelada o dada de alta a mano: el acceso sigue en pie,
+                             pero no hay cobro en curso. Lo decimos en lugar de un
+                             "todo listo" que hacía pensar que no se podía contratar. --}}
+                        {{ __('Conservas el acceso hasta el final del periodo. Más abajo puedes contratar un plan cuando quieras.') }}
+                    @endif
                 </p>
                 @if ($__u->membership_expires_at)
                     <p class="mt-2 text-sm text-warmgray">
@@ -163,8 +176,12 @@
             $grupos = [];
             $verIndividual = ! $__u || $__u->esAdmin() || $__u->esProfesional();
             $verEstudio    = ! $__u || $__u->esAdmin() || $__u->esContratante();
-            // Si ya tiene membresía activa, no listamos ningún plan.
-            if (! $__membresiaActiva) {
+            // Ocultamos los planes sólo si hay una suscripción EN CURSO, que es
+            // exactamente lo que rechazaría el checkout. Antes se miraba la
+            // membresía (campo denormalizado) y bastaba con que se
+            // desincronizara —p. ej. al cancelar desde el panel— para dejar a
+            // la persona sin ningún plan a la vista y sin forma de pagar.
+            if (! $__suscripcionEnCurso) {
                 if ($verIndividual) {
                     $grupos[] = ['titulo' => landing('membership_individual_title'), 'planes' => $individuales];
                 }

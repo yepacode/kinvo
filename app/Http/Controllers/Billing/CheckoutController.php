@@ -89,17 +89,13 @@ class CheckoutController extends Controller
             // Síntoma que delataba la incoherencia: el menú mostraba los
             // candados de "sin membresía" y a la vez el checkout respondía
             // "ya tienes una suscripción activa".
-            $subVigente = Subscription::where('user_id', $user->id)
-                ->whereIn('status', [
-                    Subscription::STATUS_ACTIVE,
-                    Subscription::STATUS_TRIALING,
-                ])
-                ->where(function ($vig) {
-                    $vig->whereNull('current_period_end')
-                        ->orWhere('current_period_end', '>=', now());
-                })
-                ->exists();
-            if ($subVigente) {
+            //
+            // La regla vive en `Subscription::scopeEnCurso` y la página de
+            // membresías pregunta lo mismo (`tieneSuscripcionEnCurso`) para
+            // decidir si pinta los botones. Así el botón y esta comprobación
+            // no pueden desalinearse: si aquí se aceptaría el pago, el botón
+            // está ahí; si no, no aparece.
+            if ($user->tieneSuscripcionEnCurso()) {
                 return back()->with('status', 'ya-tienes-suscripcion');
             }
 

@@ -241,4 +241,153 @@ class Fase2CheckoutTest extends TestCase
         ]);
         $this->actingAs($user)->get('/_test/premium')->assertOk();
     }
+
+    /**
+     * Regresión · diagnóstico 14-10-2026.
+     *
+     * Cancelar desde el panel sólo escribía `subscriptions.status`. La web lee
+     * el campo denormalizado `users.membership_expires_at`, así que quedaban
+     * dos verdades: la suscripción decía "Cancelada" y /membresias seguía
+     * diciendo "MEMBRESÍA ACTIVA" — y sin plan alguno a la vista, nadie podía
+     * pagar. Ahora la membresía se recalcula sola al guardar la suscripción.
+     */
+    public function test_cancelar_la_suscripcion_retira_la_membresia_del_usuario(): void
+    {
+        $user = $this->contratante();
+        $plan = $this->planEstudio();
+
+        $sub = Subscription::create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'provider' => 'fake',
+            'status' => Subscription::STATUS_ACTIVE,
+            'current_period_end' => now()->addMonth(),
+        ]);
+
+        // El observer la concedió al crearse la suscripción activa.
+        $this->assertTrue($user->refresh()->tieneMembresiaActiva());
+        $this->assertSame($plan->id, $user->membership_plan_id);
+
+        // Cancelación con corte inmediato, como la del panel.
+        $sub->forceFill([
+            'status' => Subscription::STATUS_CANCELED,
+            'canceled_at' => now(),
+            'current_period_end' => now()->subSecond(),
+        ])->save();
+
+        $user->refresh();
+        $this->assertFalse($user->tieneMembresiaActiva());
+        $this->assertNull($user->membership_plan_id);
+        $this->assertNull($user->membership_expires_at);
+    }
+
+    /** Cancelar sin cortar el acceso: conserva lo pagado y deja recontratar. */
+    public function test_cancelada_dentro_del_periodo_conserva_acceso_pero_permite_contratar(): void
+    {
+        $user = $this->contratante();
+        $plan = $this->planEstudio();
+
+        $sub = Subscription::create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'provider' => 'fake',
+            'status' => Subscription::STATUS_ACTIVE,
+            'current_period_end' => now()->addMonth(),
+        ]);
+        $sub->forceFill([
+            'status' => Subscription::STATUS_CANCELED,
+            'canceled_at' => now(),
+        ])->save();
+
+        $user->refresh();
+        $this->assertTrue($user->tieneMembresiaActiva(), 'el periodo pagado sigue dando acceso');
+        $this->assertFalse($user->tieneSuscripcionEnCurso(), 'ya no hay cobro en curso');
+
+        // Y el checkout la acepta: botón y backend dicen lo mismo.
+        $this->actingAs($user)->post(route('billing.start', $plan))
+            ->assertRedirect();
+        $this->assertNotSame('ya-tienes-suscripcion', session('status'));
+    }
+
+    /**
+     * La página de membresías ofrece planes en cuanto no hay cobro en curso.
+     * Antes los escondía mirando la membresía, y una desincronización dejaba
+     * la página sin un solo plen contratable.
+     */
+    public function test_membresias_ofrece_planes_tras_cancelar(): void
+    {
+        $user = $this->contratante();
+        $plan = $this->planEstudio();
+
+        $sub = Subscription::create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'provider' => 'fake',
+            'status' => Subscription::STATUS_ACTIVE,
+            'current_period_end' => now()->addMonth(),
+        ]);
+
+        // Con suscripción en curso NO se ofrece contratar.
+        $this->actingAs($user)->get(route('membresias.index'))
+            ->assertOk()
+            ->assertDontSee(route('billing.start', $plan), escape: false);
+
+        $sub->forceFill([
+            'status' => Subscription::STATUS_CANCELED,
+            'canceled_at' => now(),
+        ])->save();
+
+        // Cancelada: el plan vuelve a estar a la vista.
+        $this->actingAs($user)->get(route('membresias.index'))
+            ->assertOk()
+            ->assertSee(route('billing.start', $plan), escape: false);
+    }
+
+    /** Una membresía dada de alta a mano (sin suscripción) no se borra sola. */
+    public function test_el_alta_manual_de_membresia_sobrevive_a_la_sincronizacion(): void
+    {
+        $user = $this->contratante();
+        $plan = $this->planEstudio();
+        $otro = Plan::create([
+            'nombre' => 'Otro plan', 'audiencia' => 'estudio', 'precio' => 99,
+            'moneda' => 'MXN', 'periodo' => 'mensual', 'activo' => true, 'orden' => 2,
+        ]);
+
+        // El panel le regala 6 meses del plan $otro, sin suscripción detrás.
+        $user->forceFill([
+            'membership_plan_id' => $otro->id,
+            'membership_expires_at' => now()->addMonths(6),
+        ])->save();
+
+        // Se cancela una suscripción de OTRO plan: no debe tocar el alta manual.
+        Subscription::create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'provider' => 'fake',
+            'status' => Subscription::STATUS_CANCELED,
+            'canceled_at' => now(),
+            'current_period_end' => now()->subDay(),
+        ]);
+
+        $user->refresh();
+        $this->assertSame($otro->id, $user->membership_plan_id);
+        $this->assertTrue($user->tieneMembresiaActiva());
+    }
+
+    /** Seguridad MED-2 · una past_due sin fecha de fin no da acceso eterno. */
+    public function test_past_due_sin_periodo_no_da_acceso(): void
+    {
+        $user = $this->contratante();
+        $plan = $this->planEstudio();
+
+        Subscription::create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'provider' => 'fake',
+            'status' => Subscription::STATUS_PAST_DUE,
+            'current_period_end' => null,
+        ]);
+
+        $this->assertFalse($user->refresh()->tieneMembresiaActiva());
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Services\Billing;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
+use MercadoPago\Client\Invoice\InvoiceClient;
 use MercadoPago\Client\Payment\PaymentClient;
 use MercadoPago\Client\PreApproval\PreApprovalClient;
 use MercadoPago\MercadoPagoConfig;
@@ -209,6 +210,43 @@ class MercadoPagoGateway implements SubscriptionGateway
                         'client_reference_id'   => $localSubId ? (string) $localSubId : null,
                         'customer'              => $pre->payer_id ? (string) $pre->payer_id : null,
                         'status'                => $pre->status,
+                    ],
+                ],
+            ];
+        }
+
+        // Cobro RECURRENTE de una suscripción. MP no lo manda como `payment`:
+        // usa su propio tema `subscription_authorized_payment`, que aquí se
+        // caía en el 'ignored' de abajo. Resultado: el primer pago entraba y
+        // las renovaciones de los meses siguientes no se registraban nunca —
+        // la membresía se apagaba sola al mes aunque el cobro hubiera salido.
+        if ($topic === 'subscription_authorized_payment' || $topic === 'authorized_payment') {
+            $invoice = (new InvoiceClient())->get((int) $dataId);
+
+            // `payment` llega como array u objeto según versión del SDK.
+            $pago = $invoice->payment;
+            $pagoStatus = is_array($pago) ? ($pago['status'] ?? null) : ($pago->status ?? null);
+            $pagoId     = is_array($pago) ? ($pago['id'] ?? null) : ($pago->id ?? null);
+
+            $type = match ($pagoStatus) {
+                'approved'                 => 'payment_succeeded',
+                'refunded', 'charged_back' => 'refund',
+                'rejected', 'cancelled'    => 'payment_failed',
+                // Sin pago resuelto: sólo nos interesa si la cuota se dio por
+                // perdida; 'scheduled'/'recycling' aún están en curso.
+                default => $invoice->status === 'cancelled' ? 'payment_failed' : 'ignored',
+            };
+
+            return [
+                'type' => $type,
+                'data' => [
+                    'object' => [
+                        'id'           => (string) ($pagoId ?? $invoice->id),
+                        'subscription' => (string) ($invoice->preapproval_id ?? ''),
+                        'invoice'      => (string) $invoice->id,
+                        'amount'       => (int) round(((float) $invoice->transaction_amount) * 100),
+                        'currency'     => $invoice->currency_id,
+                        'status'       => $pagoStatus ?? $invoice->status,
                     ],
                 ],
             ];
