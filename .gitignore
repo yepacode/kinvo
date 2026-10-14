@@ -21,3 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Registro del circuito de cobro (se rota solo cada 30 días)
+/storage/logs/pagos*.log
