@@ -48,6 +48,26 @@ class ConfiguracionSitio extends Page implements HasForms
         return $form
             ->schema([
                 Tabs::make()->tabs([
+                    // Primera pestaña a propósito: es lo único de aquí que
+                    // cambia cómo FUNCIONA la plataforma, no cómo se lee.
+                    Tabs\Tab::make('Cuentas y acceso')->icon('heroicon-o-lock-closed')->schema([
+                        Toggle::make('verificacion_email_activa')
+                            ->label('Pedir confirmación del correo al registrarse')
+                            ->helperText('Apagado: la persona entra en cuanto se registra (como hasta hoy). Encendido: recibe un correo con un enlace y no puede entrar hasta abrirlo.'),
+
+                        Placeholder::make('verificacion_aviso')
+                            ->label('')
+                            ->content(new HtmlString(
+                                '<div style="border-left:4px solid #f59e0b;background:#fef3c7;padding:12px 16px;border-radius:8px;font-size:0.875rem;color:#1c1c1a;">'
+                                .'<strong>No lo enciendas hasta que los correos lleguen de verdad.</strong><br>'
+                                .'Hoy el dominio gokinvoo.com no tiene los registros SPF y DMARC, así que Gmail y Hotmail '
+                                .'rechazan los correos de Kinvoo. Si enciendes esto antes, quien se registre no recibirá el '
+                                .'enlace y se quedará sin poder entrar.<br><br>'
+                                .'Quien ya tiene cuenta no se ve afectado: sigue entrando igual aunque lo enciendas.'
+                                .'</div>'
+                            )),
+                    ]),
+
                     Tabs\Tab::make('SEO')->icon('heroicon-o-magnifying-glass')->schema([
                         TextInput::make('seo_title')->label('Título (title)')->maxLength(70)
                             ->helperText('Aparece en la pestaña del navegador y en Google.'),

@@ -87,6 +87,11 @@ class SiteSetting extends Model
             'forgot_title'           => 'Recupera tu contraseña',
             'forgot_body'            => 'Escribe tu correo y te enviaremos un enlace para crear una nueva contraseña.',
             'reset_title'            => 'Nueva contraseña',
+            // Interruptor de la verificación de correo. Apagado a propósito:
+            // encenderlo sin que los correos lleguen de verdad deja fuera a
+            // todo el que se registre. Se enciende desde el panel el día que
+            // el dominio tenga SPF y DMARC.
+            'verificacion_email_activa' => '0',
             'verify_title'           => 'Verifica tu correo',
             'verify_body'            => '¡Gracias por unirte a Kinvoo! Antes de empezar, confirma tu correo dando clic en el enlace que te acabamos de enviar. Si no lo recibiste, con gusto te mandamos otro.',
 

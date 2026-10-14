@@ -6,14 +6,14 @@ use App\Enums\EstadoUsuario;
 use App\Enums\RolUsuario;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements FilamentUser, HasLocalePreference
+class User extends Authenticatable implements FilamentUser, HasLocalePreference, MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -202,6 +202,38 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference
     public function membershipPlan(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Plan::class, 'membership_plan_id');
+    }
+
+    /**
+     * ¿Hace falta que esta persona confirme su correo?
+     *
+     * La verificación está detrás de un interruptor (`verificacion_email_activa`)
+     * porque encenderla sin que los correos lleguen de verdad deja fuera a todo
+     * el que se registre: no recibe el enlace y no puede entrar. Mientras el
+     * interruptor esté apagado, nadie queda bloqueado y no se manda ningún
+     * correo de verificación — el comportamiento es idéntico al de antes.
+     *
+     * El día que el dominio tenga SPF y DMARC se enciende desde el panel, sin
+     * tocar el servidor. Quien ya estaba registrado queda al día por migración,
+     * así que encenderlo no echa a nadie.
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        if (! self::verificacionDeCorreoActiva()) {
+            return true;
+        }
+
+        return $this->email_verified_at !== null;
+    }
+
+    /**
+     * El interruptor. Sin memo propio a propósito: `SiteSetting` ya cachea,
+     * y una variable estática aquí se quedaría con el valor viejo justo
+     * después de que alguien lo cambie desde el panel.
+     */
+    public static function verificacionDeCorreoActiva(): bool
+    {
+        return landing_bool('verificacion_email_activa', false);
     }
 
     /** ¿Tiene una membresía vigente (comparación con timestamp exacto)? */

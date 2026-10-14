@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,6 +13,21 @@ use Tests\TestCase;
 class EmailVerificationTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * La verificación de correo vive detrás de un interruptor del panel,
+     * apagado mientras el dominio no pueda entregar correo de verdad. Estas
+     * pruebas son las del flujo en sí, así que lo encienden.
+     *
+     * Que por defecto esté apagada —y que por eso nadie quede bloqueado— se
+     * cubre en VerificacionCorreoTest.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        SiteSetting::set('verificacion_email_activa', '1');
+    }
 
     public function test_email_verification_screen_can_be_rendered(): void
     {
