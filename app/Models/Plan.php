@@ -197,6 +197,12 @@ class Plan extends Model
 
                 // Fuera la marca: el icono lo pone la tarjeta.
                 $limpio = ltrim($trozo, implode('', array_map(fn ($m) => trim($m), $marcas)).' ');
+
+                // También se escribe con palabras ("Incluido: ...", "No incluye: ...").
+                // Repetirlo junto al ✓ sobra y queda feo —"✓ Incluido:Telemedicina"—,
+                // así que la palabra se toma como señal y se quita del texto.
+                [$limpio, $incluido] = self::leerPrefijo($limpio, $incluido);
+
                 $limpio = trim($limpio, " \t\n\r\0\x0B.,;");
 
                 if ($limpio !== '') {
@@ -206,6 +212,31 @@ class Plan extends Model
         }
 
         return $salida;
+    }
+
+    /**
+     * Quita del texto un "Incluido:" / "No incluye:" escrito a mano y lo
+     * convierte en la señal de si el beneficio entra o no.
+     *
+     * @return array{0:string, 1:bool}
+     */
+    private static function leerPrefijo(string $texto, bool $incluidoPorDefecto): array
+    {
+        // Lo negativo primero: "no incluido" también empieza por "incluido".
+        $prefijos = [
+            false => ['no incluido:', 'no incluye:', 'no incluidos:', 'no:', 'sin:'],
+            true => ['incluido:', 'incluye:', 'incluidos:', 'sí:', 'si:'],
+        ];
+
+        foreach ($prefijos as $incluido => $lista) {
+            foreach ($lista as $prefijo) {
+                if (str_starts_with(mb_strtolower($texto), $prefijo)) {
+                    return [trim(mb_substr($texto, mb_strlen($prefijo))), (bool) $incluido];
+                }
+            }
+        }
+
+        return [$texto, $incluidoPorDefecto];
     }
 
     /** Mínimo que la pasarela acepta para la moneda de este plan. */

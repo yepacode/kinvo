@@ -408,4 +408,40 @@ class PasarelaDiagnosticoTest extends TestCase
         $this->assertSame([], $this->plan(['beneficios' => null])->beneficiosNormalizados());
         $this->assertSame([], $this->plan(['nombre' => 'B', 'beneficios' => []])->beneficiosNormalizados());
     }
+
+    /**
+     * Regresión · producción 14-10-2026.
+     *
+     * Los beneficios se escribieron con la palabra delante ("Incluido:Todo tu
+     * respaldo"). La tarjeta añadía su propio ✓ y quedaba
+     * "✓ Incluido:Todo tu respaldo": redundante y con la coletilla pegada al
+     * texto. La palabra es la señal, no parte del beneficio.
+     */
+    public function test_el_prefijo_escrito_a_mano_se_lee_y_se_quita(): void
+    {
+        $plan = $this->plan([
+            'beneficios' => ['Incluido:Todo tu respaldo ✓ Incluido: Perfil Gratis ✕ No incluye: Comunidad'],
+        ]);
+
+        $lista = $plan->beneficiosNormalizados();
+
+        $this->assertCount(3, $lista);
+        $this->assertSame('Todo tu respaldo', $lista[0]['texto']);
+        $this->assertTrue($lista[0]['incluido']);
+        $this->assertSame('Perfil Gratis', $lista[1]['texto']);
+        $this->assertSame('Comunidad', $lista[2]['texto']);
+        $this->assertFalse($lista[2]['incluido'], '"No incluye" manda sobre la marca');
+    }
+
+    /** "No incluido" no se confunde con "incluido", que es su sufijo. */
+    public function test_no_incluido_no_se_lee_como_incluido(): void
+    {
+        $plan = $this->plan(['beneficios' => ['No incluido: Telemedicina']]);
+
+        $lista = $plan->beneficiosNormalizados();
+
+        $this->assertCount(1, $lista);
+        $this->assertFalse($lista[0]['incluido']);
+        $this->assertSame('Telemedicina', $lista[0]['texto']);
+    }
 }
