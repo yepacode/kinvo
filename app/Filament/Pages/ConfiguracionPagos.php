@@ -4,6 +4,8 @@ namespace App\Filament\Pages;
 
 use App\Models\AuditLog;
 use App\Models\PaymentCredential;
+use App\Models\Plan;
+use App\Support\FalloDePasarela;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -102,6 +104,53 @@ class ConfiguracionPagos extends Page implements HasForms
                                     Notification::make()->title(__('Aviso ocultado'))->success()->send();
                                 }),
                         ]),
+                    ]),
+
+                // La pregunta que no se podía contestar desde ninguna parte:
+                // ¿MercadoPago nos ha llamado alguna vez? Un webhook mal
+                // configurado en su panel y una integración sana que aún no ha
+                // vendido nada se veían exactamente igual — silencio.
+                Forms\Components\Section::make(__('Avisos de MercadoPago (webhook)'))
+                    ->icon('heroicon-o-signal')
+                    ->description(__('MercadoPago avisa a Kinvoo cada vez que alguien paga. Sin esos avisos el cobro se hace pero la membresía nunca se activa.'))
+                    ->visible(fn (Forms\Get $get) => $get('gateway') === 'mercadopago')
+                    ->schema([
+                        Forms\Components\Placeholder::make('pulso_webhook')
+                            ->hiddenLabel()
+                            ->content(function () {
+                                $ok = \App\Support\PulsoWebhook::ultimoAceptado();
+                                $ko = \App\Support\PulsoWebhook::ultimoRechazado();
+
+                                if (! $ok && ! $ko) {
+                                    return new \Illuminate\Support\HtmlString(
+                                        '<p class="text-sm font-medium text-danger-600">'
+                                        .e(__('MercadoPago todavía no ha llamado a Kinvoo ni una sola vez.'))
+                                        .'</p><p class="mt-1 text-xs text-gray-500">'
+                                        .e(__('Casi siempre significa que la dirección del webhook no está dada de alta en el panel de MercadoPago, en Notificaciones › Webhooks. Es la dirección que aparece aquí abajo.'))
+                                        .'</p>'
+                                    );
+                                }
+
+                                if ($ko && (! $ok || $ko['cuando'] > $ok['cuando'])) {
+                                    return new \Illuminate\Support\HtmlString(
+                                        '<p class="text-sm font-medium text-warning-600">'
+                                        .e(__('MercadoPago sí está llamando, pero Kinvoo rechazó el último aviso.'))
+                                        .'</p><p class="mt-1 text-xs text-gray-500">'
+                                        .e(__('Suele ser que el Secret de firma guardado aquí no es el que generó MercadoPago. Cópialo de nuevo desde Notificaciones › Webhooks.'))
+                                        .'</p><p class="mt-1 text-xs text-gray-400">'
+                                        .e(__('Último rechazo: :cuando · :motivo', ['cuando' => $ko['cuando'], 'motivo' => $ko['motivo'] ?? '—']))
+                                        .'</p>'
+                                    );
+                                }
+
+                                return new \Illuminate\Support\HtmlString(
+                                    '<p class="text-sm font-medium text-success-600">'
+                                    .e(__('Los avisos llegan y se aceptan correctamente.'))
+                                    .'</p><p class="mt-1 text-xs text-gray-500">'
+                                    .e(__('Último aviso: :cuando · :tipo', ['cuando' => $ok['cuando'], 'tipo' => $ok['tipo'] ?? '—']))
+                                    .'</p>'
+                                );
+                            }),
                     ]),
 
                 Forms\Components\Section::make(__('Pasarela activa'))
@@ -267,6 +316,88 @@ class ConfiguracionPagos extends Page implements HasForms
             : __('MercadoPago respondió :codigo.', ['codigo' => $res->status()]);
 
         $this->registrarPrueba($cred, false, $motivo);
+    }
+
+    /**
+     * Prueba el cobro de verdad: crea en MercadoPago una suscripción de
+     * prueba con el MISMO payload que usa el checkout y enseña la respuesta
+     * literal.
+     *
+     * "Probar conexión" sólo preguntaba quién es el dueño del token
+     * (/users/me), que responde bien aunque la cuenta no pueda crear
+     * suscripciones. Por eso podía decir "conexión correcta" mientras el
+     * botón de comprar devolvía un error 500. Esta prueba sí recorre el
+     * camino real.
+     *
+     * No cobra nada: la suscripción queda en `pending`, sin tarjeta asociada,
+     * y se cancela acto seguido.
+     */
+    public function probarCobro(): void
+    {
+        abort_unless(auth()->user()?->esAdmin(), 403);
+
+        $gateway = app(\App\Services\Billing\SubscriptionGateway::class);
+
+        if (! $gateway instanceof \App\Services\Billing\MercadoPagoGateway) {
+            Notification::make()
+                ->title(__('La pasarela activa no es MercadoPago'))
+                ->body(__('Elige MercadoPago y guarda antes de probar el cobro.'))
+                ->warning()->send();
+
+            return;
+        }
+
+        $planes = Plan::query()
+            ->where('activo', true)
+            ->whereNotNull('precio')
+            ->where('precio', '>', 0)
+            ->orderBy('orden')->orderBy('id')
+            ->get();
+
+        if ($planes->isEmpty()) {
+            Notification::make()
+                ->title(__('No hay ningún plan con precio'))
+                ->body(__('Captura el precio de al menos un plan antes de probar el cobro.'))
+                ->warning()->send();
+
+            return;
+        }
+
+        // Se prueban TODOS: basta con que un plan tenga un dato que
+        // MercadoPago no admite para que sólo ese dé error al pagarlo, y
+        // probando uno solo nunca se habría visto.
+        $fallos = [];
+        foreach ($planes as $plan) {
+            try {
+                $gateway->probarPlan($plan);
+            } catch (\Throwable $e) {
+                report($e);
+                $fallos[] = $plan->nombre.' ('.$plan->precio.' '.$plan->moneda.'): '.FalloDePasarela::motivo($e);
+            }
+        }
+
+        if (! $fallos) {
+            FalloDePasarela::limpiar();
+
+            Notification::make()
+                ->title(__('MercadoPago acepta cobrar los :n planes', ['n' => $planes->count()]))
+                ->body(__('El circuito de cobro funciona. Si aun así alguien no puede pagar, el problema está en su cuenta, no en la pasarela.'))
+                ->success()->persistent()->send();
+
+            return;
+        }
+
+        $resumen = implode(' — ', $fallos);
+        FalloDePasarela::registrar($resumen, [
+            'origen' => 'prueba de planes desde el panel',
+            'planes_revisados' => $planes->count(),
+            'planes_con_fallo' => count($fallos),
+        ]);
+
+        Notification::make()
+            ->title(__('MercadoPago rechaza :n de :total planes', ['n' => count($fallos), 'total' => $planes->count()]))
+            ->body($resumen)
+            ->danger()->persistent()->send();
     }
 
     private function registrarPrueba(PaymentCredential $cred, bool $ok, string $detalle): void

@@ -131,7 +131,7 @@ class CheckoutController extends Controller
                     cancelUrl: route('billing.fallida'),
                 );
             } catch (\Throwable $e) {
-                $motivo = $this->motivoDeLaPasarela($e);
+                $motivo = FalloDePasarela::motivo($e);
                 report($e);
 
                 FalloDePasarela::registrar($motivo, [
@@ -167,34 +167,6 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Saca el motivo legible de un fallo de la pasarela.
-     *
-     * MercadoPago no pone la causa real en el mensaje de la excepción: la
-     * manda en el cuerpo de la respuesta (`message` + `cause[]`). Sin esto,
-     * el log sólo decía "api error" y no había forma de saber qué rechazó.
-     */
-    private function motivoDeLaPasarela(\Throwable $e): string
-    {
-        if ($e instanceof \MercadoPago\Exceptions\MPApiException) {
-            $cuerpo = $e->getApiResponse()->getContent() ?? [];
-
-            $partes = array_filter([
-                $cuerpo['message'] ?? $cuerpo['error'] ?? null,
-                ...array_map(
-                    fn ($c) => is_array($c) ? ($c['description'] ?? $c['message'] ?? null) : (string) $c,
-                    $cuerpo['cause'] ?? []
-                ),
-            ]);
-
-            $texto = $partes ? implode(' · ', array_unique($partes)) : $e->getMessage();
-
-            return 'MercadoPago ('.$e->getStatusCode().'): '.$texto;
-        }
-
-        return $e->getMessage() ?: $e::class;
-    }
-
-    /**
      * Activa un plan de precio 0 sin pasar por la pasarela.
      *
      * Deja la suscripción ACTIVE y la membresía del usuario al día, igual que
@@ -204,7 +176,7 @@ class CheckoutController extends Controller
      */
     private function activarPlanGratuito($user, Plan $plan): RedirectResponse
     {
-        $hasta = $plan->periodo === 'year' ? now()->addYear() : now()->addMonth();
+        $hasta = $plan->vigenciaDesdeAhora();
 
         DB::transaction(function () use ($user, $plan, $hasta) {
             Subscription::create([

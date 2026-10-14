@@ -58,7 +58,21 @@ class SecurityHeaders
                 // servidor al guardar. Va por k-anonymity (se envían 5 caracteres
                 // del hash SHA-1, nunca la contraseña).
                 "connect-src 'self' https://api.pwnedpasswords.com",
-                "form-action 'self'",
+                // El botón "Suscribirme" es un formulario que el servidor
+                // responde con "vete a MercadoPago". El navegador aplica
+                // `form-action` a TODA la cadena de redirecciones del envío,
+                // así que con sólo 'self' bloqueaba la salida a la pasarela:
+                // la suscripción se creaba en MercadoPago y la persona se
+                // quedaba en la misma página, sin pantalla de pago y sin
+                // ningún mensaje. Mercado Libre entra porque el checkout de
+                // MercadoPago pasa por su login.
+                implode(' ', [
+                    "form-action 'self'",
+                    'https://*.mercadopago.com',
+                    'https://*.mercadopago.com.mx',
+                    'https://*.mercadolibre.com',
+                    'https://*.mercadolibre.com.mx',
+                ]),
             ]);
             $response->headers->set('Content-Security-Policy', $csp);
         }

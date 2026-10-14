@@ -23,6 +23,37 @@ class FalloDePasarela
 
     private const DIAS = 14;
 
+    /**
+     * Traduce una excepción de la pasarela al motivo legible.
+     *
+     * MercadoPago no pone la causa real en el mensaje de la excepción: la
+     * manda en el cuerpo de la respuesta (`message` + `cause[]`). Sin esto,
+     * el log sólo decía "api error" y no había forma de saber qué rechazó.
+     *
+     * Vive aquí, y no en el checkout, para que la prueba del panel y el cobro
+     * real cuenten lo mismo palabra por palabra.
+     */
+    public static function motivo(\Throwable $e): string
+    {
+        if ($e instanceof \MercadoPago\Exceptions\MPApiException) {
+            $cuerpo = $e->getApiResponse()->getContent() ?? [];
+
+            $partes = array_filter([
+                $cuerpo['message'] ?? $cuerpo['error'] ?? null,
+                ...array_map(
+                    fn ($c) => is_array($c) ? ($c['description'] ?? $c['message'] ?? null) : (string) $c,
+                    $cuerpo['cause'] ?? []
+                ),
+            ]);
+
+            $texto = $partes ? implode(' · ', array_unique($partes)) : $e->getMessage();
+
+            return 'MercadoPago ('.$e->getStatusCode().'): '.$texto;
+        }
+
+        return $e->getMessage() ?: $e::class;
+    }
+
     public static function registrar(string $motivo, array $contexto = []): void
     {
         $dato = [

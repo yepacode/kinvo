@@ -39,9 +39,33 @@ class Plan extends Model
         'anual' => 'Anual',
     ];
 
+    /**
+     * Monedas admitidas. MercadoPago exige el código ISO exacto y en
+     * mayúsculas: rechaza 'mxn', 'MX' o cualquier texto libre con un error
+     * 400 que antes sólo aparecía cuando una persona intentaba pagar.
+     */
+    public const MONEDAS = [
+        'MXN' => 'MXN · Peso mexicano',
+        'ARS' => 'ARS · Peso argentino',
+        'BRL' => 'BRL · Real brasileño',
+        'CLP' => 'CLP · Peso chileno',
+        'COP' => 'COP · Peso colombiano',
+        'PEN' => 'PEN · Sol peruano',
+        'UYU' => 'UYU · Peso uruguayo',
+    ];
+
     protected static function booted(): void
     {
         static::saving(function (Plan $p) {
+            // Red de seguridad por debajo del formulario: cualquier escritura
+            // (importador, seeder, consola) deja la moneda en el formato que
+            // la pasarela acepta, o en MXN si llega vacía.
+            $p->moneda = strtoupper(trim((string) $p->moneda)) ?: 'MXN';
+
+            // `interval` ya no se edita: se deriva de `periodo` para que la
+            // ficha y lo que se le pide a la pasarela no puedan discrepar.
+            $p->interval = $p->periodo === 'anual' ? 'year' : 'month';
+
             if (blank($p->slug)) {
                 $base = Str::slug(trim($p->audiencia.' '.$p->nombre)) ?: 'plan';
                 $slug = $base;
@@ -95,6 +119,40 @@ class Plan extends Model
     public function requierePago(): bool
     {
         return ! $this->sinPrecio() && (float) $this->precio > 0;
+    }
+
+    /**
+     * ¿El cobro es anual? REGLA ÚNICA de la periodicidad.
+     *
+     * El plan arrastra dos campos para lo mismo: `periodo` ('mensual'|'anual',
+     * que es lo que se enseña y lo que edita el panel arriba) e `interval`
+     * ('month'|'year', que es lo que miraba la pasarela, editable en otra
+     * sección del mismo formulario). Podían decir cosas distintas: un plan
+     * marcado "Anual" en la ficha seguía cobrándose cada mes porque su
+     * `interval` se había quedado en 'month'. Y al revés, el alta de un plan
+     * gratuito comparaba `periodo === 'year'`, un valor que ese campo no toma
+     * nunca, así que un plan anual sin costo sólo daba un mes.
+     *
+     * Manda `periodo`, que es el que se ve y el que se edita de verdad;
+     * `interval` sólo se respeta si `periodo` no dice nada.
+     */
+    public function esAnual(): bool
+    {
+        if (in_array($this->periodo, ['anual', 'year', 'yearly', 'annual'], true)) {
+            return true;
+        }
+
+        if (in_array($this->periodo, ['mensual', 'month', 'monthly'], true)) {
+            return false;
+        }
+
+        return in_array($this->interval, ['year', 'anual'], true);
+    }
+
+    /** Cuánto dura un periodo de este plan a partir de ahora. */
+    public function vigenciaDesdeAhora(): \Illuminate\Support\Carbon
+    {
+        return $this->esAnual() ? now()->addYear() : now()->addMonth();
     }
 
     /**

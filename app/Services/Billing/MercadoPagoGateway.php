@@ -78,7 +78,10 @@ class MercadoPagoGateway implements SubscriptionGateway
 
         // MP interpreta `frequency=1,frequency_type=months` como mensual, y
         // `frequency=12,frequency_type=months` como anual (no hay 'years').
-        $frequency = $plan->interval === 'year' ? 12 : 1;
+        // La periodicidad la decide `Plan::esAnual()`, que es la regla única:
+        // antes esto miraba `interval`, un campo distinto del que se edita en
+        // la ficha, así que un plan marcado "Anual" podía cobrarse cada mes.
+        $frequency = $plan->esAnual() ? 12 : 1;
 
         $client = new PreApprovalClient();
         $preapproval = $client->create([
@@ -102,6 +105,60 @@ class MercadoPagoGateway implements SubscriptionGateway
         // MP retorna sandbox_init_point en TEST y init_point en LIVE.
         // El SDK entrega el correcto según el modo del token activo.
         return $preapproval->init_point;
+    }
+
+    /**
+     * Comprueba que MercadoPago acepta cobrar ESTE plan, sin cobrar nada.
+     *
+     * Crea el preapproval con el mismo payload que el checkout real y lo
+     * cancela acto seguido: no hay tarjeta ni cobro, sólo la pregunta. Lanza
+     * si MercadoPago lo rechaza, con la causa dentro de la excepción.
+     *
+     * Existe porque "Probar conexión" sólo preguntaba de quién es el token
+     * (/users/me) y eso responde bien aunque un plan concreto tenga un dato
+     * que MercadoPago no acepta — moneda rara, importe fuera de rango,
+     * periodicidad imposible. Esos fallos sólo aparecían cuando una persona
+     * real intentaba pagar.
+     */
+    public function probarPlan(Plan $plan): void
+    {
+        $this->guardConfigured();
+
+        if (blank($plan->precio) || (float) $plan->precio <= 0) {
+            throw new \RuntimeException("El plan '{$plan->nombre}' no tiene precio.");
+        }
+
+        $client = new PreApprovalClient();
+        $pre = $client->create([
+            'reason'             => 'Kinvoo · '.$plan->nombre,
+            'external_reference' => 'kinvoo_prueba_'.$plan->id.'_'.time(),
+            'payer_email'        => 'prueba.'.$plan->id.'@kinvoo.test',
+            'auto_recurring'     => [
+                'frequency'          => $plan->esAnual() ? 12 : 1,
+                'frequency_type'     => 'months',
+                'transaction_amount' => (float) $plan->precio,
+                'currency_id'        => $plan->moneda ?: config('billing.currency', 'MXN'),
+            ],
+            'back_url' => $this->urlDeVuelta(),
+            'status'   => 'pending',
+        ]);
+
+        // No dejamos basura en la cuenta real.
+        if ($pre->id) {
+            try {
+                $client->update($pre->id, ['status' => 'cancelled']);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+    }
+
+    /** URL de vuelta válida: MercadoPago exige https, y en local no lo hay. */
+    private function urlDeVuelta(): string
+    {
+        $url = route('billing.exitosa');
+
+        return str_starts_with($url, 'https://') ? $url : 'https://gokinvoo.com/suscripcion/exitosa';
     }
 
     public function cancelSubscription(string $providerSubscriptionId): void

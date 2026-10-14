@@ -9,6 +9,8 @@ use App\Models\AuditLog;
 use App\Models\Payment;
 use App\Models\Subscription;
 use App\Services\Billing\SubscriptionGateway;
+use App\Support\FalloDePasarela;
+use App\Support\PulsoWebhook;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
@@ -39,6 +41,11 @@ class WebhookController extends Controller
             );
         } catch (\Throwable $e) {
             report($e);
+            // Una llamada rechazada también se anota: distingue "la pasarela
+            // no nos llama" de "nos llama pero el Secret de firma no coincide".
+            // Las dos se veían igual desde fuera — silencio.
+            PulsoWebhook::rechazado($e->getMessage() ?: 'firma inválida');
+
             return response('Invalid signature', 400);
         }
 
@@ -47,6 +54,8 @@ class WebhookController extends Controller
         // se normaliza a un conjunto interno.
         $type = $this->normalizarTipo($event['type'] ?? '');
         $data = $event['data']['object'] ?? $event['data'] ?? [];
+
+        PulsoWebhook::aceptado($type);
 
         match ($type) {
             'checkout_completed'     => $this->onCheckoutCompleted($data),
@@ -133,10 +142,26 @@ class WebhookController extends Controller
 
         // Seguridad HIGH-3 bis: NUNCA confiar en `user_id` del payload —
         // se debe resolver estrictamente vía la subscription conocida.
-        // Sin sub asociada, ignoramos el evento (evita crear Payments
-        // huérfanos o vincular pagos a users arbitrarios).
-        $sub = Subscription::where('provider_subscription_id', $data['subscription'] ?? '')->first();
-        if (! $sub) return;
+        $sub = $this->resolverSuscripcion($data);
+
+        // Un cobro que no se puede vincular ya no se tira en silencio: eso era
+        // dinero entrando sin dejar rastro en ninguna parte. Seguimos sin
+        // crear el Payment (vincularlo a ciegas sería peor), pero queda
+        // anotado y visible en /admin/configuracion-pagos para revisarlo.
+        if (! $sub) {
+            FalloDePasarela::registrar(
+                'Llegó un cobro aprobado que no se pudo vincular a ninguna suscripción. Revísalo en MercadoPago antes de dar acceso.',
+                [
+                    'pago'               => (string) $providerPaymentId,
+                    'suscripcion_remota' => (string) ($data['subscription'] ?? '—'),
+                    'referencia'         => (string) ($data['external_reference'] ?? '—'),
+                    'importe'            => (int) ($data['amount'] ?? 0),
+                ]
+            );
+
+            return;
+        }
+
         $user = $sub->user;
         if (! $user) return;
 
@@ -152,19 +177,20 @@ class WebhookController extends Controller
             'paid_at' => now(),
         ]);
 
-        if ($sub) {
-            $sub->update([
-                'status' => Subscription::STATUS_ACTIVE,
-                'current_period_start' => now(),
-                'current_period_end' => now()->addMonth(),
-            ]);
-            if ($sub->plan_id) {
-                $user->forceFill([
-                    'membership_plan_id' => $sub->plan_id,
-                    'membership_expires_at' => now()->addMonth(),
-                ])->save();
-            }
-        }
+        // El periodo lo decide el plan, no un mes fijo: un plan anual se
+        // cobraba por un año y daba acceso por treinta días.
+        $hasta = $sub->plan?->vigenciaDesdeAhora() ?? now()->addMonth();
+
+        $sub->update([
+            'status' => Subscription::STATUS_ACTIVE,
+            'current_period_start' => now(),
+            'current_period_end' => $hasta,
+        ]);
+
+        // La membresía del usuario la pone al día SubscriptionObserver a
+        // partir de la suscripción que acabamos de guardar. No se escribe
+        // aquí a mano: tener dos sitios escribiéndola es lo que hacía que
+        // el panel y la web contestaran distinto sobre el mismo acceso.
 
         // H5 · registro de conversión (petición cliente): guardar la fecha
         // del PRIMER pago exitoso para el reporte "registro vs conversión".
@@ -192,7 +218,7 @@ class WebhookController extends Controller
 
     private function onPaymentFailed(array $data): void
     {
-        $sub = Subscription::where('provider_subscription_id', $data['subscription'] ?? '')->first();
+        $sub = $this->resolverSuscripcion($data);
         if (! $sub) return;
 
         // Idempotencia: si ya registramos este intento fallido, no repetimos
@@ -229,9 +255,44 @@ class WebhookController extends Controller
         } catch (\Throwable $e) { report($e); }
     }
 
+    /**
+     * Encuentra la suscripción local a la que pertenece un evento.
+     *
+     * Antes sólo se miraba `provider_subscription_id`. En MercadoPago eso
+     * falla justo donde más duele: en un cobro recurrente, el objeto `payment`
+     * no siempre trae el id del preapproval, así que el pago se quedaba
+     * huérfano y el evento se descartaba. El `external_reference` sí viaja
+     * siempre — lo ponemos nosotros al crear el checkout — y sirve de respaldo.
+     */
+    private function resolverSuscripcion(array $data): ?Subscription
+    {
+        $remoto = (string) ($data['subscription'] ?? '');
+        if ($remoto !== '') {
+            $sub = Subscription::where('provider_subscription_id', $remoto)->first();
+            if ($sub) {
+                return $sub;
+            }
+        }
+
+        // 'kinvoo_sub_123' → 123
+        $ref = (string) ($data['external_reference'] ?? '');
+        if ($ref !== '' && str_starts_with($ref, 'kinvoo_sub_')) {
+            $id = (int) substr($ref, strlen('kinvoo_sub_'));
+            if ($id > 0) {
+                return Subscription::find($id);
+            }
+        }
+
+        $local = $data['metadata']['local_subscription_id'] ?? null;
+
+        return $local ? Subscription::find((int) $local) : null;
+    }
+
     private function onSubscriptionCanceled(array $data): void
     {
-        $sub = Subscription::where('provider_subscription_id', $data['id'] ?? $data['subscription'] ?? '')->first();
+        $sub = $this->resolverSuscripcion(
+            ['subscription' => $data['id'] ?? $data['subscription'] ?? ''] + $data
+        );
         if (! $sub) return;
 
         $sub->update([

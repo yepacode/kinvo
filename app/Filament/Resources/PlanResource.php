@@ -50,10 +50,15 @@ class PlanResource extends Resource
                         ->options(Plan::PERIODOS)
                         ->default('mensual')
                         ->required(),
-                    Forms\Components\TextInput::make('moneda')
+                    // Fija, no editable. Era un campo de texto libre y ahí
+                    // cabía cualquier cosa: "mxn", "MX", "pesos", "$".
+                    // MercadoPago sólo acepta el código exacto en mayúsculas y
+                    // rechaza el resto con un error 400 que no se veía al
+                    // guardar el plan, sino el día que alguien iba a pagarlo.
+                    Forms\Components\Placeholder::make('moneda_fija')
                         ->label('Moneda')
-                        ->default('MXN')
-                        ->maxLength(3),
+                        ->content(fn (?Plan $record) => Plan::MONEDAS[$record?->moneda ?: 'MXN'] ?? ($record?->moneda ?: 'MXN'))
+                        ->helperText('Fija: Kinvoo cobra en pesos mexicanos a través de MercadoPago México. Cambiarla requiere ajustar también la cuenta de la pasarela, así que no se edita desde aquí.'),
                 ])->columns(2),
 
                 Forms\Components\Section::make('Contenido')->schema([
@@ -87,11 +92,15 @@ class PlanResource extends Resource
                             ->label('Es recurrente')
                             ->helperText('Suscripción periódica (recomendado). Desactiva sólo si es un pago único.')
                             ->default(true),
-                        Forms\Components\Select::make('interval')
+                        // Antes aquí había un segundo selector de periodicidad,
+                        // separado del "Periodo" de arriba y capaz de
+                        // contradecirlo: un plan marcado Anual seguía
+                        // cobrándose cada mes porque este se quedaba en
+                        // mensual. Ahora se deriva solo del campo de arriba.
+                        Forms\Components\Placeholder::make('interval_derivado')
                             ->label('Periodicidad del cobro')
-                            ->options(['month' => 'Mensual', 'year' => 'Anual'])
-                            ->default('month')
-                            ->helperText('MercadoPago lo interpreta como frequency (1 o 12 meses). En Stripe debe coincidir con el interval del Price.'),
+                            ->content(fn (?Plan $record) => $record?->esAnual() ? 'Anual (cada 12 meses)' : 'Mensual (cada mes)')
+                            ->helperText('Se toma del campo "Periodo" de arriba. Es lo que se le pide cobrar a la pasarela.'),
                         Forms\Components\TextInput::make('provider_price_id')
                             ->label('Stripe Price ID (opcional)')
                             ->placeholder('price_1AbCd...')
