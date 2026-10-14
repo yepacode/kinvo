@@ -76,6 +76,56 @@ class Fase2CheckoutTest extends TestCase
         $this->assertSame('fake', $sub->provider);
     }
 
+    /**
+     * Regresión · feedback Karla 13-10-2026.
+     *
+     * Un intento de pago sin completar NO debe impedir volver a intentarlo.
+     * Antes la INCOMPLETE bloqueaba durante 30 minutos, así que alguien que
+     * abandonaba el checkout y lo reintentaba enseguida se topaba con
+     * "Ya tienes una suscripción activa" — pese a no tener acceso a nada.
+     */
+    public function test_reintentar_el_pago_tras_abandonar_el_checkout(): void
+    {
+        $user = $this->contratante();
+        $plan = $this->planEstudio();
+
+        // Primer intento: se anota la suscripción y se va a la pasarela.
+        $this->actingAs($user)->post(route('billing.start', $plan))->assertRedirect();
+        $primera = Subscription::where('user_id', $user->id)->firstOrFail();
+        $this->assertSame(Subscription::STATUS_INCOMPLETE, $primera->status);
+
+        // Segundo intento inmediato (la persona se arrepintió y volvió).
+        $r = $this->actingAs($user)->post(route('billing.start', $plan));
+
+        $r->assertRedirect();
+        $this->assertStringContainsString('/billing/fake-checkout/', $r->headers->get('Location'));
+        $this->assertNotSame('ya-tienes-suscripcion', session('status'));
+
+        // La anterior quedó cerrada y hay exactamente una en curso.
+        $this->assertSame(Subscription::STATUS_CANCELED, $primera->refresh()->status);
+        $this->assertSame(1, Subscription::where('user_id', $user->id)
+            ->where('status', Subscription::STATUS_INCOMPLETE)->count());
+    }
+
+    /** Una suscripción ACTIVA sí debe impedir contratar otra (doble cobro). */
+    public function test_suscripcion_activa_si_bloquea_contratar_otra(): void
+    {
+        $user = $this->contratante();
+        $plan = $this->planEstudio();
+
+        Subscription::create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'provider' => 'fake',
+            'status' => Subscription::STATUS_ACTIVE,
+            'current_period_end' => now()->addMonth(),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('billing.start', $plan))
+            ->assertSessionHas('status', 'ya-tienes-suscripcion');
+    }
+
     public function test_plan_de_estudio_no_es_para_profesional(): void
     {
         $user = $this->profesional();

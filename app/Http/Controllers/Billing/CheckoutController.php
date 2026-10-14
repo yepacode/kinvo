@@ -32,14 +32,6 @@ use Illuminate\View\View;
  */
 class CheckoutController extends Controller
 {
-    /**
-     * Minutos que una suscripción INCOMPLETE se considera "checkout en curso".
-     * Sirve para que un doble clic no cree dos suscripciones, pero sin dejar
-     * al usuario bloqueado para siempre si abandona el pago o si el webhook
-     * de confirmación nunca llega (feedback Karla 08-10-2026).
-     */
-    private const MINUTOS_CHECKOUT_EN_CURSO = 30;
-
     public function __construct(private SubscriptionGateway $gateway) {}
 
     /** POST /suscripcion/{plan} — arranca el checkout. */
@@ -79,45 +71,43 @@ class CheckoutController extends Controller
             return back()->with('status', 'reintentalo-en-unos-segundos');
         }
         try {
-            // Blindaje: si el user ya tiene una suscripción vigente no creamos otra.
+            // Sólo bloquea una suscripción que REALMENTE da acceso: activa o
+            // en prueba y todavía vigente. Tener dos a la vez sí sería un
+            // problema real (doble cobro).
             //
-            // Feedback Karla 08-10-2026: antes las INCOMPLETE también bloqueaban
-            // sin caducar nunca (la condición `whereNull('current_period_end')`
-            // las daba por vigentes para siempre). Resultado: quien abandonaba
-            // el checkout —o cuyo pago no se confirmaba— quedaba atrapado con
-            // "Ya tienes una suscripción activa" en todos los intentos
-            // siguientes, y ni el propio usuario ni el admin podían cancelarla.
-            // Ahora una INCOMPLETE solo bloquea mientras el checkout está
-            // razonablemente en curso; pasado ese plazo se considera abandonada.
+            // Las INCOMPLETE ya no bloquean. Feedback Karla 13-10-2026: con un
+            // correo recién registrado, al segundo intento de pago seguía
+            // saliendo "Ya tienes una suscripción activa". Una INCOMPLETE es
+            // sólo el registro que se anota ANTES de mandar a la pasarela: si
+            // la persona no termina de pagar —o se arrepiente y vuelve a
+            // intentarlo— queda ahí sin dar acceso a nada, pero impidiendo
+            // reintentar. Quien evita el doble clic es el lock de arriba, que
+            // es atómico y dura 15 segundos; añadir una ventana de minutos
+            // sobre las INCOMPLETE no aportaba nada y sí dejaba a la gente
+            // encerrada.
+            //
+            // Síntoma que delataba la incoherencia: el menú mostraba los
+            // candados de "sin membresía" y a la vez el checkout respondía
+            // "ya tienes una suscripción activa".
             $subVigente = Subscription::where('user_id', $user->id)
-                ->where(function ($q) {
-                    // Activa o en prueba: bloquea mientras siga vigente.
-                    $q->where(function ($activa) {
-                        $activa->whereIn('status', [
-                            Subscription::STATUS_ACTIVE,
-                            Subscription::STATUS_TRIALING,
-                        ])->where(function ($vig) {
-                            $vig->whereNull('current_period_end')
-                                ->orWhere('current_period_end', '>=', now());
-                        });
-                    })
-                    // Checkout en curso: bloquea solo si se inició hace poco,
-                    // para que un doble clic no cree dos suscripciones.
-                    ->orWhere(function ($enCurso) {
-                        $enCurso->where('status', Subscription::STATUS_INCOMPLETE)
-                            ->where('created_at', '>=', now()->subMinutes(self::MINUTOS_CHECKOUT_EN_CURSO));
-                    });
+                ->whereIn('status', [
+                    Subscription::STATUS_ACTIVE,
+                    Subscription::STATUS_TRIALING,
+                ])
+                ->where(function ($vig) {
+                    $vig->whereNull('current_period_end')
+                        ->orWhere('current_period_end', '>=', now());
                 })
                 ->exists();
             if ($subVigente) {
                 return back()->with('status', 'ya-tienes-suscripcion');
             }
 
-            // Las INCOMPLETE abandonadas se marcan como canceladas para que no
-            // se acumulen en el historial del usuario ni en el panel admin.
+            // Un intento nuevo reemplaza al anterior: cerramos cualquier
+            // INCOMPLETE previa para no acumular basura en el historial ni en
+            // el panel de Suscripciones.
             Subscription::where('user_id', $user->id)
                 ->where('status', Subscription::STATUS_INCOMPLETE)
-                ->where('created_at', '<', now()->subMinutes(self::MINUTOS_CHECKOUT_EN_CURSO))
                 ->update([
                     'status' => Subscription::STATUS_CANCELED,
                     'canceled_at' => now(),
