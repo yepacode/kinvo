@@ -259,12 +259,25 @@
                                 <p class="mt-3 text-sm text-warmgray">{{ $plan->descripcion }}</p>
                             @endif
 
-                            @if (! empty($plan->beneficios))
-                                <ul class="mt-4 space-y-2 text-sm text-ink/90">
-                                    @foreach ($plan->beneficios as $beneficio)
-                                        <li class="flex items-start gap-2">
-                                            <span class="mt-0.5 text-sage" aria-hidden="true">✓</span>
-                                            <span>{{ $beneficio }}</span>
+                            {{-- Los beneficios se capturan pegándolos de corrido, con
+                                 los ✓ y ✕ dentro del texto. `beneficiosNormalizados`
+                                 los separa y distingue lo que entra de lo que no.
+                                 Antes todo salía como un párrafo pegado y, peor, un
+                                 punto marcado con ✕ llevaba delante el ✓ verde de la
+                                 plantilla: se leía como incluido algo que no lo está. --}}
+                            @php $__beneficios = $plan->beneficiosNormalizados(); @endphp
+                            @if ($__beneficios)
+                                <ul class="mt-4 space-y-2 text-sm">
+                                    @foreach ($__beneficios as $beneficio)
+                                        <li class="flex items-start gap-2 {{ $beneficio['incluido'] ? 'text-ink/90' : 'text-warmgray' }}">
+                                            @if ($beneficio['incluido'])
+                                                <span class="mt-0.5 shrink-0 text-sage" aria-hidden="true">✓</span>
+                                                <span class="sr-only">{{ __('Incluido:') }}</span>
+                                            @else
+                                                <span class="mt-0.5 shrink-0 text-warmgray/70" aria-hidden="true">✕</span>
+                                                <span class="sr-only">{{ __('No incluido:') }}</span>
+                                            @endif
+                                            <span>{{ $beneficio['texto'] }}</span>
                                         </li>
                                     @endforeach
                                 </ul>

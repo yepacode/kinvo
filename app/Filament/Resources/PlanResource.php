@@ -82,7 +82,10 @@ class PlanResource extends Resource
                         ->maxLength(500),
                     Forms\Components\TagsInput::make('beneficios')
                         ->label('Beneficios / incluye')
-                        ->helperText('Escribe cada beneficio y presiona Enter.')
+                        // En la práctica se pegaba todo de corrido en una sola
+                        // entrada, con los ✓ y ✕ dentro del texto. La tarjeta
+                        // ahora lo entiende igual, pero conviene explicarlo.
+                        ->helperText('Escribe cada beneficio y presiona Enter. Para marcar algo que el plan NO incluye, empiézalo con ✕ (ej. "✕ Telemedicina"): saldrá tachado en gris. Si pegas varios de corrido separados por ✓ o ✕, también los separamos solos.')
                         ->placeholder('Nuevo beneficio'),
                     Forms\Components\Textarea::make('cobertura')
                         ->label('Cobertura')

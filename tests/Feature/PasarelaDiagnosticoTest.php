@@ -347,4 +347,65 @@ class PasarelaDiagnosticoTest extends TestCase
 
         $this->assertNull(session('pasarela_mensaje'));
     }
+
+    /**
+     * Regresión · hueco detectado en el repaso del 14-10-2026.
+     *
+     * Los beneficios se capturan pegándolos de corrido, con los ✓ y ✕ dentro
+     * del texto. La tarjeta pintaba un párrafo pegado y, peor, anteponía su
+     * propio ✓ verde a los puntos marcados con ✕: en la página donde se
+     * decide pagar se leía como incluido algo que el plan NO incluye.
+     */
+    public function test_los_beneficios_pegados_de_corrido_se_separan(): void
+    {
+        $plan = $this->plan([
+            'beneficios' => ['Todo lo del Perfil Gratis ✓ Telemedicina ilimitada ✓ Seguro de vida'],
+        ]);
+
+        $lista = $plan->beneficiosNormalizados();
+
+        $this->assertCount(3, $lista);
+        $this->assertSame('Todo lo del Perfil Gratis', $lista[0]['texto']);
+        $this->assertSame('Telemedicina ilimitada', $lista[1]['texto']);
+        $this->assertTrue(collect($lista)->every(fn ($b) => $b['incluido']));
+    }
+
+    /** Lo marcado con ✕ es lo que el plan NO trae, y debe distinguirse. */
+    public function test_lo_no_incluido_no_se_pinta_como_incluido(): void
+    {
+        $plan = $this->plan([
+            'beneficios' => ['Perfil en el directorio ✕ Comunidad ✕ Telemedicina'],
+        ]);
+
+        $lista = $plan->beneficiosNormalizados();
+
+        $this->assertCount(3, $lista);
+        $this->assertTrue($lista[0]['incluido']);
+        $this->assertFalse($lista[1]['incluido'], 'lo marcado con ✕ no entra en el plan');
+        $this->assertSame('Comunidad', $lista[1]['texto']);
+        $this->assertFalse($lista[2]['incluido']);
+    }
+
+    /** Una lista bien capturada, uno por entrada, se respeta tal cual. */
+    public function test_una_lista_bien_capturada_no_se_toca(): void
+    {
+        $plan = $this->plan([
+            'beneficios' => ['Vacantes ilimitadas', 'Contacto directo', '✕ Beneficios para tu equipo'],
+        ]);
+
+        $lista = $plan->beneficiosNormalizados();
+
+        $this->assertCount(3, $lista);
+        $this->assertSame('Vacantes ilimitadas', $lista[0]['texto']);
+        $this->assertTrue($lista[1]['incluido']);
+        $this->assertFalse($lista[2]['incluido']);
+        $this->assertSame('Beneficios para tu equipo', $lista[2]['texto']);
+    }
+
+    /** Sin beneficios no se rompe nada. */
+    public function test_un_plan_sin_beneficios_no_revienta(): void
+    {
+        $this->assertSame([], $this->plan(['beneficios' => null])->beneficiosNormalizados());
+        $this->assertSame([], $this->plan(['nombre' => 'B', 'beneficios' => []])->beneficiosNormalizados());
+    }
 }

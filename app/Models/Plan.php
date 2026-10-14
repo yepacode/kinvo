@@ -139,6 +139,75 @@ class Plan extends Model
         return ! $this->sinPrecio() && (float) $this->precio > 0;
     }
 
+    /** Marcas con las que se escribe "esto sí entra" y "esto no entra". */
+    private const MARCAS_INCLUIDO = ['✓', '✔', '✅', '•'];
+
+    private const MARCAS_EXCLUIDO = ['✕', '✗', '❌', '×', 'x '];
+
+    /**
+     * Beneficios listos para pintar: cada uno con su texto y si entra o no.
+     *
+     * El campo `beneficios` es una lista, pero en la práctica se pega todo
+     * seguido en una sola entrada, con los ✓ y ✕ escritos dentro del texto.
+     * La tarjeta entonces mostraba un párrafo corrido y —peor— anteponía su
+     * propio ✓ verde a los puntos marcados con ✕, de modo que un beneficio
+     * NO incluido se leía como incluido. En la página donde se decide pagar,
+     * eso es una mentira sobre lo que trae el plan.
+     *
+     * Aquí se parte por esas marcas y se respeta la intención de quien lo
+     * escribió, sin obligarle a capturarlo de otra forma.
+     *
+     * @return list<array{texto:string, incluido:bool}>
+     */
+    public function beneficiosNormalizados(): array
+    {
+        $crudos = $this->beneficios;
+        if (blank($crudos)) {
+            return [];
+        }
+
+        $marcas = array_merge(self::MARCAS_INCLUIDO, self::MARCAS_EXCLUIDO);
+        $salida = [];
+
+        foreach ((array) $crudos as $entrada) {
+            $texto = trim((string) $entrada);
+            if ($texto === '') {
+                continue;
+            }
+
+            // Partimos conservando la marca, para saber de qué tipo es cada trozo.
+            $patron = '/(?=['.preg_quote(implode('', array_map(
+                fn ($m) => trim($m), $marcas
+            )), '/').'])/u';
+            $trozos = preg_split($patron, $texto, -1, PREG_SPLIT_NO_EMPTY) ?: [$texto];
+
+            foreach ($trozos as $trozo) {
+                $trozo = trim($trozo);
+                if ($trozo === '') {
+                    continue;
+                }
+
+                $incluido = true;
+                foreach (self::MARCAS_EXCLUIDO as $marca) {
+                    if (str_starts_with($trozo, trim($marca))) {
+                        $incluido = false;
+                        break;
+                    }
+                }
+
+                // Fuera la marca: el icono lo pone la tarjeta.
+                $limpio = ltrim($trozo, implode('', array_map(fn ($m) => trim($m), $marcas)).' ');
+                $limpio = trim($limpio, " \t\n\r\0\x0B.,;");
+
+                if ($limpio !== '') {
+                    $salida[] = ['texto' => $limpio, 'incluido' => $incluido];
+                }
+            }
+        }
+
+        return $salida;
+    }
+
     /** Mínimo que la pasarela acepta para la moneda de este plan. */
     public function minimoDeLaPasarela(): float
     {
