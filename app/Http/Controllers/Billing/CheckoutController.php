@@ -12,6 +12,7 @@ use App\Models\Subscription;
 use App\Notifications\CobroExitosoNotification;
 use App\Services\Billing\SubscriptionGateway;
 use App\Support\FalloDePasarela;
+use App\Support\RastroDePago;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +42,20 @@ class CheckoutController extends Controller
         $user = $request->user();
         abort_unless($user, 403);
 
+        // Rastro del intento, en storage/logs/pagos.log. La referencia se
+        // repite en cada línea y se le enseña a la persona si algo falla, así
+        // que basta con que la diga para dar con su caso exacto.
+        $rastro = new RastroDePago();
+        $rastro->paso('Intento de cobro', [
+            'usuario' => $user->email,
+            'plan' => $plan->nombre,
+            'plan_id' => $plan->id,
+            'precio' => $plan->precio,
+            'moneda' => $plan->moneda,
+            'periodo' => $plan->periodo,
+            'pasarela' => $this->gateway->name(),
+        ]);
+
         // Blindaje explícito: los admins no se suscriben, gestionan planes.
         if ($user->esAdmin()) {
             return back()->with('status', 'admin-no-suscribe');
@@ -59,6 +74,8 @@ class CheckoutController extends Controller
         // contratar. `scopeContratable` ya lo oculta del listado, así que aquí
         // sólo llegan quienes forzaron la URL.
         if ($plan->sinPrecio()) {
+            $rastro->aviso('Rechazado: el plan no tiene precio capturado');
+
             return back()->with('status', 'plan-sin-precio');
         }
 
@@ -97,6 +114,8 @@ class CheckoutController extends Controller
             // no pueden desalinearse: si aquí se aceptaría el pago, el botón
             // está ahí; si no, no aparece.
             if ($user->tieneSuscripcionEnCurso()) {
+                $rastro->aviso('Rechazado: ya tiene una suscripción en curso');
+
                 return back()->with('status', 'ya-tienes-suscripcion');
             }
 
@@ -115,7 +134,29 @@ class CheckoutController extends Controller
             // de 0). Antes estos planes se mostraban pero no se podían
             // contratar: el usuario acababa en "escríbenos y te ayudamos".
             if ($plan->esGratuito()) {
+                $rastro->paso('Plan sin costo: se activa sin pasar por la pasarela');
+
                 return $this->activarPlanGratuito($user, $plan);
+            }
+
+            // Un plan por debajo del mínimo de la pasarela no se puede cobrar.
+            // Mejor decirlo aquí, con nombre y apellidos, que dejar que
+            // MercadoPago lo rechace y la persona vea un error que no explica
+            // nada — y que quien administra no llegue a ver nunca.
+            if ($plan->porDebajoDelMinimo()) {
+                FalloDePasarela::registrar(
+                    'El plan "'.$plan->nombre.'" cuesta $'.number_format((float) $plan->precio, 2).' '.$plan->moneda
+                    .', por debajo del mínimo de $'.number_format($plan->minimoDeLaPasarela(), 2).' que acepta la pasarela. '
+                    .'Nadie puede contratarlo: súbele el precio o ponlo en 0 para que sea sin costo.',
+                    ['plan_id' => $plan->id, 'plan' => $plan->nombre, 'usuario' => $user->email]
+                );
+
+                $rastro->fallo('Rechazado: precio por debajo del mínimo de la pasarela', [
+                    'precio' => (float) $plan->precio,
+                    'minimo' => $plan->minimoDeLaPasarela(),
+                ]);
+
+                return back()->with('status', 'plan-por-debajo-del-minimo');
             }
 
             // Si la pasarela rechaza la operación, el usuario veía una página
@@ -123,6 +164,8 @@ class CheckoutController extends Controller
             // log del servidor — invisible para quien administra Kinvoo. Un
             // "Suscribirme" no puede reventar en blanco: se recoge el motivo,
             // se guarda para el panel y se le dice algo claro a la persona.
+            $rastro->paso('Llamando a la pasarela para abrir el checkout');
+
             try {
                 $url = $this->gateway->createCheckoutUrl(
                     $user,
@@ -134,12 +177,19 @@ class CheckoutController extends Controller
                 $motivo = FalloDePasarela::motivo($e);
                 report($e);
 
+                $rastro->fallo('La pasarela rechazó la operación', [
+                    'motivo' => $motivo,
+                    'excepcion' => $e::class,
+                    'archivo' => $e->getFile().':'.$e->getLine(),
+                ]);
+
                 FalloDePasarela::registrar($motivo, [
                     'plan_id'   => $plan->id,
                     'plan'      => $plan->nombre,
                     'usuario'   => $user->email,
                     'gateway'   => $this->gateway->name(),
                     'excepcion' => $e::class,
+                    'referencia' => $rastro->referencia(),
                 ]);
 
                 // El intento anotado no llegó a ninguna parte: lo cerramos para

@@ -58,6 +58,22 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        /**
+         * Rastro del circuito de cobro, en su propio archivo.
+         *
+         * Hasta ahora, cuando alguien no podía pagar, la única pista estaba
+         * mezclada entre miles de líneas de laravel.log — que además crece
+         * hasta cientos de megas y es inmanejable. Aquí queda sólo el paso a
+         * paso del pago: quién, qué plan, qué respondió la pasarela.
+         */
+        'pagos' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/pagos.log'),
+            'level' => 'debug',
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),

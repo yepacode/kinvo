@@ -115,10 +115,43 @@ class Plan extends Model
         return $this->precio === null;
     }
 
+    /**
+     * Importe mínimo que la pasarela acepta cobrar, por moneda.
+     *
+     * No es un invento nuestro: MercadoPago rechaza por debajo de esto con
+     * «Cannot pay an amount lower than $ 10.00». Antes nada impedía crear un
+     * plan de $3: se veía perfecto en la web y sólo reventaba cuando una
+     * persona pulsaba "Suscribirme".
+     */
+    public const MINIMOS_PASARELA = [
+        'MXN' => 10.0,
+        'ARS' => 100.0,
+        'BRL' => 1.0,
+        'CLP' => 1000.0,
+        'COP' => 5000.0,
+        'PEN' => 3.0,
+        'UYU' => 40.0,
+    ];
+
     /** Requiere pasar por la pasarela de pago. */
     public function requierePago(): bool
     {
         return ! $this->sinPrecio() && (float) $this->precio > 0;
+    }
+
+    /** Mínimo que la pasarela acepta para la moneda de este plan. */
+    public function minimoDeLaPasarela(): float
+    {
+        return self::MINIMOS_PASARELA[$this->moneda ?: 'MXN'] ?? 10.0;
+    }
+
+    /**
+     * Plan de pago que la pasarela NO puede cobrar por ser demasiado barato.
+     * Los gratuitos (0) quedan fuera: ésos no pasan por la pasarela.
+     */
+    public function porDebajoDelMinimo(): bool
+    {
+        return $this->requierePago() && (float) $this->precio < $this->minimoDeLaPasarela();
     }
 
     /**

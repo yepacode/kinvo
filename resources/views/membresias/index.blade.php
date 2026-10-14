@@ -65,6 +65,10 @@
             <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-yellow-200 bg-yellow-50 px-5 py-4 text-center text-sm text-ink">
                 {{ __('Este plan aún no tiene precio configurado. Escríbenos y te ayudamos a contratarlo.') }}
             </div>
+        @elseif (session('status') === 'plan-por-debajo-del-minimo')
+            <div class="mx-auto mb-10 max-w-2xl rounded-xl border border-yellow-200 bg-yellow-50 px-5 py-4 text-center text-sm text-ink">
+                {{ __('Este plan no se puede contratar ahora mismo: su precio está por debajo del mínimo que admite la pasarela de pago. Ya avisamos al equipo de Kinvoo. Elige otro plan o escríbenos.') }}
+            </div>
         @elseif (session('status') === 'pasarela-no-disponible')
             {{-- Antes esto era una pantalla blanca de error 500: la pasarela
                  rechazaba la operación y ni la persona ni Kinvoo se enteraban
@@ -267,6 +271,14 @@
                                     && (($planIndividual && $user->esProfesional())
                                      || ($planEstudio && $user->esContratante()));
                             @endphp
+
+                            @if ($plan->porDebajoDelMinimo() && auth()->user()?->esAdmin())
+                                {{-- Sólo lo ve quien administra: el plan está a
+                                     la vista pero la pasarela no puede cobrarlo. --}}
+                                <p class="mt-4 rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2 text-xs text-yellow-900">
+                                    {{ __('Ojo: $:precio está por debajo del mínimo de $:minimo que cobra MercadoPago. Nadie puede contratarlo.', ['precio' => number_format((float) $plan->precio, 2), 'minimo' => number_format($plan->minimoDeLaPasarela(), 2)]) }}
+                                </p>
+                            @endif
 
                             @if ($puedeSuscribirse)
                                 <form method="POST" action="{{ route('billing.start', $plan) }}" class="mt-6">

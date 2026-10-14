@@ -44,7 +44,21 @@ class PlanResource extends Resource
                         ->numeric()
                         ->prefix('$')
                         ->minValue(0)
-                        ->helperText('Déjalo vacío si el precio es "a consultar".'),
+                        ->helperText('Déjalo vacío si el precio es "a consultar". Escribe 0 para un plan sin costo. MercadoPago no cobra importes menores a $'.number_format(Plan::MINIMOS_PASARELA['MXN'], 0).' MXN.')
+                        // Se valida aquí porque, si no, el plan se guarda tan
+                        // ricamente y el error sale semanas después, cuando una
+                        // persona intenta pagarlo y la pasarela lo rechaza.
+                        ->rule(function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                if ($value === null || $value === '') {
+                                    return;
+                                }
+                                $minimo = Plan::MINIMOS_PASARELA['MXN'];
+                                if ((float) $value > 0 && (float) $value < $minimo) {
+                                    $fail('MercadoPago no cobra menos de $'.number_format($minimo, 2).' MXN: un plan a este precio se vería en la web pero fallaría al pagarlo. Pon 0 si quieres que sea sin costo, o un importe de $'.number_format($minimo, 2).' en adelante.');
+                                }
+                            };
+                        }),
                     Forms\Components\Select::make('periodo')
                         ->label('Periodo')
                         ->options(Plan::PERIODOS)

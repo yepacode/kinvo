@@ -228,4 +228,42 @@ class PasarelaDiagnosticoTest extends TestCase
         $this->assertSame('MXN', $this->plan(['nombre' => 'B', 'moneda' => ''])->moneda);
         $this->assertSame('COP', $this->plan(['nombre' => 'C', 'moneda' => 'cop'])->moneda);
     }
+
+    /**
+     * Regresión · reporte 14-10-2026.
+     *
+     * MercadoPago México rechaza cualquier cobro por debajo de $10 MXN
+     * («Cannot pay an amount lower than $ 10.00»). Nada impedía crear un plan
+     * de $3: se veía perfecto en la web y sólo fallaba cuando alguien pulsaba
+     * "Suscribirme", con un error que no explicaba nada.
+     */
+    public function test_un_plan_por_debajo_del_minimo_no_llega_a_la_pasarela(): void
+    {
+        $user = $this->contratante();
+        $barato = $this->plan(['nombre' => 'Prueba 3 pesos', 'precio' => 3]);
+
+        $this->assertTrue($barato->porDebajoDelMinimo());
+
+        \App\Support\FalloDePasarela::limpiar();
+
+        $r = $this->actingAs($user)->post(route('billing.start', $barato));
+        $r->assertRedirect();
+        $r->assertSessionHas('status', 'plan-por-debajo-del-minimo');
+
+        // No se anotó ninguna suscripción: ni se intentó llamar a la pasarela.
+        $this->assertSame(0, Subscription::where('user_id', $user->id)->count());
+
+        // Y queda dicho en el panel, con el nombre del plan.
+        $fallo = \App\Support\FalloDePasarela::ultimo();
+        $this->assertNotNull($fallo);
+        $this->assertStringContainsString('Prueba 3 pesos', $fallo['motivo']);
+    }
+
+    /** Un plan en el mínimo exacto sí pasa, y uno gratuito no se ve afectado. */
+    public function test_el_minimo_exacto_y_los_gratuitos_pasan(): void
+    {
+        $this->assertFalse($this->plan(['nombre' => 'Justo', 'precio' => 10])->porDebajoDelMinimo());
+        $this->assertFalse($this->plan(['nombre' => 'Gratis', 'precio' => 0])->porDebajoDelMinimo());
+        $this->assertFalse($this->plan(['nombre' => 'A consultar', 'precio' => null])->porDebajoDelMinimo());
+    }
 }
