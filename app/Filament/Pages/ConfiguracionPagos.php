@@ -39,6 +39,11 @@ class ConfiguracionPagos extends Page implements HasForms
     protected static string $view = 'filament.pages.configuracion-pagos';
 
     /** Marca que el admin dejó el campo intacto (no sobrescribir el guardado). */
+    /**
+     * Marcador antiguo. Ya no se manda al navegador —los campos van vacíos—
+     * pero se sigue rechazando al guardar por si alguien tiene abierta una
+     * pestaña vieja: guardar ahí no debe convertir el marcador en la clave.
+     */
     private const SIN_CAMBIO = '__sin_cambio__';
 
     public ?array $data = [];
@@ -52,19 +57,48 @@ class ConfiguracionPagos extends Page implements HasForms
     {
         $cred = PaymentCredential::activa() ?? PaymentCredential::query()->where('gateway', 'mercadopago')->first();
 
+        // Los secretos se dejan VACÍOS, no con un relleno falso.
+        //
+        // Antes se rellenaban con un marcador de "sin cambio", y en un campo
+        // de contraseña eso salía como un puñado de puntitos — muchos menos
+        // que los del secreto real. Karla (19-10-2026) lo leyó como que el
+        // sistema le estaba recortando la clave al guardarla, y con razón:
+        // la pantalla mostraba algo que no era lo guardado. Lo que hay de
+        // verdad se cuenta ahora en el texto de ayuda de cada campo.
         $this->form->fill([
             'gateway' => $cred?->gateway ?? config('billing.gateway', 'fake'),
             'modo' => $cred?->modo ?? 'produccion',
-            // Si ya hay un secreto guardado mandamos el placeholder; así el
-            // admin ve que existe sin que viaje el valor real al navegador.
-            'access_token' => $cred?->secreto('access_token') ? self::SIN_CAMBIO : null,
-            'webhook_secret' => $cred?->secreto('webhook_secret') ? self::SIN_CAMBIO : null,
-            'public_key' => $cred?->secreto('public_key') ? self::SIN_CAMBIO : null,
+            'access_token' => null,
+            'webhook_secret' => null,
+            'public_key' => null,
+        ]);
+    }
+
+    /**
+     * Describe el secreto que hay guardado, sin enseñarlo.
+     *
+     * "Lo que ves es lo que hay": si la pantalla no dice qué hay dentro, se
+     * acaba desconfiando de ella — y con motivo, porque el campo en blanco y
+     * el campo con una clave de 64 caracteres se veían igual.
+     */
+    private function estadoDelSecreto(?PaymentCredential $cred, string $campo, string $deDonde): string
+    {
+        $valor = $cred?->secreto($campo);
+
+        if (! filled($valor)) {
+            return __('Vacío. :de', ['de' => $deDonde]);
+        }
+
+        return __('Guardado: :n caracteres, termina en «:fin». Déjalo vacío para conservarlo, o pega uno nuevo para reemplazarlo.', [
+            'n' => mb_strlen($valor),
+            'fin' => mb_substr($valor, -4),
         ]);
     }
 
     public function form(Form $form): Form
     {
+        $cred = PaymentCredential::activa() ?? PaymentCredential::query()->where('gateway', 'mercadopago')->first();
+
         return $form
             ->schema([
                 // Si la pasarela rechazó el último intento de cobro, el motivo
@@ -191,7 +225,7 @@ class ConfiguracionPagos extends Page implements HasForms
                             ->revealable()
                             ->autocomplete('new-password')
                             ->maxLength(500)
-                            ->helperText(__('MercadoPago → Tu aplicación → Credenciales de producción → Access Token. Empieza con APP_USR-')),
+                            ->helperText($this->estadoDelSecreto($cred, 'access_token', __('MercadoPago → Tu aplicación → Credenciales de producción → Access Token. Empieza con APP_USR-'))),
 
                         Forms\Components\TextInput::make('webhook_secret')
                             ->label(__('Secret de firma del webhook'))
@@ -199,7 +233,7 @@ class ConfiguracionPagos extends Page implements HasForms
                             ->revealable()
                             ->autocomplete('new-password')
                             ->maxLength(500)
-                            ->helperText(__('MercadoPago → Tu aplicación → Webhooks → Secret de firma. Sin esto los pagos entran pero no se confirman solos.')),
+                            ->helperText($this->estadoDelSecreto($cred, 'webhook_secret', __('MercadoPago → Tu aplicación → Notificaciones → Webhooks → Secret de firma. Sin esto los pagos entran pero no se confirman solos.'))),
 
                         Forms\Components\TextInput::make('public_key')
                             ->label(__('Public Key (opcional)'))
