@@ -2,6 +2,8 @@
 
 namespace App\Services\Billing;
 
+use App\Exceptions\FirmaDeWebhookInvalida;
+
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
@@ -119,13 +121,19 @@ class StripeGateway implements SubscriptionGateway
     {
         $secret = config('billing.stripe.webhook_secret');
         if (! $secret) {
-            throw new \RuntimeException(
+            throw new FirmaDeWebhookInvalida(
                 'STRIPE_WEBHOOK_SECRET no está configurado en .env. Consíguelo en Stripe Dashboard → Developers → Webhooks → tu endpoint → Signing secret.'
             );
         }
-        // constructEvent tira SignatureVerificationException si la firma no
-        // coincide — el WebhookController la convierte en HTTP 400.
-        $event = StripeWebhook::constructEvent($payload, $signatureHeader, $secret);
+
+        // Las fallas de autenticidad llevan su propia excepción para que el
+        // WebhookController las distinga de un fallo al procesar un aviso
+        // que sí era legítimo: sólo las primeras merecen un 400.
+        try {
+            $event = StripeWebhook::constructEvent($payload, $signatureHeader, $secret);
+        } catch (\Stripe\Exception\SignatureVerificationException $e) {
+            throw new FirmaDeWebhookInvalida($e->getMessage(), 0, $e);
+        }
         return json_decode(json_encode($event->toArray()), true);
     }
 

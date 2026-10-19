@@ -444,4 +444,65 @@ class PasarelaDiagnosticoTest extends TestCase
         $this->assertFalse($lista[0]['incluido']);
         $this->assertSame('Telemedicina', $lista[0]['texto']);
     }
+
+    /**
+     * Regresión · incidente real del 16-10-2026.
+     *
+     * MercadoPago avisó de un cobro, la firma se validó correctamente, y al
+     * consultarle el recurso devolvió 404 (el cobro se había rechazado, así
+     * que la factura nunca existió). Ese fallo —posterior a la firma— se
+     * contestaba con "Invalid signature" y un 400. Dos daños: mandaba a
+     * buscar el problema en la clave del webhook, que estaba bien, y
+     * MercadoPago reintentaba el mismo aviso sin parar.
+     */
+    public function test_un_aviso_legitimo_que_falla_al_procesarse_no_dice_firma_invalida(): void
+    {
+        \App\Support\FalloDePasarela::limpiar();
+
+        $this->app->bind(\App\Services\Billing\SubscriptionGateway::class, fn () => new class implements \App\Services\Billing\SubscriptionGateway
+        {
+            public function name(): string
+            {
+                return 'fake';
+            }
+
+            public function createCheckoutUrl(\App\Models\User $user, \App\Models\Plan $plan, string $successUrl, string $cancelUrl): string
+            {
+                return 'https://example.test';
+            }
+
+            public function cancelSubscription(string $id): void {}
+
+            public function verifyWebhook(string $payload, string $firma): array
+            {
+                // La firma ya pasó; esto revienta después, consultando la API.
+                throw new \RuntimeException('Api error. Check response for details');
+            }
+        });
+
+        $r = $this->call('POST', route('billing.webhook'), [], [], [],
+            ['CONTENT_TYPE' => 'application/json'], '{"type":"payment"}');
+
+        $r->assertOk();
+        $this->assertSame('ok', $r->getContent(), 'se le confirma a la pasarela que el aviso llegó');
+
+        // Queda anotado como recibido, no como rechazado por firma.
+        $this->assertNotNull(\App\Support\PulsoWebhook::ultimoAceptado());
+        $this->assertNull(\App\Support\PulsoWebhook::ultimoRechazado());
+
+        $fallo = \App\Support\FalloDePasarela::ultimo();
+        $this->assertNotNull($fallo);
+        $this->assertStringContainsString('no se pudo procesar', $fallo['motivo']);
+    }
+
+    /** Una firma de verdad inválida sí sigue devolviendo 400. */
+    public function test_una_firma_invalida_sigue_siendo_400(): void
+    {
+        $r = $this->call('POST', route('billing.webhook'), [], [], [],
+            ['CONTENT_TYPE' => 'application/json', 'HTTP_X_SIGNATURE' => 'sha256=mentira'],
+            '{"type":"payment_succeeded"}');
+
+        $r->assertStatus(400);
+        $this->assertNotNull(\App\Support\PulsoWebhook::ultimoRechazado());
+    }
 }

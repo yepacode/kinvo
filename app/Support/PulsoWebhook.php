@@ -2,31 +2,33 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Facades\Cache;
+use App\Models\SiteSetting;
 
 /**
  * Deja constancia de cada llamada que entra por /webhooks/billing.
  *
  * Sin esto no había forma de responder a la pregunta más básica de toda la
  * integración: "¿MercadoPago nos ha llamado alguna vez?". Si la dirección
- * estaba mal configurada en su panel —que es justo lo que pasó— el silencio
- * era idéntico al de una integración sana que todavía no ha vendido nada.
+ * estaba mal configurada en su panel, el silencio era idéntico al de una
+ * integración sana que todavía no ha vendido nada.
  *
- * Guarda dos cosas por separado, porque distinguen dos problemas muy
- * distintos:
+ * Guarda dos cosas por separado, porque distinguen dos problemas distintos:
  *   - la última llamada ACEPTADA  → la firma es correcta, todo bien;
  *   - la última llamada RECHAZADA → MercadoPago sí llama, pero el Secret de
  *     firma guardado en Kinvoo no es el suyo.
  *
- * Usa caché a propósito: ningún despliegue necesita migraciones por esto.
+ * Vive en la tabla de ajustes, NO en caché. La primera versión usaba caché
+ * para no añadir migraciones al despliegue, y salió mal: `optimize:clear`
+ * —que es justo lo que se corre en cada despliegue— la vacía. El 16-10-2026
+ * MercadoPago llamó de verdad, el aviso se registró, y el despliegue del día
+ * siguiente borró la prueba; el panel pasó a decir "no ha llamado nunca" y
+ * mandó a buscar el problema donde no estaba.
  */
 class PulsoWebhook
 {
-    private const OK = 'billing:webhook:ultimo-ok';
+    private const OK = 'webhook_ultimo_aceptado';
 
-    private const RECHAZADO = 'billing:webhook:ultimo-rechazado';
-
-    private const DIAS = 60;
+    private const RECHAZADO = 'webhook_ultimo_rechazado';
 
     public static function aceptado(string $tipo): void
     {
@@ -59,9 +61,12 @@ class PulsoWebhook
     private static function guardar(string $clave, array $dato): void
     {
         try {
-            Cache::put($clave, $dato + ['cuando' => now()->toDateTimeString()], now()->addDays(self::DIAS));
+            SiteSetting::set($clave, json_encode(
+                $dato + ['cuando' => now()->toDateTimeString()],
+                JSON_UNESCAPED_UNICODE
+            ));
         } catch (\Throwable $e) {
-            // El pulso es informativo: si la caché falla, el webhook sigue.
+            // El pulso es informativo: si falla, el webhook sigue su curso.
             report($e);
         }
     }
@@ -69,7 +74,14 @@ class PulsoWebhook
     private static function leer(string $clave): ?array
     {
         try {
-            return Cache::get($clave);
+            $crudo = SiteSetting::get($clave);
+            if (! filled($crudo)) {
+                return null;
+            }
+
+            $dato = json_decode((string) $crudo, true);
+
+            return is_array($dato) ? $dato : null;
         } catch (\Throwable $e) {
             report($e);
 

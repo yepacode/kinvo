@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Facades\Cache;
+use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -14,15 +14,13 @@ use Illuminate\Support\Str;
  * storage/logs/laravel.log — un archivo al que quien administra Kinvoo no
  * tiene acceso. Resultado: "no deja pagar" sin ninguna pista de por qué.
  *
- * Deliberadamente usa la caché y no una tabla nueva: así el despliegue sigue
- * siendo `git pull` + `optimize:clear`, sin migraciones. Si la caché se
- * limpia se pierde el dato, pero el log de Laravel conserva el registro.
+ * Vive en la tabla de ajustes, NO en caché: `optimize:clear` —que se corre en
+ * cada despliegue— vaciaba la caché y con ella la prueba de lo ocurrido,
+ * justo cuando más falta hacía.
  */
 class FalloDePasarela
 {
-    private const CLAVE = 'billing:ultimo-fallo';
-
-    private const DIAS = 14;
+    private const CLAVE = 'billing_ultimo_fallo';
 
     /**
      * Traduce una excepción de la pasarela al motivo legible.
@@ -96,9 +94,9 @@ class FalloDePasarela
         ];
 
         try {
-            Cache::put(self::CLAVE, $dato, now()->addDays(self::DIAS));
+            SiteSetting::set(self::CLAVE, json_encode($dato, JSON_UNESCAPED_UNICODE));
         } catch (\Throwable $e) {
-            // Si la caché falla no pasa nada: el log de abajo es el respaldo.
+            // Si falla no pasa nada: el log de abajo es el respaldo.
             report($e);
         }
 
@@ -109,7 +107,14 @@ class FalloDePasarela
     public static function ultimo(): ?array
     {
         try {
-            return Cache::get(self::CLAVE);
+            $crudo = SiteSetting::get(self::CLAVE);
+            if (! filled($crudo)) {
+                return null;
+            }
+
+            $dato = json_decode((string) $crudo, true);
+
+            return is_array($dato) ? $dato : null;
         } catch (\Throwable $e) {
             report($e);
 
@@ -120,7 +125,7 @@ class FalloDePasarela
     public static function limpiar(): void
     {
         try {
-            Cache::forget(self::CLAVE);
+            SiteSetting::set(self::CLAVE, null);
         } catch (\Throwable $e) {
             report($e);
         }

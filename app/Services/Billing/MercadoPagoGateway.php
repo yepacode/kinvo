@@ -5,6 +5,7 @@ namespace App\Services\Billing;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Exceptions\FirmaDeWebhookInvalida;
 use MercadoPago\Client\Invoice\InvoiceClient;
 use MercadoPago\Client\Payment\PaymentClient;
 use MercadoPago\Client\PreApproval\PreApprovalClient;
@@ -178,7 +179,7 @@ class MercadoPagoGateway implements SubscriptionGateway
     {
         $secret = config('billing.mercadopago.webhook_secret');
         if (! $secret) {
-            throw new \RuntimeException(
+            throw new FirmaDeWebhookInvalida(
                 'Falta el Secret de firma del webhook de MercadoPago. Captúralo en /admin/configuracion-pagos (o en MERCADOPAGO_WEBHOOK_SECRET del .env). Lo obtienes en MercadoPago → Tu aplicación → Webhooks → Secret de firma.'
             );
         }
@@ -194,7 +195,7 @@ class MercadoPagoGateway implements SubscriptionGateway
         $ts  = $parts['ts'] ?? '';
         $sig = $parts['v1'] ?? '';
         if (! $ts || ! $sig) {
-            throw new \RuntimeException('MercadoPago webhook signature header inválido');
+            throw new FirmaDeWebhookInvalida('MercadoPago webhook signature header inválido');
         }
 
         // Manifest exacto que MP firma:
@@ -205,7 +206,7 @@ class MercadoPagoGateway implements SubscriptionGateway
         $manifest  = "id:{$dataId};request-id:{$requestId};ts:{$ts};";
         $expected  = hash_hmac('sha256', $manifest, $secret);
         if (! hash_equals($expected, $sig)) {
-            throw new \RuntimeException('MercadoPago webhook signature mismatch');
+            throw new FirmaDeWebhookInvalida('MercadoPago webhook signature mismatch');
         }
 
         // Normalizamos el evento al MISMO shape que StripeGateway devuelve,
@@ -214,6 +215,29 @@ class MercadoPagoGateway implements SubscriptionGateway
         // saber el status real del recurso.
         $topic = $data['type'] ?? $data['topic'] ?? '';
 
+        // A partir de aquí la firma ya está validada: el aviso es auténtico.
+        // Lo que sigue es consultarle a MercadoPago por el recurso, y eso
+        // puede fallar por motivos que no son culpa de nadie —p. ej. un
+        // 404 porque el cobro se rechazó y la factura nunca llegó a
+        // existir—. Esos fallos NO deben tumbar el aviso: se devuelve
+        // 'ignored' y el webhook contesta que lo recibió. Si se contestara
+        // con error, MercadoPago reintentaría el mismo aviso sin parar y
+        // acabaría desactivando el webhook por su cuenta.
+        try {
+            return $this->resolverEvento($topic, $dataId);
+        } catch (\MercadoPago\Exceptions\MPNotFoundException $e) {
+            report($e);
+
+            return ['type' => 'ignored', 'data' => ['object' => ['id' => $dataId, 'no_encontrado' => true]]];
+        }
+    }
+
+    /**
+     * Traduce un aviso ya autenticado al evento interno, consultando a
+     * MercadoPago el estado real del recurso.
+     */
+    private function resolverEvento(string $topic, string $dataId): array
+    {
         if ($topic === 'payment') {
             $paymentClient = new PaymentClient();
             $payment = $paymentClient->get($dataId);

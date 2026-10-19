@@ -2,6 +2,8 @@
 
 namespace App\Services\Billing;
 
+use App\Exceptions\FirmaDeWebhookInvalida;
+
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
@@ -67,7 +69,7 @@ class FakeGateway implements SubscriptionGateway
         // sobre subs ajenas (Seguridad HIGH-3).
         $secret = (string) config('billing.webhook_secret', '');
         if ($secret === '') {
-            throw new \RuntimeException('Webhook secret no configurado (BILLING_WEBHOOK_SECRET).');
+            throw new FirmaDeWebhookInvalida('Webhook secret no configurado (BILLING_WEBHOOK_SECRET).');
         }
 
         // Formato esperado del header: "sha256=<hex>"
@@ -77,12 +79,12 @@ class FakeGateway implements SubscriptionGateway
         }
         $esperada = hash_hmac('sha256', $payload, $secret);
         if (! hash_equals($esperada, $recibida)) {
-            throw new \RuntimeException('Firma HMAC inválida.');
+            throw new FirmaDeWebhookInvalida('Firma HMAC inválida.');
         }
 
         $data = json_decode($payload, true);
         if (! is_array($data)) {
-            throw new \RuntimeException('Webhook payload no es JSON válido.');
+            throw new FirmaDeWebhookInvalida('Webhook payload no es JSON válido.');
         }
         return $data;
     }

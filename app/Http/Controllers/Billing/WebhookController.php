@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Billing;
 use App\Http\Controllers\Controller;
 use App\Mail\AvisoCobroExitoso;
 use App\Mail\AvisoCobroFallido;
+use App\Exceptions\FirmaDeWebhookInvalida;
 use App\Models\AuditLog;
 use App\Models\Payment;
 use App\Models\Subscription;
@@ -39,7 +40,7 @@ class WebhookController extends Controller
                 $request->getContent(),
                 $request->header('Stripe-Signature') ?? $request->header('X-Signature') ?? ''
             );
-        } catch (\Throwable $e) {
+        } catch (FirmaDeWebhookInvalida $e) {
             report($e);
             // Una llamada rechazada también se anota: distingue "la pasarela
             // no nos llama" de "nos llama pero el Secret de firma no coincide".
@@ -47,6 +48,21 @@ class WebhookController extends Controller
             PulsoWebhook::rechazado($e->getMessage() ?: 'firma inválida');
 
             return response('Invalid signature', 400);
+        } catch (\Throwable $e) {
+            // La firma era correcta: el aviso es auténtico y algo falló
+            // después, al consultarle el recurso a MercadoPago. Antes esto
+            // se contestaba con "Invalid signature" y un 400, lo que mandaba
+            // a buscar el problema en la clave del webhook —que estaba
+            // bien— y hacía que MercadoPago reintentara el mismo aviso sin
+            // parar. Se anota como recibido y se contesta que llegó.
+            report($e);
+            PulsoWebhook::aceptado('no procesado');
+            FalloDePasarela::registrar(
+                'Llegó un aviso legítimo de MercadoPago que no se pudo procesar: '.$e->getMessage(),
+                ['excepcion' => $e::class]
+            );
+
+            return response('ok', 200);
         }
 
         // Registro del webhook para trazabilidad. type puede venir como
